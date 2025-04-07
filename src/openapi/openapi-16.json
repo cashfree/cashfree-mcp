@@ -1,0 +1,305 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "LRS",
+    "version": "4"
+  },
+  "servers": [
+    {
+      "url": "https://sandbox.cashfree.com/",
+      "description": "Sandbox server"
+    },
+    {
+      "url": "https://api.cashfree.com/",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {}
+  },
+  "security": [
+    {}
+  ],
+  "paths": {
+    "/import/settlements/recon": {
+      "post": {
+        "summary": "Get Import Settlement recon details",
+        "description": "This API is used to fetch all events happened for provided Settlement IDs",
+        "operationId": "get-import-settlement-recon-details",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Start date for fetching settlement recon details",
+            "schema": {
+              "type": "string",
+              "default": "2024-08-13"
+            },
+            "required": true
+          },
+          {
+            "name": "x-client-id",
+            "in": "header",
+            "description": "client id generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-client-secret",
+            "in": "header",
+            "description": "client secret generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "description": "API version to be used. Format is in YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "default": "2024-08-01"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "End date for fetching settlement recon details",
+            "schema": {
+              "type": "string",
+              "default": "2024-08-15"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "filter",
+                  "pagination"
+                ],
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "properties": {
+                      "start_date": {
+                        "type": "string",
+                        "description": "Start date for fetching settlement recon details",
+                        "format": "date"
+                      },
+                      "end_date": {
+                        "type": "string",
+                        "description": "End date for fetching settlement recon details",
+                        "format": "date"
+                      },
+                      "cf_ica_settlement_ids": {
+                        "type": "array",
+                        "description": "List of ICA Settlement IDs for fetching related recon events",
+                        "items": {
+                          "type": "integer",
+                          "format": "int32"
+                        }
+                      },
+                      "settlement_utrs": {
+                        "type": "array",
+                        "description": "List of ICA Settlement UTRs for fetching corresponding recon events",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "pagination": {
+                    "type": "object",
+                    "properties": {
+                      "limit": {
+                        "type": "integer",
+                        "description": "Limit on number of entries to fetch",
+                        "format": "int64"
+                      },
+                      "cursor": {
+                        "type": "string",
+                        "description": "Cursor from which entries to be fetched"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": "{\n    \"cursor\": null,\n    \"limit\": 3,\n    \"data\": [\n        {\n            \"event_id\": \"14934603727\",\n            \"entity\": \"recon\",\n            \"event_type\": \"PAYMENT\",\n            \"sale_type\": \"CREDIT\",\n            \"event_time\": \"2024-06-17T23:28:19+05:30\",\n            \"event_settlement_amount\": null,\n            \"event_amount\": 10000.0000,\n            \"event_status\": \"SUCCESS\",\n            \"event_currency\": \"INR\",\n            \"order_id\": \"da34745f-70e9-4c9b-9dcd-1c7aed01b7a6\",\n            \"customer_name\": \"Rachit\",\n            \"customer_phone\": \"9101496247\",\n            \"customer_email\": \"sk729485@gmail.com\",\n            \"cf_payment_id\": null,\n            \"payment_amount\": null,\n            \"order_amount\": 10000.0000,\n            \"payment_time\": null,\n            \"payment_service_charge\": null,\n            \"payment_service_tax\": null,\n            \"payment_utr\": \"123\",\n            \"cf_ica_settlement_id\": null,\n            \"vendor_commission\": null,\n            \"split_service_charge\": null,\n            \"split_service_tax\": null,\n            \"settlement_utr\": null,\n            \"refund_note\": null,\n            \"refund_id\": null,\n            \"refund_arn\": null,\n            \"refund_processed_at\": null,\n            \"closed_in_favor_of\": null,\n            \"resolved_on\": null,\n            \"dispute_category\": null,\n            \"dispute_note\": null,\n            \"dispute_resolved_on\": null,\n            \"adjustment_remarks\": null,\n            \"adjustment\": null,\n            \"service_tax\": null,\n            \"service_charge\": null,\n            \"amount_settled\": null,\n            \"payment_from\": null,\n            \"payment_till\": null,\n            \"reason\": null,\n            \"settlement_initiated_on\": null,\n            \"settlement_settled_on\": null,\n            \"settlement_type\": null,\n            \"settlement_charge\": null,\n            \"settlement_tax\": null,\n            \"payment_group\": \"UPI\",\n            \"remarks\": null\n        },\n        {\n            \"event_id\": \"1319338170\",\n            \"entity\": \"recon\",\n            \"event_type\": \"REFUND\",\n            \"sale_type\": \"DEBIT\",\n            \"event_time\": \"2024-08-05T14:00:49+05:30\",\n            \"event_settlement_amount\": 10000.0000,\n            \"event_amount\": 10000.0000,\n            \"event_status\": \"SUCCESS\",\n            \"event_currency\": \"INR\",\n            \"order_id\": \"da34745f-70e9-4c9b-9dcd-1c7aed01b7a6\",\n            \"customer_name\": \"Rachit\",\n            \"customer_phone\": \"9101496247\",\n            \"customer_email\": \"sk729485@gmail.com\",\n            \"cf_payment_id\": 14934603727,\n            \"payment_amount\": 10000.0000,\n            \"order_amount\": 10000.0000,\n            \"payment_time\": \"2024-06-17T23:28:19+05:30\",\n            \"payment_service_charge\": null,\n            \"payment_service_tax\": null,\n            \"payment_utr\": \"123\",\n            \"cf_ica_settlement_id\": 8,\n            \"vendor_commission\": null,\n            \"split_service_charge\": null,\n            \"split_service_tax\": null,\n            \"settlement_utr\": null,\n            \"refund_note\": \"\",\n            \"refund_id\": \"REF_73afb145-aac1-45b6-b634-c3cf72cdaefc\",\n            \"refund_arn\": \"Test_ARN\",\n            \"refund_processed_at\": \"2024-08-05T14:00:49+05:30\",\n            \"closed_in_favor_of\": null,\n            \"resolved_on\": null,\n            \"dispute_category\": null,\n            \"dispute_note\": null,\n            \"dispute_resolved_on\": null,\n            \"adjustment_remarks\": null,\n            \"adjustment\": null,\n            \"service_tax\": null,\n            \"service_charge\": null,\n            \"amount_settled\": null,\n            \"payment_from\": null,\n            \"payment_till\": null,\n            \"reason\": null,\n            \"settlement_initiated_on\": null,\n            \"settlement_settled_on\": null,\n            \"settlement_type\": null,\n            \"settlement_charge\": null,\n            \"settlement_tax\": null,\n            \"payment_group\": null,\n            \"remarks\": null\n        },\n        {\n            \"event_id\": \"5114910810523\",\n            \"entity\": \"recon\",\n            \"event_type\": \"PAYMENT\",\n            \"sale_type\": \"CREDIT\",\n            \"event_time\": \"2024-08-02T13:32:27+05:30\",\n            \"event_settlement_amount\": 49856.5800,\n            \"event_amount\": 51000.0000,\n            \"event_status\": \"SUCCESS\",\n            \"event_currency\": \"INR\",\n            \"order_id\": \"6f9db742-e423-40ed-afee-2e7898b98c9e\",\n            \"customer_name\": \"Rachit\",\n            \"customer_phone\": \"9101496247\",\n            \"customer_email\": \"sk729485@gmail.com\",\n            \"cf_payment_id\": null,\n            \"payment_amount\": null,\n            \"order_amount\": 51000.0000,\n            \"payment_time\": null,\n            \"payment_service_charge\": 969.0000,\n            \"payment_service_tax\": 174.4200,\n            \"payment_utr\": \"123\",\n            \"cf_ica_settlement_id\": 7,\n            \"vendor_commission\": 0.0000,\n            \"split_service_charge\": 0.0000,\n            \"split_service_tax\": 0.0000,\n            \"settlement_utr\": null,\n            \"refund_note\": null,\n            \"refund_id\": null,\n            \"refund_arn\": null,\n            \"refund_processed_at\": null,\n            \"closed_in_favor_of\": null,\n            \"resolved_on\": null,\n            \"dispute_category\": null,\n            \"dispute_note\": null,\n            \"dispute_resolved_on\": null,\n            \"adjustment_remarks\": null,\n            \"adjustment\": null,\n            \"service_tax\": null,\n            \"service_charge\": null,\n            \"amount_settled\": null,\n            \"payment_from\": null,\n            \"payment_till\": null,\n            \"reason\": null,\n            \"settlement_initiated_on\": null,\n            \"settlement_settled_on\": null,\n            \"settlement_type\": null,\n            \"settlement_charge\": null,\n            \"settlement_tax\": null,\n            \"payment_group\": \"UPI\",\n            \"remarks\": null\n        }\n    ]\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cursor": {},
+                    "limit": {
+                      "type": "integer",
+                      "example": 3,
+                      "default": 0
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event_id": {
+                            "type": "string",
+                            "example": "14934603727"
+                          },
+                          "entity": {
+                            "type": "string",
+                            "example": "recon"
+                          },
+                          "event_type": {
+                            "type": "string",
+                            "example": "PAYMENT"
+                          },
+                          "sale_type": {
+                            "type": "string",
+                            "example": "CREDIT"
+                          },
+                          "event_time": {
+                            "type": "string",
+                            "example": "2024-06-17T23:28:19+05:30"
+                          },
+                          "event_settlement_amount": {},
+                          "event_amount": {
+                            "type": "integer",
+                            "example": 10000,
+                            "default": 0
+                          },
+                          "event_status": {
+                            "type": "string",
+                            "example": "SUCCESS"
+                          },
+                          "event_currency": {
+                            "type": "string",
+                            "example": "INR"
+                          },
+                          "order_id": {
+                            "type": "string",
+                            "example": "da34745f-70e9-4c9b-9dcd-1c7aed01b7a6"
+                          },
+                          "customer_name": {
+                            "type": "string",
+                            "example": "Rachit"
+                          },
+                          "customer_phone": {
+                            "type": "string",
+                            "example": "9101496247"
+                          },
+                          "customer_email": {
+                            "type": "string",
+                            "example": "sk729485@gmail.com"
+                          },
+                          "cf_payment_id": {},
+                          "payment_amount": {},
+                          "order_amount": {
+                            "type": "integer",
+                            "example": 10000,
+                            "default": 0
+                          },
+                          "payment_time": {},
+                          "payment_service_charge": {},
+                          "payment_service_tax": {},
+                          "payment_utr": {
+                            "type": "string",
+                            "example": "123"
+                          },
+                          "cf_ica_settlement_id": {},
+                          "vendor_commission": {},
+                          "split_service_charge": {},
+                          "split_service_tax": {},
+                          "settlement_utr": {},
+                          "refund_note": {},
+                          "refund_id": {},
+                          "refund_arn": {},
+                          "refund_processed_at": {},
+                          "closed_in_favor_of": {},
+                          "resolved_on": {},
+                          "dispute_category": {},
+                          "dispute_note": {},
+                          "dispute_resolved_on": {},
+                          "adjustment_remarks": {},
+                          "adjustment": {},
+                          "service_tax": {},
+                          "service_charge": {},
+                          "amount_settled": {},
+                          "payment_from": {},
+                          "payment_till": {},
+                          "reason": {},
+                          "settlement_initiated_on": {},
+                          "settlement_settled_on": {},
+                          "settlement_type": {},
+                          "settlement_charge": {},
+                          "settlement_tax": {},
+                          "payment_group": {
+                            "type": "string",
+                            "example": "UPI"
+                          },
+                          "remarks": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{\n    \"type\": \"authentication_error\",\n    \"message\": \"authentication Failed\",\n    \"code\": \"request_failed\"\n}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "authentication_error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "authentication Failed"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "request_failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

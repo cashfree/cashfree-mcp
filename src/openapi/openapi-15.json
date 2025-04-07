@@ -1,0 +1,1371 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "2023-01-01",
+    "title": "Merchant Onboarding APIs"
+  },
+  "servers": [
+    {
+      "url": "https://api-sandbox.cashfree.com/partners",
+      "description": "Sandbox server"
+    },
+    {
+      "url": "https://api.cashfree.com/partners",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/merchants": {
+      "post": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Create Merchant",
+        "description": "Use this API to create a sub-merchant account. You can provide additional basic details. KYC documents are then required to activate the account.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMerchantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantResponseEntity"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Partner API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Merchant account with email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyExistsError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any bad or invalid request will lead to following error object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/{merchant_id}": {
+      "patch": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Update Merchant",
+        "description": "Use this API to update a sub-merchant account. You can provide basic details only if the account is not yet active.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          },
+          {
+            "in": "path",
+            "name": "merchant_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the merchant"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMerchantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantResponseEntity"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Partner API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid Merchant ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidMerchantError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product is already active for the merchant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyActiveError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any bad or invalid request will lead to following error object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Get Merchant Status",
+        "description": "Use this API to get Merchant onboarding details by for the sub-merchant account.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          },
+          {
+            "in": "path",
+            "name": "merchant_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the merchant"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantResponseEntity"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Partner API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid Merchant ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidMerchantError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product is already active for the merchant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyActiveError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any bad or invalid request will lead to following error object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/{merchant_id}/documents": {
+      "post": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Upload Documents",
+        "description": "Use this API to upload KYC Documents for merchants",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          },
+          {
+            "in": "path",
+            "name": "merchant_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the merchant"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "document_type": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDocumentResponseEntity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid File Format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidFileFormatError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Partner API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid Merchant ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidMerchantError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product is already active for the merchant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyActiveError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any bad or invalid request will lead to following error object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/{merchant_id}/onboarding_link": {
+      "post": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Create Embeddable Onboarding Link (does not require login)",
+        "description": "Use this API to create a pre-built onboarding link for the sub-merchant account. Embed within your platform and Merchant can fill their KYC per compliance. Link will only be active for 1 hour.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          },
+          {
+            "in": "path",
+            "name": "merchant_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the merchant"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "type": "account_onboarding",
+                  "return_url": "https://b8af79f41056.eu.ngrok.io?key1=value1"
+                },
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Value should be \"account_onboarding\""
+                  },
+                  "return_url": {
+                    "type": "string",
+                    "description": "The URL to which user will be redirected to after KYC is submitted"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "created_at": "2023-07-24T12:24:44+0530",
+                    "expires_at": "2023-07-24T13:24:44+0530",
+                    "onboarding_link": "https://merchant.cashfree.com/merchantwebapp/validate/..token..?goto=onboarding"
+                  },
+                  "properties": {
+                    "created_at": {
+                      "type": "string",
+                      "description": "Timestamp when onboarding link was created"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "description": "Timestamp when onboarding link will expire"
+                    },
+                    "onboarding_link": {
+                      "type": "string",
+                      "description": "URL for onboarding link. Embed this within your platform."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Partner API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid Merchant ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidMerchantError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product is already active for the merchant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyActiveError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any bad or invalid request will lead to following error object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/{merchant_id}/onboarding_link/standard": {
+      "post": {
+        "tags": [
+          "Merchant Onboarding"
+        ],
+        "summary": "Create Standard Onboarding Link (with login required by merchant)",
+        "description": "Use this API to create a pre-built onboarding link for the sub-merchant account. Share with sub-merchant and Merchant can fill their KYC per compliance. Merchant needs to login using Cashfree password or OTP received on registered email.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiKeyHeader"
+          },
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          },
+          {
+            "in": "path",
+            "name": "merchant_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the merchant"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "type": "account_onboarding",
+                  "return_url": "https://b8af79f41056.eu.ngrok.io?key1=value1"
+                },
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Value should be \"account_onboarding\""
+                  },
+                  "return_url": {
+                    "type": "string",
+                    "description": "The URL to which user will be redirected to after KYC is submitted"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "created_at": "2023-07-24T12:24:44+0530",
+                    "onboarding_link": "https://merchant.cashfree.com/onboarding/login/?token=..token.."
+                  },
+                  "properties": {
+                    "created_at": {
+                      "type": "string",
+                      "description": "Timestamp when onboarding link was created"
+                    },
+                    "onboarding_link": {
+                      "type": "string",
+                      "description": "URL for onboarding link. Share this with your merchant."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Partner API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid Merchant ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidMerchantError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Product is already active for the merchant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyActiveError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any bad or invalid request will lead to following error object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "apiKeyHeader": {
+        "in": "header",
+        "name": "x-partner-apikey",
+        "required": true,
+        "schema": {
+          "description": "Partner API Key",
+          "type": "string"
+        }
+      },
+      "apiVersionHeader": {
+        "in": "header",
+        "name": "x-api-version",
+        "schema": {
+          "type": "string",
+          "description": "API version to be used",
+          "default": "2023-01-01"
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "title": "ErrorResponse",
+        "example": {
+          "message": "bad URL, please check API documentation",
+          "code": "request_failed",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "AuthenticationError": {
+        "title": "AuthenticationError",
+        "example": {
+          "message": "Invalid authentication credentials",
+          "code": "failed_authentication",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "AlreadyActiveError": {
+        "title": "AlreadyActiveError",
+        "example": {
+          "message": "Product is already active for the merchant",
+          "code": "merchant_product_is_active",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "InvalidMerchantError": {
+        "title": "InvalidMerchantError",
+        "example": {
+          "message": "Merchant not found or linked to partner",
+          "code": "partner_connect_not_found",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "AlreadyExistsError": {
+        "title": "AlreadyExistsError",
+        "example": {
+          "message": "Merchant with same id or email already exists",
+          "code": "merchant_already_exists",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "MerchantResponseEntity": {
+        "title": "MerchantResponseEntity",
+        "type": "object",
+        "example": {
+          "merchant_id": "test_merchantid_1",
+          "merchant_email": "john@cashfree.com",
+          "merchant_name": "John Doe Business",
+          "created_at": "2023-07-24T04:45:20.000Z",
+          "onboarding_status": "Email Verified",
+          "product_status": [
+            {
+              "product_name": "PG",
+              "product_min_kyc_status": "MIN_KYC_PENDING"
+            }
+          ]
+        },
+        "properties": {
+          "merchant_id": {
+            "type": "string",
+            "description": "Unique identifier for the merchant. Max 40 characters, Alphanumeric, Hypeh, Underscore allowed."
+          },
+          "merchant_email": {
+            "type": "string",
+            "description": "Registered email address"
+          },
+          "merchant_name": {
+            "type": "string",
+            "description": "Business brand name"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Timestamp when merchant account was created"
+          },
+          "onboarding_status": {
+            "type": "string",
+            "description": "Merchant account onboarding status- \"Created\": Email is not verified, \"Email Verified\": Email is verified"
+          },
+          "product_status": {
+            "type": "array",
+            "description": "List of Product KYC Status {\"product_name\": \"PG\",\"product_min_kyc_status\": \"MIN_KYC_PENDING\"}",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_name": {
+                  "type": "string",
+                  "description": "Product requested for Merchant"
+                },
+                "product_min_kyc_status": {
+                  "type": "string",
+                  "description": "KYC status for the product. One of [\"MIN_KYC_PENDING\",\"MIN_KYC_SUBMITTED\",\"MIN_KYC_APPROVED\",\"MIN_KYC_REJECTED\"]"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateMerchantRequest": {
+        "title": "CreateMerchantRequest",
+        "type": "object",
+        "example": {
+          "merchant_id": "test_merchantid_1",
+          "merchant_email": "john@cashfree.com",
+          "merchant_name": "John Doe Business",
+          "poc_phone": "9999999999",
+          "merchant_site_url": "cashfree.com",
+          "business_details": {
+            "business_legal_name": "John Doe Company",
+            "business_type": "Private Limited",
+            "business_model": "Both",
+            "business_category": "Ecommerce",
+            "business_subcategory": "Books",
+            "business_pan": "ABCCD8000T",
+            "business_address": "Flat-101, Apartment Name, Street Name",
+            "business_city": "Bengaluru",
+            "business_state": "Karnataka",
+            "business_postalcode": "560076",
+            "business_country": "India",
+            "business_gstin": "29AAICP2912R1ZR",
+            "business_cin": "L65190MH2003PLC143249"
+          },
+          "website_details": {
+            "website_contact_us": "https://www.cashfree.com/",
+            "website_privacy_policy": "https://www.cashfree.com/privacypolicy/",
+            "website_refund_policy": "https://www.cashfree.com/policies/refund-policy",
+            "website_shop_delivery": "https://www.cashfree.com/policies/shipping-policy",
+            "website_checkout_page": "https://www.cashfree.com/",
+            "website_about_us": "https://www.cashfree.com/about-us/",
+            "website_pricing_policy": "https://www.cashfree.com/payment-gateway-charges/",
+            "website_product_service": "https://www.cashfree.com/payment-gateway-india/",
+            "website_address": "https://www.cashfree.com/grievance-redressal-policy",
+            "website_tnc": "https://www.cashfree.com/tnc/"
+          },
+          "bank_account_details": {
+            "bank_account_number": "026291800001191",
+            "bank_ifsc": "YESB0000262"
+          },
+          "signatory_details": {
+            "signatory_name": "John Doe",
+            "signatory_pan": "ABCPV1234D"
+          },
+          "additional_details": {
+            "payment_gateway_use_case": "Payment Gateway required for collecting money from customers for purchasing books",
+            "payment_gateway_mcc": "5942",
+            "exporter_type": "Service Exporter",
+            "gcl_purpose_code": "P0101",
+            "import_export_code": 123456789,
+            "gcl_transaction_value": "1 - 5 Lac",
+            "gcl_transaction_volume": "1 - 5",
+            "gcl_use_case": "lorem ipsum dolar cimat lorem ipsum dolar cimat lorem ipsum dolar cimat lorem"
+          }
+        },
+        "required": [
+          "merchant_id",
+          "merchant_email",
+          "merchant_name",
+          "poc_phone",
+          "merchant_site_url"
+        ],
+        "properties": {
+          "merchant_id": {
+            "type": "string",
+            "description": "Unique identifier for the merchant. Max 40 characters, Alphanumeric, Hypeh, Underscore allowed."
+          },
+          "merchant_email": {
+            "type": "string",
+            "description": "Registered email address"
+          },
+          "merchant_name": {
+            "type": "string",
+            "description": "Business brand name"
+          },
+          "poc_phone": {
+            "type": "string",
+            "description": "Owner phone number"
+          },
+          "merchant_site_url": {
+            "type": "string",
+            "description": "Business website"
+          },
+          "business_details": {
+            "type": "object",
+            "required": [
+              "business_legal_name",
+              "business_type",
+              "business_model"
+            ],
+            "properties": {
+              "business_legal_name": {
+                "type": "string",
+                "description": "Registered name of business"
+              },
+              "business_type": {
+                "type": "string",
+                "description": "Entity Type. One of [\"Individual\",\"Proprietorship\",\"LLP\",\"Partnership\",\"Private Limited\",\"Public Limited\",\"Trust\",\"Society\",\"NGO\",\"Hindu Undivided Family (HUF)\",\"Association of Persons (AOP)\",\"Body of Individuals (BOI)\",\"Local Authority\",\"Artificial Juridical Person\",\"Government\"]"
+              },
+              "business_model": {
+                "type": "string",
+                "description": "Business Model. One of [\"B2C\",\"B2B\",\"Both\"]"
+              },
+              "business_category": {
+                "type": "string",
+                "description": "Business Category. One from master sheet - https://bit.ly/ObCategory"
+              },
+              "business_subcategory": {
+                "type": "string",
+                "description": "Business Subcategory. One from master sheet - https://bit.ly/ObSubcategory"
+              },
+              "business_pan": {
+                "type": "string",
+                "description": "Business PAN. If Individual, provide Personal PAN"
+              },
+              "business_address": {
+                "type": "string",
+                "description": "Business Address"
+              },
+              "business_city": {
+                "type": "string",
+                "description": "Business CIty"
+              },
+              "business_state": {
+                "type": "string",
+                "description": "Business State"
+              },
+              "business_postalcode": {
+                "type": "string",
+                "description": "Business Pincode"
+              },
+              "business_country": {
+                "type": "string",
+                "description": "Business Country"
+              },
+              "business_gstin": {
+                "type": "string",
+                "description": "Business GSTIN. Skip for unregistered businesses"
+              },
+              "business_non_gst_declaration": {
+                "type": "string",
+                "description": "For unregistered or GST exempt businesses. Value can be either \"My business category is exempted from GST\" or \"My annual turnover is less than GST prescribed limit\""
+              },
+              "business_cin": {
+                "type": "string",
+                "description": "Business CIN. Provide for Private and Public Limited entities"
+              },
+              "business_llpin": {
+                "type": "string",
+                "description": "Business LLPIN. Provide for LLP and Partnership entities"
+              }
+            }
+          },
+          "website_details": {
+            "type": "object",
+            "properties": {
+              "website_contact_us": {
+                "type": "string",
+                "description": "Website url where Email, Contact number, or Contact Us form is available"
+              },
+              "website_tnc": {
+                "type": "string",
+                "description": "Website url where Terms & Conditions are available"
+              },
+              "website_privacy_policy": {
+                "type": "string",
+                "description": "Website url where Privacy, Data Storage & Security Policy is available"
+              },
+              "website_refund_policy": {
+                "type": "string",
+                "description": "Website url where Refund (with request timeline) & Cancellation Policy is available"
+              },
+              "website_shop_delivery": {
+                "type": "string",
+                "description": "If applicable, Website url where Shipping and Delivery policy with charges and timeline is available"
+              },
+              "website_checkout_page": {
+                "type": "string",
+                "description": "Website url where product, cart and checkout flow is available"
+              },
+              "website_about_us": {
+                "type": "string",
+                "description": "Website url where company legal name and description of business is available"
+              },
+              "website_pricing_policy": {
+                "type": "string",
+                "description": "Website url where product pricing in INR, Rs., etc. is available"
+              },
+              "website_product_service": {
+                "type": "string",
+                "description": "Website url mentioning Products or Services, with their pricing and images"
+              },
+              "website_address": {
+                "type": "string",
+                "description": "Website url where registered address of the business is mentioned"
+              }
+            }
+          },
+          "bank_account_details": {
+            "type": "object",
+            "description": "Bank account to receive settlements",
+            "properties": {
+              "bank_account_number": {
+                "type": "string",
+                "description": "Bank Account Number"
+              },
+              "bank_ifsc": {
+                "type": "string",
+                "description": "Bank IFSC"
+              }
+            }
+          },
+          "signatory_details": {
+            "type": "object",
+            "description": "Beneficial Owner of the Business",
+            "required": [
+              "signatory_name"
+            ],
+            "properties": {
+              "signatory_name": {
+                "type": "string",
+                "description": "Beneficial Owner Name"
+              },
+              "signatory_pan": {
+                "type": "string",
+                "description": "Beneficial Owner PAN"
+              }
+            }
+          },
+          "additional_details": {
+            "type": "object",
+            "description": "Pass additional details required by specific products",
+            "properties": {
+              "payment_gateway_use_case": {
+                "type": "string",
+                "description": "Purpose of collecting payments. Min 50 characters and Max 200 characters"
+              },
+              "payment_gateway_mcc": {
+                "type": "string",
+                "description": "Merchant Category Code (MCC)"
+              },
+              "exporter_type": {
+                "type": "string",
+                "description": "Entity Type. One of [\"Service Exporter\", \"Goods Exporter\"]"
+              },
+              "gcl_purpose_code": {
+                "type": "string",
+                "description": "Pass 'Purpose Code' value, refer to this https://docs.cashfree.com/v3/reference/purpose-codes"
+              },
+              "import_export_code": {
+                "type": "string",
+                "description": "Send 10 digit value of Import-Export Code, only applicable for Goods"
+              },
+              "gcl_transaction_value": {
+                "type": "string",
+                "description": "Entity Type. One of ['Less than 1 Lac', '1 - 5 Lac', '5 - 10 Lac', '10 - 15 Lac', '15 - 25 Lac', '25 Lac & above']"
+              },
+              "gcl_transaction_volume": {
+                "type": "string",
+                "description": "Entity Type. One of ['1 - 50', '50 - 100', '100 - 1000', '1000 - 3000', '3000 & above']"
+              },
+              "gcl_use_case": {
+                "type": "string",
+                "description": "Elaborate on how you will you global collection. Please also include customer type"
+              }
+            }
+          }
+        }
+      },
+      "UpdateMerchantRequest": {
+        "title": "UpdateMerchantRequest",
+        "example": {
+          "merchant_name": "John Doe Business",
+          "poc_phone": "9999999999",
+          "merchant_site_url": "cashfree.com",
+          "business_details": {
+            "business_legal_name": "John Doe Company",
+            "business_type": "Private Limited",
+            "business_model": "Both",
+            "business_category": "Ecommerce",
+            "business_subcategory": "Books",
+            "business_pan": "ABCCD8000T",
+            "business_address": "Flat-101, Apartment Name, Street Name",
+            "business_city": "Bengaluru",
+            "business_state": "Karnataka",
+            "business_postalcode": "560076",
+            "business_country": "India",
+            "business_gstin": "29AAICP2912R1ZR",
+            "business_cin": "L65190MH2003PLC143249"
+          },
+          "website_details": {
+            "website_contact_us": "https://www.cashfree.com/",
+            "website_privacy_policy": "https://www.cashfree.com/privacypolicy/",
+            "website_refund_policy": "https://www.cashfree.com/policies/refund-policy",
+            "website_shop_delivery": "https://www.cashfree.com/policies/shipping-policy",
+            "website_checkout_page": "https://www.cashfree.com/",
+            "website_about_us": "https://www.cashfree.com/about-us/",
+            "website_pricing_policy": "https://www.cashfree.com/payment-gateway-charges/",
+            "website_product_service": "https://www.cashfree.com/payment-gateway-india/",
+            "website_address": "https://www.cashfree.com/grievance-redressal-policy",
+            "website_tnc": "https://www.cashfree.com/tnc/"
+          },
+          "bank_account_details": {
+            "bank_account_number": "026291800001191",
+            "bank_ifsc": "YESB0000262"
+          },
+          "signatory_details": {
+            "signatory_name": "John Doe",
+            "signatory_pan": "ABCPV1234D"
+          },
+          "additional_details": {
+            "payment_gateway_use_case": "Payment Gateway required for collecting money from customers for purchasing books",
+            "payment_gateway_mcc": "5942",
+            "exporter_type": "Service Exporter",
+            "gcl_purpose_code": "P0101",
+            "import_export_code": 123456789,
+            "gcl_transaction_value": "1 - 5 Lac",
+            "gcl_transaction_volume": "1 - 5",
+            "gcl_use_case": "lorem ipsum dolar cimat lorem ipsum dolar cimat lorem ipsum dolar cimat lorem"
+          }
+        },
+        "properties": {
+          "merchant_name": {
+            "type": "string",
+            "description": "Business brand name"
+          },
+          "poc_phone": {
+            "type": "string",
+            "description": "Owner phone number"
+          },
+          "merchant_site_url": {
+            "type": "string",
+            "description": "Business website"
+          },
+          "business_details": {
+            "type": "object",
+            "properties": {
+              "business_legal_name": {
+                "type": "string",
+                "description": "Registered name of business"
+              },
+              "business_type": {
+                "type": "string",
+                "description": "Entity Type. One of [\"Individual\",\"Proprietorship\",\"LLP\",\"Partnership\",\"Private Limited\",\"Public Limited\",\"Trust\",\"Society\",\"NGO\",\"Hindu Undivided Family (HUF)\",\"Association of Persons (AOP)\",\"Body of Individuals (BOI)\",\"Local Authority\",\"Artificial Juridical Person\",\"Government\"]"
+              },
+              "business_model": {
+                "type": "string",
+                "description": "Business Model. One of [\"B2C\",\"B2B\",\"Both\"]"
+              },
+              "business_category": {
+                "type": "string",
+                "description": "Business Category. One from master sheet - https://bit.ly/ObCategory"
+              },
+              "business_subcategory": {
+                "type": "string",
+                "description": "Business Subcategory. One from master sheet - https://bit.ly/ObSubcategory"
+              },
+              "business_pan": {
+                "type": "string",
+                "description": "Business PAN. If Individual, provide Personal PAN"
+              },
+              "business_address": {
+                "type": "string",
+                "description": "Business Address"
+              },
+              "business_city": {
+                "type": "string",
+                "description": "Business CIty"
+              },
+              "business_state": {
+                "type": "string",
+                "description": "Business State"
+              },
+              "business_postalcode": {
+                "type": "string",
+                "description": "Business Pincode"
+              },
+              "business_country": {
+                "type": "string",
+                "description": "Business Country"
+              },
+              "business_gstin": {
+                "type": "string",
+                "description": "Business GSTIN. Skip for unregistered businesses"
+              },
+              "business_non_gst_declaration": {
+                "type": "string",
+                "description": "For unregistered or GST exempt businesses. Value can be either \"My business category is exempted from GST\" or \"My annual turnover is less than GST prescribed limit\""
+              },
+              "business_cin": {
+                "type": "string",
+                "description": "Business CIN. Provide for Private and Public Limited entities"
+              },
+              "business_llpin": {
+                "type": "string",
+                "description": "Business LLPIN. Provide for LLP and Partnership entities"
+              }
+            }
+          },
+          "website_details": {
+            "type": "object",
+            "properties": {
+              "website_contact_us": {
+                "type": "string",
+                "description": "Website url where Email, Contact number, or Contact Us form is available"
+              },
+              "website_tnc": {
+                "type": "string",
+                "description": "Website url where Terms & Conditions are available"
+              },
+              "website_privacy_policy": {
+                "type": "string",
+                "description": "Website url where Privacy, Data Storage & Security Policy is available"
+              },
+              "website_refund_policy": {
+                "type": "string",
+                "description": "Website url where Refund (with request timeline) & Cancellation Policy is available"
+              },
+              "website_shop_delivery": {
+                "type": "string",
+                "description": "If applicable, Website url where Shipping and Delivery policy with charges and timeline is available"
+              },
+              "website_checkout_page": {
+                "type": "string",
+                "description": "Website url where product, cart and checkout flow is available"
+              },
+              "website_about_us": {
+                "type": "string",
+                "description": "Website url where company legal name and description of business is available"
+              },
+              "website_pricing_policy": {
+                "type": "string",
+                "description": "Website url where product pricing in INR, Rs., etc. is available"
+              },
+              "website_product_service": {
+                "type": "string",
+                "description": "Website url mentioning Products or Services, with their pricing and images"
+              },
+              "website_address": {
+                "type": "string",
+                "description": "Website url where registered address of the business is mentioned"
+              }
+            }
+          },
+          "bank_account_details": {
+            "type": "object",
+            "description": "Bank account to receive settlements",
+            "properties": {
+              "bank_account_number": {
+                "type": "string",
+                "description": "Bank Account Number"
+              },
+              "bank_ifsc": {
+                "type": "string",
+                "description": "Bank IFSC"
+              }
+            }
+          },
+          "signatory_details": {
+            "type": "object",
+            "description": "Beneficial Owner of the Business",
+            "required": [
+              "signatory_name"
+            ],
+            "properties": {
+              "signatory_name": {
+                "type": "string",
+                "description": "Beneficial Owner Name"
+              },
+              "signatory_pan": {
+                "type": "string",
+                "description": "Beneficial Owner PAN"
+              }
+            }
+          },
+          "additional_details": {
+            "type": "object",
+            "description": "Pass additional details required by specific products",
+            "properties": {
+              "payment_gateway_use_case": {
+                "type": "string",
+                "description": "Purpose of collecting payments. Min 50 characters and Max 200 characters"
+              },
+              "payment_gateway_mcc": {
+                "type": "string",
+                "description": "Merchant Category Code (MCC)"
+              },
+              "exporter_type": {
+                "type": "string",
+                "description": "Entity Type. One of [\"Service Exporter\", \"Goods Exporter\"]"
+              },
+              "gcl_purpose_code": {
+                "type": "string",
+                "description": "Pass 'Purpose Code' value, refer to this https://docs.cashfree.com/v3/reference/purpose-codes"
+              },
+              "import_export_code": {
+                "type": "string",
+                "description": "Send 10 digit value of Import-Export Code, only applicable for Goods"
+              },
+              "gcl_transaction_value": {
+                "type": "string",
+                "description": "Entity Type. One of ['Less than 1 Lac', '1 - 5 Lac', '5 - 10 Lac', '10 - 15 Lac', '15 - 25 Lac', '25 Lac & above']"
+              },
+              "gcl_transaction_volume": {
+                "type": "string",
+                "description": "Entity Type. One of ['1 - 50', '50 - 100', '100 - 1000', '1000 - 3000', '3000 & above']"
+              },
+              "gcl_use_case": {
+                "type": "string",
+                "description": "Elaborate on how you will you global collection. Please also include customer type"
+              }
+            }
+          }
+        }
+      },
+      "UploadDocumentResponseEntity": {
+        "title": "Upload Document Success Response",
+        "example": {
+          "document_type": "bank_statement",
+          "uploaded_on": "2006-01-02T15:04:05-0700"
+        },
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "description": "Enter the valid document type as given"
+          },
+          "uploaded_on": {
+            "type": "string",
+            "description": "time when document was uploaded"
+          }
+        }
+      },
+      "DocumentAlreadyApprovedError": {
+        "title": "DocumentAlreadyApprovedError",
+        "example": {
+          "message": "Document is already approved for the merchant",
+          "code": "merchant_document_is_approved",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "InvalidFileFormatError": {
+        "title": "InvalidFileFormatError",
+        "example": {
+          "message": "Invalid file format. Allowed formats are jpeg, png, pdf",
+          "code": "invalid_document_format",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      },
+      "InvalidDocumentTypeError": {
+        "title": "InvalidDocumentTypeError",
+        "example": {
+          "message": "Invalid Document Type",
+          "code": "invalid_document_type",
+          "type": "invalid_request_error"
+        },
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "invalid_request_error"
+          }
+        }
+      }
+    }
+  }
+}

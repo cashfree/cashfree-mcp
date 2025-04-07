@@ -1,0 +1,1201 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Bank Account Verification",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "servers": [
+    {
+      "url": "https://payout-api.cashfree.com"
+    }
+  ],
+  "paths": {
+    "/payout/v1.2/validation/bankDetails": {
+      "get": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "Bank Verification Sync V1.2",
+        "description": "Use this API to validate the given bank account number and IFSC. This is a sync verification request.",
+        "operationId": "bankVerificationSyncV1.2",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "It is the bank account holder's name for who you want to verify the bank details (100 character limit).",
+            "schema": {
+              "type": "string",
+              "example": "Jane"
+            }
+          },
+          {
+            "name": "bankAccount",
+            "in": "query",
+            "required": true,
+            "description": "It is the bank account number to be validated (6 to 40 character limit).",
+            "schema": {
+              "type": "string",
+              "example": "02014457596969"
+            }
+          },
+          {
+            "name": "ifsc",
+            "in": "query",
+            "required": true,
+            "description": "The IFSC information of the bank account to be validated. It should be an alphanumeric value of 11 characters. The first 4 characters should be alphabets, the 5th character should be a 0, and the remaining 6 characters should be numerals.",
+            "schema": {
+              "type": "string",
+              "example": "CITI0000001"
+            }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "description": "It is the phone number of the bank account holder.",
+            "schema": {
+              "type": "string",
+              "example": "8349102770"
+            }
+          },
+          {
+            "name": "remarks",
+            "in": "query",
+            "description": "You can add custom remarks in the API request. These remarks will be visible in the customer's bank statement corresponding to the penny drop transaction. A maximum of 25 characters are allowed.",
+            "schema": {
+              "type": "string",
+              "example": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESSS"
+                    },
+                    "subCode": {
+                      "type": "number",
+                      "description": "It represents the subcode of the API request.",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "It represents the message of the API request.",
+                      "example": "Bank account details verified successfully"
+                    },
+                    "accountStatus": {
+                      "type": "string",
+                      "description": "It represents the status of the bank account.",
+                      "example": "VALID"
+                    },
+                    "accountStatusCode": {
+                      "type": "string",
+                      "description": "It represents the status code of the bank account.",
+                      "example": "ACCOUNT_IS_VALID"
+                    },
+                    "data": {
+                      "description": "It contains the bank account details.",
+                      "properties": {
+                        "nameAtBank": {
+                          "type": "number",
+                          "description": "It represents the name of the account holder as per the bank registration.",
+                          "example": "JOHN DOE"
+                        },
+                        "refId": {
+                          "type": "number",
+                          "description": "It represents the reference ID.",
+                          "example": 219834028
+                        },
+                        "bankName": {
+                          "type": "string",
+                          "description": "It represents the name of the bank where the account is active.",
+                          "example": "ICICI BANK LIMITED"
+                        },
+                        "utr": {
+                          "type": "number",
+                          "description": "It represents the UTR number.",
+                          "example": 210219578183
+                        },
+                        "city": {
+                          "type": "string",
+                          "description": "It represents the name of the city where the bank operates.",
+                          "example": "GWALIOR"
+                        },
+                        "branch": {
+                          "type": "string",
+                          "description": "It represents the branch name of the bank where the account is active.",
+                          "example": "GWALIOR"
+                        },
+                        "micr": {
+                          "type": "number",
+                          "description": "It represents the code used to identify banks and branches participating in the Electronic Clearing System (ECS).",
+                          "example": 0
+                        },
+                        "nameMatchScore": {
+                          "type": "string",
+                          "description": "It represents the percentage of the name match verification.",
+                          "example": 0
+                        },
+                        "nameMatchResult": {
+                          "type": "string",
+                          "description": "IT represents the result of the name match verification",
+                          "example": "NO_MATCH"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 403
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token is not valid"
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 403,
+                      "message": "Token is not valid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payout/v1/asyncValidation/bankDetails": {
+      "get": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "Bank Verification Async",
+        "description": "Use this API to validate the given bank account number and IFSC. This is an async verification request.",
+        "operationId": "bankVerificationAsync",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "It is the name of the account holder to be validated. Only alphanumeric and white spaces are accepted. A maximum of 100 characters are allowed.",
+            "schema": {
+              "type": "string",
+              "example": "Harshit"
+            }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "description": "It is the phone number of the bank account holder.",
+            "schema": {
+              "type": "string",
+              "example": "026291800001191"
+            }
+          },
+          {
+            "name": "bankAccount",
+            "in": "query",
+            "required": true,
+            "description": "It is the bank account number to be validated (6 to 40 character limit).",
+            "schema": {
+              "type": "string",
+              "example": "YESB0000262"
+            }
+          },
+          {
+            "name": "ifsc",
+            "in": "query",
+            "required": true,
+            "description": "The IFSC information of the bank account to be validated. It should be an alphanumeric value of 11 characters. The first 4 characters should be alphabets, the 5th character should be a 0, and the remaining 6 characters should be numerals.",
+            "schema": {
+              "type": "string",
+              "example": "8349102770"
+            }
+          },
+          {
+            "name": "remarks",
+            "in": "query",
+            "description": "You can add custom remarks in the API request. These remarks will be visible in the customer's bank statement corresponding to the penny drop transaction. A maximum of 25 characters are allowed.",
+            "schema": {
+              "type": "string",
+              "example": ""
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "It it the unique ID to identify the bank verification user. Only alphanumeric and underscore (_) are accepted. A maximum of 40 characters are allowed.",
+            "schema": {
+              "type": "string",
+              "example": "A1011"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESSS"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "description": "It represents the sub code of the API request.",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "It represents the message of the API request.",
+                      "example": "Validation request accepted successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "It contains the bank verification reference ID.",
+                      "properties": {
+                        "bvRefId": {
+                          "type": "number",
+                          "description": "It represents the bank verification reference ID.",
+                          "example": 1097292
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 422
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Please provide a valid IFSC code"
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 422,
+                      "message": "Please provide a valid IFSC code"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payout/v1/getValidationStatus/bank": {
+      "get": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "Get Verification Status",
+        "description": "Use this API to get the statuses of the bank validation request by providing the bvRefId or userId.",
+        "operationId": "getVerificationStatus",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bvRefId",
+            "in": "query",
+            "required": true,
+            "description": "It is the bank verification reference ID.",
+            "schema": {
+              "type": "string",
+              "example": "1628114"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "description": "It is the unique ID created to identify the bank verification user.",
+            "schema": {
+              "type": "string",
+              "example": "A1011"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESSS"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "description": "It represents the sub code of the API request.",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "It represents the message of the API request.",
+                      "example": "Bank account details verified successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "bvRefId": {
+                          "type": "number",
+                          "description": "It represents the bank verification reference ID.",
+                          "example": 123456
+                        },
+                        "nameAtBank": {
+                          "type": "string",
+                          "description": "It represents the name of the bank account holder as per the bank registration.",
+                          "example": "JOHN DOE"
+                        },
+                        "accountExists": {
+                          "type": "string",
+                          "description": "It represents the existence information of the bank account.",
+                          "example": "YES"
+                        },
+                        "bankAccount": {
+                          "type": "number",
+                          "description": "It represents the bank account number.",
+                          "example": 26291800001191
+                        },
+                        "ifsc": {
+                          "type": "string",
+                          "description": "It represents the IFSC information.",
+                          "example": "YESB0000262"
+                        },
+                        "utr": {
+                          "type": "number",
+                          "description": "It represents the UTR number.",
+                          "example": 12341234123
+                        },
+                        "nameMatchScore": {
+                          "type": "number",
+                          "description": "It represents the name match score.",
+                          "example": 100
+                        },
+                        "nameMatchResult": {
+                          "type": "string",
+                          "description": "It represents the result of the name match.",
+                          "example": "DIRECT_MATCH"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 422
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Either bvRefId or userId should be provided in the request"
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 422,
+                      "message": "Either bvRefId or userId should be provided in the request"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payout/v1/validation/upiDetails": {
+      "get": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "UPI Verification",
+        "description": "Use this API to verify if a given UPI handle exists. You will receive the customer name given at the bank in the response for valid UPIs.",
+        "operationId": "upiVerification",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "It is the name of the account to be validated. Only alphabets and white spaces are accepted. A maximum of 100 characters are allowed.",
+            "schema": {
+              "type": "string",
+              "example": "Harshit"
+            }
+          },
+          {
+            "name": "vpa",
+            "in": "query",
+            "required": true,
+            "description": "It is the VPA detail of the account to be validated. Only alphanumeric, period (.), hyphen (-), at sign (@) and underscore ( _ ) are accepted. A maximum of 100 characters are allowed. Note that underscore ( _ ) and period (.) get accepted before and after at sign (@), but hyphen (-) gets accepted only before the at sign (@)",
+            "schema": {
+              "type": "string",
+              "example": "success@upi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESSS"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "description": "It represents the sub code of the API request.",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "It represents the message of the API request.",
+                      "example": "Bank account details verified successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "It contains the UPI information.",
+                      "properties": {
+                        "nameAtBank": {
+                          "type": "string",
+                          "description": "It represents the name of the account holder as per the bank registration.",
+                          "example": "JOHN DOE"
+                        },
+                        "accountExists": {
+                          "type": "string",
+                          "description": "It represents the existence information of the account.",
+                          "example": "YES"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 422
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Please provide a valid Virtual Payee Address."
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 422,
+                      "message": "Please provide a valid Virtual Payee Address."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payout/v1/ifsc/{ifsc}": {
+      "get": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "IFSC Verification",
+        "description": "Use this API to verify if a given IFSC exists. The bank name, the branch that it belongs to, the transfer modes supported, and the respective MICR code will be shown in the response.",
+        "operationId": "ifscVerification",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ifsc",
+            "in": "path",
+            "description": "The IFSC information of the bank account to be validated. It should be an alphanumeric value of 11 characters. The first 4 characters should be alphabets, the 5th character should be a 0, and the remaining 6 characters should be numerals.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "SCBL0036078"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESSS"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "description": "It represents the sub code of the API request.",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "It represents the message of the API request.",
+                      "example": "Bank account details verified successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "It contains the bank account information.",
+                      "properties": {
+                        "bank": {
+                          "type": "string",
+                          "description": "It represents the name of the bank where the account is active.",
+                          "example": "HDFC BANK"
+                        },
+                        "ifsc": {
+                          "type": "string",
+                          "description": "It represents the IFSC information of the bank.",
+                          "example": "HDFC0004110"
+                        },
+                        "neft": {
+                          "type": "string",
+                          "description": "It represents the status of NEFT.",
+                          "example": "Live"
+                        },
+                        "imps": {
+                          "type": "string",
+                          "description": "It represents the status of IMPS.",
+                          "example": "Live"
+                        },
+                        "rtgs": {
+                          "type": "string",
+                          "description": "It represents the status of RTGS.",
+                          "example": "Live"
+                        },
+                        "upi": {
+                          "type": "string",
+                          "description": "It represents the status of UPI.",
+                          "example": "Not Live"
+                        },
+                        "ft": {
+                          "type": "string",
+                          "description": "It represents the status of FT.",
+                          "example": "Live"
+                        },
+                        "card": {
+                          "type": "string",
+                          "description": "It represents the status of card transactions.",
+                          "example": "Not Live"
+                        },
+                        "micr": {
+                          "type": "string",
+                          "description": "It represents the code used to identify banks and branches participating in the Electronic Clearing System (ECS)."
+                        },
+                        "nbin": {
+                          "type": "string",
+                          "description": "It represents the national bank identification number (NBIN).",
+                          "example": 9240
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "It represents the address of the bank branch where it operates.",
+                          "example": "HDFC BANK LTD WZ G 1 161 GROUND FLOOR UTTAM NAGAR MAIN ROAD NEW DELHI DELHI 110059"
+                        },
+                        "city": {
+                          "type": "string",
+                          "description": "It represents the city of the bank operational address.",
+                          "example": "DELHI"
+                        },
+                        "state": {
+                          "type": "string",
+                          "description": "It represents the state of the city where the bank operates.",
+                          "example": "DELHI"
+                        },
+                        "branch": {
+                          "type": "string",
+                          "description": "It represents the branch name of the bank.",
+                          "example": "UTTAM NAGAR"
+                        },
+                        "ifscSubcode": {
+                          "type": "string",
+                          "description": "It represents the sub code of IFSC.",
+                          "example": "HDFC0"
+                        },
+                        "category": {
+                          "type": "string",
+                          "description": "It represents the IFSC category.",
+                          "example": "DIRECT_MEMBER"
+                        },
+                        "swiftCode": {
+                          "type": "string",
+                          "description": "It represents the code to identify the bank branch that processes international transactions.",
+                          "example": ""
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "IFSC not found. Try again with valid IFSC"
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 404,
+                      "message": "IFSC not found. Try again with valid IFSC"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payout/v1/bulkValidation/bankDetails": {
+      "post": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "Bulk Bank Verification",
+        "description": "Use this API to request bank validations in bulk. It is an asynchronous process.",
+        "operationId": "bulkBankVerification",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bulkValidationId": {
+                    "type": "string",
+                    "description": "It is the unique ID to identify the the corresponding request. Only alphanumeric characters and underscore (_) are allowed.",
+                    "example": "A45"
+                  },
+                  "entries": {
+                    "type": "array",
+                    "items": {
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "It is the name of the account holder. Only alphanumeric and whitespaces are allowed.",
+                          "example": "John Doe"
+                        },
+                        "bankAccount": {
+                          "type": "string",
+                          "description": "It is the bank account number to be validated (6 to 40 character limit).",
+                          "example": 11020001770
+                        },
+                        "ifsc": {
+                          "type": "string",
+                          "description": "The IFSC information of the bank account to be validated. It should be an alphanumeric value of 11 characters. The first 4 characters should be alphabets, the 5th character should be a 0, and the remaining 6 characters should be numerals.",
+                          "example": "HDFC0000001"
+                        },
+                        "phone": {
+                          "type": "number",
+                          "description": "It is the phone number of the account holder.",
+                          "example": 9999912345
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESSS"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "description": "It represents the sub code of the API request.",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "It represents the message of the API request.",
+                      "example": "Bulk Validation requested successfully."
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "It contains the bulk request information.",
+                      "properties": {
+                        "bulkValidationId": {
+                          "type": "string",
+                          "description": "It represents the unique ID created to identify the corresponding request.",
+                          "example": "testid1"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "error",
+            "headers": {
+              "Content-Length": {
+                "schema": {
+                  "type": "string",
+                  "example": "114"
+                }
+              },
+              "Date": {
+                "schema": {
+                  "type": "string",
+                  "example": "Fri, 25 Nov 2022 08:09:40 GMT"
+                }
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "example": "2I1zGNV5SNkaZZV5juPVaeNh1hv"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 409
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bulk Validation Id already exists"
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 409,
+                      "message": "Bulk Validation Id already exists"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payout/v1/getBulkValidationStatus": {
+      "get": {
+        "tags": [
+          "Bank Account Verification"
+        ],
+        "summary": "Get Bulk Verification Status",
+        "description": "Use this API to get the status of bulk bank validation request by providing the bulkValidationId.",
+        "operationId": "getBulkVerificationStatus",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer Auth Token",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "description": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bulkValidationId",
+            "in": "query",
+            "required": true,
+            "description": "It is the unique ID created to identify the bulk bank validation request.",
+            "schema": {
+              "type": "string",
+              "example": "A45"
+            }
+          },
+          {
+            "name": "bankAccount",
+            "in": "query",
+            "description": "It is the bank account number whose status needs to be retried (6 to 40 character limit).",
+            "schema": {
+              "type": "string",
+              "example": "00011020001772"
+            }
+          },
+          {
+            "name": "ifsc",
+            "in": "query",
+            "description": "The IFSC information of the bank account to be validated. It should be an alphanumeric value of 11 characters. The first 4 characters should be alphabets, the 5th character should be a 0, and the remaining 6 characters should be numerals.",
+            "schema": {
+              "type": "string",
+              "example": "HDFC0000001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "description": "It represents the status of the API request.",
+                      "example": "SUCCESS"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "description": "It represents the sub code of the API request.",
+                      "example": 200
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "It contains the bulk request information",
+                      "properties": {
+                        "bulkValidationId": {
+                          "type": "string",
+                          "description": "It is the unique ID created to identify the bulk verification request.",
+                          "example": "testname"
+                        },
+                        "entries": {
+                          "description": "It represents the bulk verification information.",
+                          "properties": {
+                            "00011020001772_HDFC0000001": {
+                              "type": "object",
+                              "properties": {
+                                "bankAccount": {
+                                  "type": "number",
+                                  "description": "It represents the bank account number.",
+                                  "example": 11020001772
+                                },
+                                "ifsc": {
+                                  "type": "string",
+                                  "description": "It represents the IFSC information.",
+                                  "example": "HDFC0000001"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "description": "It represents the account holder name.",
+                                  "example": "John Doe"
+                                },
+                                "phone": {
+                                  "type": "number",
+                                  "description": "It represents the phone number of the account holder.",
+                                  "example": 7709736537
+                                },
+                                "nameAtBank": {
+                                  "type": "string",
+                                  "description": "It represents the bank name where the bank account is active.",
+                                  "example": "John Doe"
+                                },
+                                "accountExists": {
+                                  "type": "string",
+                                  "description": "It represents the existence information of the bank account.",
+                                  "example": "YES"
+                                },
+                                "refId": {
+                                  "type": "number",
+                                  "description": "It represents the reference ID.",
+                                  "example": 1097293
+                                },
+                                "message": {
+                                  "type": "string",
+                                  "description": "It represents the status of the bulk verification request.",
+                                  "example": "Amount Deposited Successfully"
+                                },
+                                "nameMatchScore": {
+                                  "type": "string",
+                                  "description": "It represents the name match score.",
+                                  "example": 100
+                                },
+                                "nameMatchResult": {
+                                  "type": "string",
+                                  "description": "It represents the result of the name match.",
+                                  "example": "DIRECT_MATCH"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ERROR"
+                    },
+                    "subCode": {
+                      "type": "string",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bulk Validation Id does not exist"
+                    }
+                  }
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": 404,
+                      "message": "Bulk Validation Id does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

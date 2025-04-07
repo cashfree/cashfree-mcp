@@ -1,0 +1,188 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Connected Wallet Notional Debit",
+    "version": "1.0.0",
+    "description": "This API debits an amount from a connected wallet using a specified payment instrument"
+  },
+  "servers": [],
+  "tags": [],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "DebitRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "description": "The amount to be debited in decimal value up to 2 precision"
+          },
+          "paymentInstrumentId": {
+            "type": "string",
+            "description": "Identifier for the payment instrument"
+          },
+          "referenceId": {
+            "type": "string",
+            "description": "Identifier for the debit transaction"
+          },
+          "remarks": {
+            "type": "string",
+            "description": "Remarks for the debit transaction"
+          }
+        },
+        "required": [
+          "amount",
+          "paymentInstrumentId"
+        ]
+      },
+      "DebitResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status of the request"
+          },
+          "subCode": {
+            "type": "string",
+            "description": "A code identifying the response or error"
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the outcome of the request"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "referenceId": {
+                "type": "string",
+                "description": "The unique identifier for the debit transaction"
+              },
+              "message": {
+                "type": "string",
+                "description": "A message describing the outcome of the debit"
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status of the request"
+          },
+          "subCode": {
+            "type": "string",
+            "description": "A code identifying the error"
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the error"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/payout/v1/connected-wallet/debit": {
+      "post": {
+        "summary": "Debit Connected Wallet",
+        "operationId": "connectedWalletDebit",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Request payload to debit a connected wallet",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DebitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Debit successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebitResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "status": "SUCCESS",
+                      "subCode": "200",
+                      "message": "Debit successful",
+                      "data": {
+                        "referenceId": 4379710,
+                        "message": "Amount deducted from the merchant balance"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalidRequest": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "422",
+                      "message": "Bad request, please check API documentation"
+                    }
+                  },
+                  "paymentInstrumentNotFound": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "422",
+                      "message": "Specified paymentInstrumentId not available"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internalServerError": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "500",
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

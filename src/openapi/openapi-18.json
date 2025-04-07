@@ -1,0 +1,1528 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "LRS",
+    "version": "4"
+  },
+  "servers": [
+    {
+      "url": "https://sandbox.cashfree.com/",
+      "description": "Sandbox server"
+    },
+    {
+      "url": "https://api.cashfree.com/",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {}
+  },
+  "security": [
+    {}
+  ],
+  "paths": {
+    "/import/transactions/{cf_payment_id}": {
+      "post": {
+        "summary": "Upload Payment Verification Details",
+        "description": "This API is used to upload the required payment details for the verification",
+        "operationId": "upload-payment-verification-details",
+        "parameters": [
+          {
+            "name": "cf_payment_id",
+            "in": "path",
+            "description": "Successful payment id for the created order.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          },
+          {
+            "name": "x-client-id",
+            "in": "header",
+            "description": "client id generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-client-secret",
+            "in": "header",
+            "description": "client secret generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "description": "API version to be used. Format is in YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "default": "2023-08-01"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "doc_name"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "description": "Attach file for the given doc_name if input_type is DOCUMENT",
+                    "format": "binary",
+                    "example": "@/path/to/file.pdf"
+                  },
+                  "doc_value": {
+                    "type": "string",
+                    "description": "Pass the doc value for the given doc_name if input_type is VALUE"
+                  },
+                  "doc_name": {
+                    "type": "string",
+                    "description": "Required doc name for the given payment"
+                  }
+                }
+              },
+              "examples": {
+                "doc_value": {
+                  "summary": "Sample using doc_value as a string",
+                  "value": {
+                    "doc_name": "<string>",
+                    "doc_value": "<string>"
+                  }
+                },
+                "file": {
+                  "summary": "Sample using file upload",
+                  "value": {
+                    "doc_name": "<string>",
+                    "file": "@/path/to/file.pdf"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "uploaded_documents": [
+                        {
+                          "doc_name": "shop_or_brand_name",
+                          "doc_type": "VALUE",
+                          "doc_status": "VERIFIED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "partner_order_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "goods_description",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "invoice_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "VERIFIED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "importer_name",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "importer_address",
+                          "doc_type": "VALUE",
+                          "doc_status": "VERIFIED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "country_of_origin",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        }
+                      ],
+                      "missing_documents": [
+                        {
+                          "doc_name": "invoice_file",
+                          "doc_type": "DOCUMENT",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "ecommerce_order_serial_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "hs_code",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "shipment_date",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "port_of_loading",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "awb_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        }
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "missing_documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "doc_name": {
+                            "description": "Name of the missing doc",
+                            "type": "string",
+                            "example": "shop_or_brand_name"
+                          },
+                          "doc_status": {
+                            "description": "Status of the missing doc",
+                            "type": "string",
+                            "example": "ACTION_REQUIRED"
+                          },
+                          "doc_type": {
+                            "description": "Type of the missing doc",
+                            "type": "string",
+                            "example": "VALUE"
+                          },
+                          "remarks": {
+                            "description": "Remarks for the missing doc",
+                            "type": "string",
+                            "example": "Doc is waiting to be uploaded"
+                          },
+                          "added_on": {
+                            "description": "Date and time at which the doc requirement was added",
+                            "type": "string"
+                          },
+                          "last_updated_on": {
+                            "description": "Date and time at which the doc was uploaded",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "uploaded_documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "doc_name": {
+                            "description": "Name of the missing doc",
+                            "type": "string",
+                            "example": "shop_or_brand_name"
+                          },
+                          "doc_status": {
+                            "description": "Status of the missing doc",
+                            "type": "string",
+                            "example": "ACTION_REQUIRED"
+                          },
+                          "doc_type": {
+                            "description": "Type of the missing doc",
+                            "type": "string",
+                            "example": "VALUE"
+                          },
+                          "remarks": {
+                            "description": "Remarks for the missing doc",
+                            "type": "string",
+                            "example": "Doc is waiting to be uploaded"
+                          },
+                          "added_on": {
+                            "description": "Date and time at which the doc requirement was added",
+                            "type": "string",
+                            "example": "2025-01-16T12:34:10+05:30"
+                          },
+                          "last_updated_on": {
+                            "description": "Date and time at which the doc was uploaded",
+                            "type": "string",
+                            "example": "2025-01-16T12:34:10+05:30"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Invalid input document": {
+                    "value": {
+                      "message": "Input document - gstin, not recognized,",
+                      "code": "request_invalid,",
+                      "type": "invalid_request_error"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Input document - gstin, not recognized"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "request_invalid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "invalid_request_error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "type": "authentication_error,",
+                      "message": "authentication Failed,",
+                      "code": "request_failed"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "authentication_error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "authentication Failed"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "request_failed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Transaction not found": {
+                    "value": {
+                      "message": "Transaction not found,",
+                      "code": "transaction_not_found,",
+                      "type": "invalid_request_error"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Transaction not found"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "transaction_not_found"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "invalid_request_error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "get": {
+        "summary": "Get Payment Verification Details",
+        "description": "Use this API to GET the status of the payment verification",
+        "operationId": "get-payment-verification-details",
+        "parameters": [
+          {
+            "name": "cf_payment_id",
+            "in": "path",
+            "description": "Successful payment id for the created order.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "cf_payment_id": 5114910606536,
+                      "payment_status": "SUCCESS",
+                      "payment_verification_status": "ACTION_REQUIRED",
+                      "payment_expiry": "2024-07-10T15:39:49",
+                      "remarks": null,
+                      "details": [
+                        {
+                          "doc_name": "shop_or_brand_name",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "partner_order_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "goods_description",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "invoice_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "importer_name",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "importer_address",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "country_of_origin",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "invoice_file",
+                          "doc_type": "DOCUMENT",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "ecommerce_order_serial_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "hs_code",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "shipment_date",
+                          "doc_type": "VALUE",
+                          "doc_status": "ACTION_REQUIRED",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "port_of_loading",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        },
+                        {
+                          "doc_name": "awb_number",
+                          "doc_type": "VALUE",
+                          "doc_status": "IN_REVIEW",
+                          "remarks": null,
+                          "added_on": null,
+                          "last_updated_on": null
+                        }
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cf_payment_id": {
+                      "description": "Successful payment id for the created order",
+                      "type": "integer",
+                      "example": 5114910606536
+                    },
+                    "payment_status": {
+                      "description": "Payment status",
+                      "type": "string",
+                      "example": "SUCCESS"
+                    },
+                    "payment_verification_status": {
+                      "description": "Payment verification status",
+                      "type": "string",
+                      "enum": [
+                        "ACTION_REQUIRED",
+                        "IN_REVIEW",
+                        "VERIFIED",
+                        "EXPIRED"
+                      ],
+                      "example": "ACTION_REQUIRED"
+                    },
+                    "payment_expiry": {
+                      "description": "Date and time at which the payment will expire if the required docs are not uploaded",
+                      "type": "string",
+                      "example": "2025-01-16T12:34:10+05:30"
+                    },
+                    "remarks": {
+                      "description": "Verification remarks for the transaction",
+                      "type": "string",
+                      "example": "Transaction reject due to invalid doc"
+                    },
+                    "details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "doc_name": {
+                            "description": "Name of the missing doc",
+                            "type": "string",
+                            "example": "shop_or_brand_name"
+                          },
+                          "doc_status": {
+                            "description": "Status of the missing doc",
+                            "type": "string",
+                            "example": "ACTION_REQUIRED"
+                          },
+                          "doc_type": {
+                            "description": "Type of the missing doc",
+                            "type": "string",
+                            "example": "VALUE"
+                          },
+                          "remarks": {
+                            "description": "Remarks for the missing doc",
+                            "type": "string",
+                            "example": "Doc is waiting to be uploaded"
+                          },
+                          "added_on": {
+                            "description": "Date and time at which the doc requirement was added",
+                            "type": "string",
+                            "example": "2025-01-16T12:34:10+05:30"
+                          },
+                          "last_updated_on": {
+                            "description": "Date and time at which the doc was uploaded",
+                            "type": "string",
+                            "example": "2025-01-16T12:34:10+05:30"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "message": "Transaction not found",
+                      "code": "transaction_not_found",
+                      "type": "invalid_request_error"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Transaction not found"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "transaction_not_found"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "invalid_request_error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/import/transactions/{order_id}/settlement": {
+      "get": {
+        "summary": "Get Import Settlement details",
+        "description": "This API is used to get ICA settlement details using PG Order ID",
+        "operationId": "get-import-settlement-details",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "description": "Your order id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "x-client-id",
+            "in": "header",
+            "description": "client id generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-client-secret",
+            "in": "header",
+            "description": "client secret generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "description": "API version to be used. Format is in YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "default": "2023-08-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "cf_order_details": {
+                        "cf_payment_id": 5114911054376,
+                        "order_amount": 8455,
+                        "order_currency": "INR",
+                        "order_id": "6cafd7aa-6568-4cc4-ba71-5e528272a3d3",
+                        "payment_time": "2024-08-28T15:37:49"
+                      },
+                      "cf_ica_settlement_details": {
+                        "settlement_id": 10,
+                        "status": "SETTLED",
+                        "collection_amount_inr": 86176,
+                        "service_charge_inr": null,
+                        "service_tax_inr": 294.73,
+                        "adjustment_amount_inr": -18743.89,
+                        "settlement_charges_inr": 0,
+                        "settlement_tax_inr": 0,
+                        "settlement_amount_inr": 65500.04,
+                        "settlement_foreign_currency_details": {
+                          "settlement_currency": "USD",
+                          "settlement_forex_rate": 83.8788,
+                          "settlement_amount": 780.8891
+                        },
+                        "payment_from": "2024-08-28T15:36:33",
+                        "payment_till": "2024-08-28T15:37:49",
+                        "settlement_utr": "123412",
+                        "initiated_on": "2024-08-28T17:24:55",
+                        "settled_on": "2024-08-29T16:30:46"
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cf_order_details": {
+                      "type": "object",
+                      "description": "Contains information about the order related to the settlement",
+                      "properties": {
+                        "cf_payment_id": {
+                          "type": "integer",
+                          "example": 5114911054376,
+                          "default": 0,
+                          "description": "Unique payment ID associated with the order"
+                        },
+                        "order_amount": {
+                          "type": "number",
+                          "example": 8455,
+                          "default": 0,
+                          "description": "Total order amount in numeric value"
+                        },
+                        "order_currency": {
+                          "type": "string",
+                          "example": "INR",
+                          "description": "Currency of the order"
+                        },
+                        "order_id": {
+                          "type": "string",
+                          "example": "6cafd7aa-6568-4cc4-ba71-5e528272a3d3",
+                          "description": "Unique order identifier"
+                        },
+                        "payment_time": {
+                          "type": "string",
+                          "example": "2024-08-28T15:37:49",
+                          "description": "Time when payment for the order was processed"
+                        }
+                      }
+                    },
+                    "cf_ica_settlement_details": {
+                      "type": "object",
+                      "description": "Contains information about the settlement transaction",
+                      "properties": {
+                        "settlement_id": {
+                          "type": "integer",
+                          "example": 10,
+                          "default": 0,
+                          "description": "Unique ID of the settlement"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "SETTLED",
+                          "description": "Current status of the settlement"
+                        },
+                        "collection_amount_inr": {
+                          "type": "number",
+                          "example": 86176,
+                          "default": 0,
+                          "description": "Total collected amount in INR"
+                        },
+                        "service_charge_inr": {
+                          "type": "object",
+                          "description": "Service charge in INR, if applicable"
+                        },
+                        "service_tax_inr": {
+                          "type": "number",
+                          "example": 294.73,
+                          "default": 0,
+                          "description": "Service tax in INR"
+                        },
+                        "adjustment_amount_inr": {
+                          "type": "number",
+                          "example": -18743.89,
+                          "default": 0,
+                          "description": "Adjustment amount in INR"
+                        },
+                        "settlement_charges_inr": {
+                          "type": "integer",
+                          "example": 0,
+                          "default": 0,
+                          "description": "Charges related to the settlement in INR"
+                        },
+                        "settlement_tax_inr": {
+                          "type": "integer",
+                          "example": 0,
+                          "default": 0,
+                          "description": "Tax on settlement in INR"
+                        },
+                        "settlement_amount_inr": {
+                          "type": "number",
+                          "example": 65500.04,
+                          "default": 0,
+                          "description": "Total settlement amount in INR"
+                        },
+                        "settlement_foreign_currency_details": {
+                          "type": "object",
+                          "properties": {
+                            "settlement_currency": {
+                              "type": "string",
+                              "example": "USD",
+                              "description": "Currency of the settlement amount"
+                            },
+                            "settlement_forex_rate": {
+                              "type": "number",
+                              "example": 83.8788,
+                              "default": 0,
+                              "description": "Exchange rate used for conversion to settlement currency"
+                            },
+                            "settlement_amount": {
+                              "type": "number",
+                              "example": 780.8891,
+                              "default": 0,
+                              "description": "Amount in the foreign currency after conversion"
+                            }
+                          }
+                        },
+                        "payment_from": {
+                          "type": "string",
+                          "example": "2024-08-28T15:36:33",
+                          "description": "Start time of the payment period"
+                        },
+                        "payment_till": {
+                          "type": "string",
+                          "example": "2024-08-28T15:37:49",
+                          "description": "End time of the payment period"
+                        },
+                        "settlement_utr": {
+                          "type": "string",
+                          "example": "123412",
+                          "description": "Unique transaction reference (UTR) for the settlement"
+                        },
+                        "initiated_on": {
+                          "type": "string",
+                          "example": "2024-08-28T17:24:55",
+                          "description": "Date and time when the settlement was initiated"
+                        },
+                        "settled_on": {
+                          "type": "string",
+                          "example": "2024-08-29T16:30:46",
+                          "description": "Date and time when the settlement was completed"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "type": "authentication_error",
+                      "message": "authentication Failed",
+                      "code": "request_failed"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "authentication_error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "authentication Failed"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "request_failed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Transaction not found": {
+                    "value": {
+                      "message": "Transaction not found",
+                      "code": "transaction_not_found",
+                      "type": "invalid_request_error"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Transaction not found"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "transaction_not_found"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "invalid_request_error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/import/settlements/recon": {
+      "post": {
+        "summary": "Get Import Settlement recon details",
+        "description": "This API is used to fetch all events happened for provided Settlement IDs",
+        "operationId": "get-import-settlement-recon-details",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Start date for fetching settlement recon details",
+            "schema": {
+              "type": "string",
+              "default": "2024-08-13"
+            },
+            "required": true
+          },
+          {
+            "name": "x-client-id",
+            "in": "header",
+            "description": "client id generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-client-secret",
+            "in": "header",
+            "description": "client secret generated from the merchant dashboard",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "description": "API version to be used. Format is in YYYY-MM-DD",
+            "schema": {
+              "type": "string",
+              "default": "2023-08-01"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "End date for fetching settlement recon details",
+            "schema": {
+              "type": "string",
+              "default": "2024-08-15"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "filter",
+                  "pagination"
+                ],
+                "properties": {
+                  "filter": {
+                    "type": "object",
+                    "properties": {
+                      "start_date": {
+                        "type": "string",
+                        "description": "Start date for fetching settlement recon details",
+                        "format": "date"
+                      },
+                      "end_date": {
+                        "type": "string",
+                        "description": "End date for fetching settlement recon details",
+                        "format": "date"
+                      },
+                      "cf_ica_settlement_ids": {
+                        "type": "array",
+                        "description": "List of ICA Settlement IDs for fetching related recon events",
+                        "items": {
+                          "type": "integer",
+                          "format": "int32"
+                        }
+                      },
+                      "settlement_utrs": {
+                        "type": "array",
+                        "description": "List of ICA Settlement UTRs for fetching corresponding recon events",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "pagination": {
+                    "type": "object",
+                    "properties": {
+                      "limit": {
+                        "type": "integer",
+                        "description": "Limit on number of entries to fetch",
+                        "format": "int64"
+                      },
+                      "cursor": {
+                        "type": "string",
+                        "description": "Cursor from which entries to be fetched"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "cursor": null,
+                      "limit": 3,
+                      "data": [
+                        {
+                          "event_id": "14934603727",
+                          "entity": "recon",
+                          "event_type": "PAYMENT",
+                          "sale_type": "CREDIT",
+                          "event_time": "2024-06-17T23:28:19+05:30",
+                          "event_settlement_amount": null,
+                          "event_amount": 10000,
+                          "event_status": "SUCCESS",
+                          "event_currency": "INR",
+                          "order_id": "da34745f-70e9-4c9b-9dcd-1c7aed01b7a6",
+                          "customer_name": "Rachit",
+                          "customer_phone": "9101496247",
+                          "customer_email": "sk729485@gmail.com",
+                          "cf_payment_id": null,
+                          "payment_amount": null,
+                          "order_amount": 10000,
+                          "payment_time": null,
+                          "payment_service_charge": null,
+                          "payment_service_tax": null,
+                          "payment_utr": "123",
+                          "cf_ica_settlement_id": null,
+                          "vendor_commission": null,
+                          "split_service_charge": null,
+                          "split_service_tax": null,
+                          "settlement_utr": null,
+                          "refund_note": null,
+                          "refund_id": null,
+                          "refund_arn": null,
+                          "refund_processed_at": null,
+                          "closed_in_favor_of": null,
+                          "resolved_on": null,
+                          "dispute_category": null,
+                          "dispute_note": null,
+                          "dispute_resolved_on": null,
+                          "adjustment_remarks": null,
+                          "adjustment": null,
+                          "service_tax": null,
+                          "service_charge": null,
+                          "amount_settled": null,
+                          "payment_from": null,
+                          "payment_till": null,
+                          "reason": null,
+                          "settlement_initiated_on": null,
+                          "settlement_settled_on": null,
+                          "settlement_type": null,
+                          "settlement_charge": null,
+                          "settlement_tax": null,
+                          "payment_group": "UPI",
+                          "remarks": null
+                        },
+                        {
+                          "event_id": "1319338170",
+                          "entity": "recon",
+                          "event_type": "REFUND",
+                          "sale_type": "DEBIT",
+                          "event_time": "2024-08-05T14:00:49+05:30",
+                          "event_settlement_amount": 10000,
+                          "event_amount": 10000,
+                          "event_status": "SUCCESS",
+                          "event_currency": "INR",
+                          "order_id": "da34745f-70e9-4c9b-9dcd-1c7aed01b7a6",
+                          "customer_name": "Rachit",
+                          "customer_phone": "9101496247",
+                          "customer_email": "sk729485@gmail.com",
+                          "cf_payment_id": 14934603727,
+                          "payment_amount": 10000,
+                          "order_amount": 10000,
+                          "payment_time": "2024-06-17T23:28:19+05:30",
+                          "payment_service_charge": null,
+                          "payment_service_tax": null,
+                          "payment_utr": "123",
+                          "cf_ica_settlement_id": 8,
+                          "vendor_commission": null,
+                          "split_service_charge": null,
+                          "split_service_tax": null,
+                          "settlement_utr": null,
+                          "refund_note": "",
+                          "refund_id": "REF_73afb145-aac1-45b6-b634-c3cf72cdaefc",
+                          "refund_arn": "Test_ARN",
+                          "refund_processed_at": "2024-08-05T14:00:49+05:30",
+                          "closed_in_favor_of": null,
+                          "resolved_on": null,
+                          "dispute_category": null,
+                          "dispute_note": null,
+                          "dispute_resolved_on": null,
+                          "adjustment_remarks": null,
+                          "adjustment": null,
+                          "service_tax": null,
+                          "service_charge": null,
+                          "amount_settled": null,
+                          "payment_from": null,
+                          "payment_till": null,
+                          "reason": null,
+                          "settlement_initiated_on": null,
+                          "settlement_settled_on": null,
+                          "settlement_type": null,
+                          "settlement_charge": null,
+                          "settlement_tax": null,
+                          "payment_group": null,
+                          "remarks": null
+                        },
+                        {
+                          "event_id": "5114910810523",
+                          "entity": "recon",
+                          "event_type": "PAYMENT",
+                          "sale_type": "CREDIT",
+                          "event_time": "2024-08-02T13:32:27+05:30",
+                          "event_settlement_amount": 49856.58,
+                          "event_amount": 51000,
+                          "event_status": "SUCCESS",
+                          "event_currency": "INR",
+                          "order_id": "6f9db742-e423-40ed-afee-2e7898b98c9e",
+                          "customer_name": "Rachit",
+                          "customer_phone": "9101496247",
+                          "customer_email": "sk729485@gmail.com",
+                          "cf_payment_id": null,
+                          "payment_amount": null,
+                          "order_amount": 51000,
+                          "payment_time": null,
+                          "payment_service_charge": 969,
+                          "payment_service_tax": 174.42,
+                          "payment_utr": "123",
+                          "cf_ica_settlement_id": 7,
+                          "vendor_commission": 0,
+                          "split_service_charge": 0,
+                          "split_service_tax": 0,
+                          "settlement_utr": null,
+                          "refund_note": null,
+                          "refund_id": null,
+                          "refund_arn": null,
+                          "refund_processed_at": null,
+                          "closed_in_favor_of": null,
+                          "resolved_on": null,
+                          "dispute_category": null,
+                          "dispute_note": null,
+                          "dispute_resolved_on": null,
+                          "adjustment_remarks": null,
+                          "adjustment": null,
+                          "service_tax": null,
+                          "service_charge": null,
+                          "amount_settled": null,
+                          "payment_from": null,
+                          "payment_till": null,
+                          "reason": null,
+                          "settlement_initiated_on": null,
+                          "settlement_settled_on": null,
+                          "settlement_type": null,
+                          "settlement_charge": null,
+                          "settlement_tax": null,
+                          "payment_group": "UPI",
+                          "remarks": null
+                        }
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cursor": {
+                      "type": "object",
+                      "description": "Cursor for pagination, used to fetch the next set of results"
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "example": 3,
+                      "default": 0,
+                      "description": "Maximum number of records to return per page"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event_id": {
+                            "type": "string",
+                            "example": "14934603727",
+                            "description": "Unique identifier for the event"
+                          },
+                          "entity": {
+                            "type": "string",
+                            "example": "recon",
+                            "description": "Entity associated with the event"
+                          },
+                          "event_type": {
+                            "type": "string",
+                            "example": "PAYMENT",
+                            "description": "Type of the event (e.g., PAYMENT, REFUND)"
+                          },
+                          "sale_type": {
+                            "type": "string",
+                            "example": "CREDIT",
+                            "description": "Type of sale (e.g., CREDIT, DEBIT)"
+                          },
+                          "event_time": {
+                            "type": "string",
+                            "example": "2024-06-17T23:28:19+05:30",
+                            "description": "Time when the event occurred"
+                          },
+                          "event_settlement_amount": {
+                            "type": "object",
+                            "description": "Amount related to the settlement of the event"
+                          },
+                          "event_amount": {
+                            "type": "number",
+                            "example": 10000,
+                            "default": 0,
+                            "description": "Amount involved in the event"
+                          },
+                          "event_status": {
+                            "type": "string",
+                            "example": "SUCCESS",
+                            "description": "Status of the event (e.g., SUCCESS, FAILURE)"
+                          },
+                          "event_currency": {
+                            "type": "string",
+                            "example": "INR",
+                            "description": "Currency used for the event"
+                          },
+                          "order_id": {
+                            "type": "string",
+                            "example": "da34745f-70e9-4c9b-9dcd-1c7aed01b7a6",
+                            "description": "Unique identifier for the order associated with the event"
+                          },
+                          "customer_name": {
+                            "type": "string",
+                            "example": "Rachit",
+                            "description": "Name of the customer associated with the event"
+                          },
+                          "customer_phone": {
+                            "type": "string",
+                            "example": "9101496247",
+                            "description": "Phone number of the customer"
+                          },
+                          "customer_email": {
+                            "type": "string",
+                            "example": "sk729485@gmail.com",
+                            "description": "Email address of the customer"
+                          },
+                          "cf_payment_id": {
+                            "type": "object",
+                            "description": "Payment ID"
+                          },
+                          "payment_amount": {
+                            "type": "object",
+                            "description": "Amount of payment made"
+                          },
+                          "order_amount": {
+                            "type": "number",
+                            "example": 10000,
+                            "default": 0,
+                            "description": "Total order amount"
+                          },
+                          "payment_time": {
+                            "type": "object",
+                            "description": "Time when the payment was processed"
+                          },
+                          "payment_service_charge": {
+                            "type": "object",
+                            "description": "Service charge applied to the payment"
+                          },
+                          "payment_service_tax": {
+                            "type": "object",
+                            "description": "Tax applied to the service charge"
+                          },
+                          "payment_utr": {
+                            "type": "string",
+                            "example": "123",
+                            "description": "Unique transaction reference for the payment"
+                          },
+                          "cf_ica_settlement_id": {
+                            "type": "object",
+                            "description": "Unique ID for the settlement associated with the event"
+                          },
+                          "vendor_commission": {
+                            "type": "object",
+                            "description": "Commission paid to the vendor"
+                          },
+                          "split_service_charge": {
+                            "type": "object",
+                            "description": "Split service charge, if applicable"
+                          },
+                          "split_service_tax": {
+                            "type": "object",
+                            "description": "Split service tax, if applicable"
+                          },
+                          "settlement_utr": {
+                            "type": "object",
+                            "description": "Unique transaction reference for the settlement"
+                          },
+                          "refund_note": {
+                            "type": "object",
+                            "description": "Notes related to any refund issued"
+                          },
+                          "refund_id": {
+                            "type": "object",
+                            "description": "Unique ID for the refund"
+                          },
+                          "refund_arn": {
+                            "type": "object",
+                            "description": "ARN (Acquirer Reference Number) for the refund"
+                          },
+                          "refund_processed_at": {
+                            "type": "object",
+                            "description": "Date and time when the refund was processed"
+                          },
+                          "closed_in_favor_of": {
+                            "type": "object",
+                            "description": "Indicates if the case was closed in favor of any party"
+                          },
+                          "resolved_on": {
+                            "type": "object",
+                            "description": "Date and time when the dispute or issue was resolved"
+                          },
+                          "dispute_category": {
+                            "type": "object",
+                            "description": "Category of the dispute, if applicable"
+                          },
+                          "dispute_note": {
+                            "type": "object",
+                            "description": "Notes related to the dispute, if applicable"
+                          },
+                          "dispute_resolved_on": {
+                            "type": "object",
+                            "description": "Date and time when the dispute was resolved"
+                          },
+                          "adjustment_remarks": {
+                            "type": "object",
+                            "description": "Any remarks regarding adjustments made to the event"
+                          },
+                          "adjustment": {
+                            "type": "object",
+                            "description": "Adjustment amount, if applicable"
+                          },
+                          "service_tax": {
+                            "type": "object",
+                            "description": "Tax on the service, if applicable"
+                          },
+                          "service_charge": {
+                            "type": "object",
+                            "description": "Charge for the service, if applicable"
+                          },
+                          "amount_settled": {
+                            "type": "object",
+                            "description": "Amount that has been settled for the event"
+                          },
+                          "payment_from": {
+                            "type": "object",
+                            "description": "Start time of the payment period"
+                          },
+                          "payment_till": {
+                            "type": "object",
+                            "description": "End time of the payment period"
+                          },
+                          "reason": {
+                            "type": "object",
+                            "description": "Reason for the event or transaction"
+                          },
+                          "settlement_initiated_on": {
+                            "type": "object",
+                            "description": "Date and time when the settlement was initiated"
+                          },
+                          "settlement_settled_on": {
+                            "type": "object",
+                            "description": "Date and time when the settlement was completed"
+                          },
+                          "settlement_type": {
+                            "type": "object",
+                            "description": "Type of settlement (e.g., Full, Partial)"
+                          },
+                          "settlement_charge": {
+                            "type": "object",
+                            "description": "Charges applied during settlement"
+                          },
+                          "settlement_tax": {
+                            "type": "object",
+                            "description": "Tax applied during settlement"
+                          },
+                          "payment_group": {
+                            "type": "string",
+                            "example": "UPI",
+                            "description": "Payment group used for the transaction (e.g., UPI, Credit Card)"
+                          },
+                          "remarks": {
+                            "type": "object",
+                            "description": "Additional remarks related to the event"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "type": "authentication_error",
+                      "message": "authentication Failed",
+                      "code": "request_failed"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "authentication_error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "authentication Failed"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "request_failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

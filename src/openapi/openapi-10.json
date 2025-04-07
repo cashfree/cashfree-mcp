@@ -1,0 +1,193 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Add Registered Recharge Account(Whitelist Bank Account)",
+    "version": "1.0.0",
+    "description": "This API whitelists/registers a new bank account for recharge for a payout account."
+  },
+  "servers": [],
+  "tags": [],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "WhitelistBankAccountRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier for name at the bank account."
+          },
+          "bankAccount": {
+            "type": "string",
+            "description": "Identifier for the bank account."
+          },
+          "ifsc": {
+            "type": "string",
+            "description": "Identifier for the ifsc of the bank account."
+          },
+          "paymentInstrumentId": {
+            "type": "string",
+            "description": "The unique identifier for the fund source that will be associated with the payout account (Mandatory for One Escrow)."
+          }
+        },
+        "required": [
+          "name",
+          "bankAccount",
+          "ifsc",
+          "paymentInstrumentId"
+        ]
+      },
+      "PayoutResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status of the request."
+          },
+          "subCode": {
+            "type": "string",
+            "description": "Detailed sub-code for the response."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the response."
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/whitelisted-bank-accounts": {
+      "post": {
+        "summary": "Add Registered Recharge Account(Whitelist Bank Account)",
+        "operationId": "whitelistBankAccount",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Request payload to whitelist bank account.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhitelistBankAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account whitelisted for recharge successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "status": "SUCCESS",
+                      "subCode": "200",
+                      "message": "Bank Account whitelisted successfully for recharge"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponse"
+                },
+                "examples": {
+                  "InvalidPaymentInstrumentIdError": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "400",
+                      "message": "Specified paymentInstrumentId not available"
+                    }
+                  },
+                  "AccountAlreadyExistError": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "400",
+                      "message": "Recharge Account Already Exists"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Whitelisted recharge bank account limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponse"
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "406",
+                      "message": "Exceeded registered recharge bank account count, please delete existing recharge account to add new one"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponse"
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "422",
+                      "message": "Please provide a valid request body"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutResponse"
+                },
+                "examples": {
+                  "error": {
+                    "value": {
+                      "status": "ERROR",
+                      "subCode": "500",
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
