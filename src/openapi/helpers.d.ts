@@ -26,4 +26,5 @@ export declare function convertEndpointToCategorizedZod(envKey: string, endpoint
     headers: ServerParams;
     cookies: ServerParams;
 };
+export declare function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any;
 export {};

@@ -79,17 +79,85 @@ export function getMcpToolsAndEndpointsFromOpenApiSpecs(specs) {
     });
     return toolsWithEndpoints;
 }
+// Helper function to resolve references in an OpenAPI specification
+function resolveReferences(spec, refPath, cache = {}) {
+    // Return from cache if already resolved
+    if (cache[refPath]) {
+      return cache[refPath];
+    }
+  
+    if (!refPath.startsWith('#/')) {
+      throw new Error(`External references not supported: ${refPath}`);
+    }
+  
+    const pathParts = refPath.substring(2).split('/');
+    let current = spec;
+  
+    for (const part of pathParts) {
+      if (!current[part]) {
+        throw new Error(`Reference not found: ${refPath}`);
+      }
+      current = current[part];
+    }
+  
+    // Handle nested references
+    if (current && current.$ref) {
+      current = resolveReferences(spec, current.$ref, cache);
+    }
+  
+    // Cache the resolved reference
+    cache[refPath] = current;
+    return current;
+  }
+  
+  // Function to deeply resolve all references in an object
+  function resolveAllReferences(obj, spec, cache = {}) {
+    if (!obj || typeof obj !== 'object') {
+      return obj;
+    }
+  
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => resolveAllReferences(item, spec, cache));
+    }
+  
+    // Handle $ref
+    if (obj.$ref) {
+      const resolved = resolveReferences(spec, obj.$ref, cache);
+      return resolveAllReferences({...resolved}, spec, cache);
+    }
+  
+    // Handle regular objects
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = resolveAllReferences(value, spec, cache);
+    }
+    return result;
+  }
+  
 export function getEndpointsFromOpenApi(specification) {
     const endpoints = [];
     const paths = specification.paths;
+    const refCache = {};
     for (const path in paths) {
         const operations = paths[path];
         for (const method in operations) {
             if (method === 'parameters' || method === 'trace') {
                 continue;
             }
-            const endpoint = OpenApiToEndpointConverter.convert(specification, path, method, true);
-            endpoints.push(endpoint);
+            try {
+                // Resolve any references in the path item before converting
+                const resolvedPathItem = resolveAllReferences(operations[method], specification, refCache);
+                const endpoint = OpenApiToEndpointConverter.convert(
+                  {...specification, paths: {[path]: {[method]: resolvedPathItem}}}, 
+                  path, 
+                  method
+                );
+                
+                endpoints.push(endpoint);
+            } catch (error) {
+                console.error(`Error processing endpoint ${method.toUpperCase()} ${path}:`, error.message);
+            }
         }
     }
     return endpoints;
@@ -173,4 +241,22 @@ export function convertEndpointToCategorizedZod(envKey, endpoint) {
         body = { body: zodBodySchema };
     }
     return { url, method, paths, queries, body, headers, cookies };
+}
+
+export function getValFromNestedJson(key, jsonObj) {
+    if (!key) {
+        return;
+    }
+    var keySplit = key.split(".");
+    var keyValue = jsonObj;
+    for (const subKey of keySplit) {
+        if (keyValue && subKey in keyValue) {
+            keyValue = keyValue[subKey];
+        } else {
+            return undefined;
+        }
+
+    }
+
+    return keyValue;
 }
