@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { initializeObject } from '../utils.js';
 import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
+import { load } from 'js-yaml';
 export function convertStrToTitle(str) {
     const spacedString = str.replace(/[-_]/g, ' ');
     const words = spacedString.split(/(?=[A-Z])|\s+/);
@@ -222,7 +223,7 @@ function convertSecurityParametersAndAddToRelevantParamGroups(securityParameters
 export function convertEndpointToCategorizedZod(envKey, endpoint) {
     var _a, _b, _c;
     const envVariables = loadEnv(envKey);
-    const url = `${((_b = (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.url) || ''}${endpoint.path}`;
+    const url = `${envVariables.base_url || ((_b = (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.url) || ''}${endpoint.path}`;
     const method = endpoint.method;
     const paths = {};
     const queries = {};
@@ -259,4 +260,10 @@ export function getValFromNestedJson(key, jsonObj) {
     }
 
     return keyValue;
+}
+
+export function isMcpEnabled(path) {
+    let enabledProducts =  loadEnv('McpTools');
+    const product = path.split('.json')[0].split('-')[1]; 
+    return enabledProducts[product] === true;
 }

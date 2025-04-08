@@ -2,7 +2,7 @@
   "name": "cashfreepayments-d00050e9-mcp",
   "version": "1.0.0",
   "type": "module",
-  "description": "MCP server generated for the cashfreepayments-d00050e9 subdomain from Mintlify",
+  "description": "Cashfree MCP server for cashfree docs",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node src/index.js"
   },
-  "author": "Mintlify",
+  "author": "Cashfree",
+  "reference": "Mintlify mcp",
   "dependencies": {
     "@mintlify/openapi-parser": "^0.0.7",
     "@mintlify/openapi-types": "^0.0.0",

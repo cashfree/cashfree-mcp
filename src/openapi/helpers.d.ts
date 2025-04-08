@@ -27,4 +27,5 @@ export declare function convertEndpointToCategorizedZod(envKey: string, endpoint
     cookies: ServerParams;
 };
 export declare function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any;
+export declare function isMcpEnabled(path: string): boolean;
 export {};

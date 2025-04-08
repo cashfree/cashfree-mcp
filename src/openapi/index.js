@@ -137,12 +137,13 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                 }
                 catch (error) {
                     const errMsg = JSON.stringify(error, undefined, 2);
+                    const data = JSON.stringify(error.response ? error.response.data : {}, undefined, 2);
                     return {
                         isError: true,
                         content: [
                             {
                                 type: 'text',
-                                text: isAxiosError(error) ? `${error.message}\n\n${errMsg}` : errMsg,
+                                text: isAxiosError(error) ? `receivedPayload: ${data}\n\n errorMessage: ${error.message}\n\n${errMsg}` : `receivedPayload: ${data}\n\n errorMessage: ${errMsg}`,
                             },
                         ],
                     };

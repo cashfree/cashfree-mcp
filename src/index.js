@@ -1,3 +1,4 @@
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14,6 +15,7 @@ import { connectServer } from './connect.js';
 import { initialize } from './initialize.js';
 import { createToolsFromOpenApi } from './openapi/index.js';
 import { createSearchTool } from './search.js';
+import { isMcpEnabled } from './openapi/helpers.js';
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const server = initialize();
@@ -22,7 +24,8 @@ function main() {
         const openApiDir = path.join(fileURLToPath(import.meta.url), '../openapi');
         const openApiFilePaths = fs
             .readdirSync(openApiDir)
-            .filter((path) => path.startsWith('openapi-') && path.endsWith('.json'));
+            .filter((path) => path.startsWith('openapi-') && path.endsWith('.json'))
+            .filter((path) => isMcpEnabled(path));
         yield Promise.all(openApiFilePaths.map((openApiPath, index) => __awaiter(this, void 0, void 0, function* () {
             return yield createToolsFromOpenApi(path.join(openApiDir, openApiPath), index, server, existingTools);
         })));
