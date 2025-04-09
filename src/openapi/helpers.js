@@ -174,7 +174,10 @@ export function loadEnv(key) {
         }
     }
     catch (error) {
-        // if there's no env, the user will be prompted
+        if (error instanceof SyntaxError) {
+            throw error;
+        }
+        // if there's no keys added in env, the user will be prompted
         // for their auth info at runtime if necessary
         // (shouldn't happen either way)
     }
