@@ -116,6 +116,12 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                                 inputCookies[key] = envValue;
                             }
                         });
+                        Object.entries(securityParams.header).forEach(([key, value]) => {
+                            const headerValue = envVars.header?.[key];
+                            if (headerValue) {
+                                inputHeaders[key] = headerValue;
+                            }
+                        });
                     }
                 }
                 try {

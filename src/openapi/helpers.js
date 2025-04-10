@@ -197,23 +197,7 @@ function convertParametersAndAddToRelevantParamGroups(parameters, paths, queries
 }
 function convertSecurityParameterSection(securityParameters, securityParamSection, envVariables, location) {
     Object.entries(securityParameters).forEach(([key, value]) => {
-        let envKeyList = [];
-        let targetKey = '';
-        switch (value.type) {
-            case 'apiKey':
-                envKeyList = [location, key];
-                targetKey = 'API_KEY';
-                break;
-            case 'http':
-                envKeyList = [location, key, 'HTTP'];
-                targetKey = value.scheme;
-                break;
-            case 'oauth2':
-            default:
-                break;
-        }
-        const target = initializeObject(Object.assign({}, envVariables), envKeyList);
-        if (envKeyList.length && !target[targetKey]) {
+        if (envVariables[key] === undefined) {
             securityParamSection[key] = z.string();
         }
     });
@@ -248,21 +232,10 @@ export function convertEndpointToCategorizedZod(envKey, endpoint) {
 }
 
 export function getValFromNestedJson(key, jsonObj) {
-    if (!key) {
+    if (!key || !jsonObj) {
         return;
     }
-    var keySplit = key.split(".");
-    var keyValue = jsonObj;
-    for (const subKey of keySplit) {
-        if (keyValue && subKey in keyValue) {
-            keyValue = keyValue[subKey];
-        } else {
-            return undefined;
-        }
-
-    }
-
-    return keyValue;
+    return jsonObj[key];
 }
 
 export function isMcpEnabled(path) {
