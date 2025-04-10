@@ -1,4 +1,3 @@
-
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,12 +15,132 @@ import { initialize } from './initialize.js';
 import { createToolsFromOpenApi } from './openapi/index.js';
 import { createSearchTool } from './search.js';
 import { isMcpEnabled } from './openapi/helpers.js';
+import { readConfig } from './config.js';
+
+// Remove redundant import and use path.dirname instead
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+let authArg = null;
+
+// Check for --payments_key=value format
+const equalFlag = args.find(arg => arg.startsWith('--payments_key='));
+if (equalFlag) {
+  authArg = equalFlag.split('=')[1];
+}
+
+// Check for --payments_key value format
+const spaceIndex = args.indexOf('--payments_key');
+if (spaceIndex !== -1 && args[spaceIndex + 1]) {
+  authArg = args[spaceIndex + 1];
+}
+
+if (!authArg) {
+  console.error('Please provide authentication using --payments_key=x-client-id:x-client-secret or --payments_key x-client-id:x-client-secret');
+  process.exit(1);
+}
+
+// Split and validate auth credentials
+const [clientId, clientSecret] = authArg.split(':');
+if (!clientId || !clientSecret) {
+  console.error('Invalid authentication format. Use x-client-id:x-client-secret as the key value');
+  process.exit(1);
+}
+
+// Configure headers
+const pgHeaders = {
+  'x-client-id': clientId,
+  'x-client-secret': clientSecret
+};
+
+// Parse command line arguments for SecureID API
+const secureidSpaceIndex = args.indexOf('--secureid_key');
+const secureidEqualFlag = args.find(arg => arg.startsWith('--secureid_key='));
+let secureidArg = null;
+
+if (secureidEqualFlag) {
+  secureidArg = secureidEqualFlag.split('=')[1];
+} else if (secureidSpaceIndex !== -1 && args[secureidSpaceIndex + 1]) {
+  secureidArg = args[secureidSpaceIndex + 1];
+}
+
+// Configure SecureID headers if provided
+const vrsHeaders = {};
+if (secureidArg) {
+  const [clientId, clientSecret] = secureidArg.split(':');
+  if (!clientId || !clientSecret) {
+    console.error('Invalid SecureID authentication format. Use x-client-id:x-client-secret as the key value');
+    process.exit(1);
+  }
+  vrsHeaders['x-client-id'] = clientId;
+  vrsHeaders['x-client-secret'] = clientSecret;
+}
+
+// Parse command line arguments for Payouts API
+const payoutsSpaceIndex = args.indexOf('--payouts_key');
+const payoutsEqualFlag = args.find(arg => arg.startsWith('--payouts_key='));
+let payoutsArg = null;
+
+if (payoutsEqualFlag) {
+  payoutsArg = payoutsEqualFlag.split('=')[1];
+} else if (payoutsSpaceIndex !== -1 && args[payoutsSpaceIndex + 1]) {
+  payoutsArg = args[payoutsSpaceIndex + 1];
+}
+
+// Configure Payouts headers if provided
+const poHeaders = {};
+if (payoutsArg) {
+  const [clientId, clientSecret] = payoutsArg.split(':');
+  if (!clientId || !clientSecret) {
+    console.error('Invalid Payouts authentication format. Use x-client-id:x-client-secret as the key value');
+    process.exit(1);
+  }
+  poHeaders['x-client-id'] = clientId;
+  poHeaders['x-client-secret'] = clientSecret;
+}
+
+function getConfig() {
+  const config = readConfig();
+  
+  // Override PG API credentials with command line args if provided
+  if (config['Cashfree Payment Gateway APIs - 2025-01-01']) {
+    config['Cashfree Payment Gateway APIs - 2025-01-01'].header = {
+      ...config['Cashfree Payment Gateway APIs - 2025-01-01'].header,
+      'x-client-id': pgHeaders['x-client-id'],
+      'x-client-secret': pgHeaders['x-client-secret']
+    };
+  }
+
+  // Override SecureID API credentials if provided
+  if (secureidArg && config['Cashfree Verification API\'s. - 2023-12-18']) {
+    config['Cashfree Verification API\'s. - 2023-12-18'].header = {
+      ...config['Cashfree Verification API\'s. - 2023-12-18'].header,
+      'x-client-id': vrsHeaders['x-client-id'],
+      'x-client-secret': vrsHeaders['x-client-secret']
+    };
+  }
+
+  // Override Payouts API credentials if provided
+  if (payoutsArg && config['Cashfree Payout APIs - 2024-01-01']) {
+    config['Cashfree Payout APIs - 2024-01-01'].header = {
+      ...config['Cashfree Payout APIs - 2024-01-01'].header,
+      'x-client-id': poHeaders['x-client-id'],
+      'x-client-secret': poHeaders['x-client-secret']
+    };
+  }
+  
+  return config;
+}
+
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        const server = initialize();
+        const config = getConfig();
+        const server = initialize(config);
         const existingTools = new Set();
         yield createSearchTool(server);
-        const openApiDir = path.join(fileURLToPath(import.meta.url), '../openapi');
+        const openApiDir = path.join(__dirname, 'openapi');
         const openApiFilePaths = fs
             .readdirSync(openApiDir)
             .filter((path) => path.startsWith('openapi-') && path.endsWith('.json'))
