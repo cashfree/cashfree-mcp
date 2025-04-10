@@ -184,7 +184,7 @@ export function getValFromNestedJson(key, jsonObj) {
 }
 
 export function isMcpEnabled(path) {
-    let enabledProducts =  loadEnv('McpTools');
-    const product = path.split('.json')[0].split('-')[1]; 
-    return enabledProducts[product] === true;
+    const product = path.split('.json')[0].split('-')[1];
+    // Use the global mcpTools variable
+    return global.mcpTools?.[product] === true;
 }

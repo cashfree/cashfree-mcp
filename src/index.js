@@ -23,6 +23,40 @@ const __dirname = path.dirname(__filename);
 
 // Parse command line arguments
 const args = process.argv.slice(2);
+
+// Parse production flag
+const isProduction = args.includes('--production');
+
+// Parse tools argument
+const toolsEqualFlag = args.find(arg => arg.startsWith('--tools='));
+const toolsSpaceIndex = args.indexOf('--tools');
+let toolsArg = null;
+
+if (toolsEqualFlag) {
+  toolsArg = toolsEqualFlag.split('=')[1];
+} else if (toolsSpaceIndex !== -1 && args[toolsSpaceIndex + 1]) {
+  toolsArg = args[toolsSpaceIndex + 1];
+}
+
+// Configure McpTools based on command line args
+const mcpTools = {
+  PG: false,
+  PO: false,
+  VRS: false
+};
+
+if (toolsArg) {
+  const tools = toolsArg.toLowerCase().split(',');
+  tools.forEach(tool => {
+    if (tool === 'pg') mcpTools.PG = true;
+    if (tool === 'po') mcpTools.PO = true;
+    if (tool === 'vrs') mcpTools.VRS = true;
+  });
+}
+
+// Make mcpTools globally available
+global.mcpTools = mcpTools;
+
 let authArg = null;
 
 // Check for --payments_key=value format
@@ -104,8 +138,13 @@ if (payoutsArg) {
 function getConfig() {
   const config = readConfig();
   
-  // Override PG API credentials with command line args if provided
+  // Set base_url based on production flag
   if (config['Cashfree Payment Gateway APIs - 2025-01-01']) {
+    config['Cashfree Payment Gateway APIs - 2025-01-01'].base_url = isProduction 
+      ? 'https://api.cashfree.com/pg'
+      : 'https://sandbox.cashfree.com/pg';
+
+    // Override PG API credentials with command line args if provided
     config['Cashfree Payment Gateway APIs - 2025-01-01'].header = {
       ...config['Cashfree Payment Gateway APIs - 2025-01-01'].header,
       'x-client-id': pgHeaders['x-client-id'],
