@@ -24,62 +24,7 @@ export function findNextIteration(set, str) {
     });
     return count + 1;
 }
-export function getMcpEnabledEndpointsFromOpenApiSpecs(specs) {
-    var _a;
-    const mcpEnabledEndpoints = [];
-    for (const spec of specs) {
-        const isMcpEnabledGloballyInSpec = ((_a = spec['x-mcp']) === null || _a === void 0 ? void 0 : _a.enabled) === true;
-        const endpoints = getEndpointsFromOpenApi(spec);
-        if (isMcpEnabledGloballyInSpec) {
-            const notDisabledEndpoints = endpoints.filter((endpoint) => { var _a; return ((_a = endpoint.xMcp) === null || _a === void 0 ? void 0 : _a.enabled) !== false; });
-            mcpEnabledEndpoints.push(...notDisabledEndpoints);
-        }
-        else {
-            const enabledEndpoints = endpoints.filter((endpoint) => { var _a; return ((_a = endpoint.xMcp) === null || _a === void 0 ? void 0 : _a.enabled) === true; });
-            mcpEnabledEndpoints.push(...enabledEndpoints);
-        }
-    }
-    return mcpEnabledEndpoints;
-}
-export function convertEndpointToTool(endpoint) {
-    var _a, _b;
-    let name;
-    if ((_a = endpoint.xMcp) === null || _a === void 0 ? void 0 : _a.name) {
-        name = endpoint.xMcp.name;
-    }
-    else if (endpoint.title) {
-        name = dashify(endpoint.title);
-    }
-    else {
-        name = convertStrToTitle(endpoint.path);
-    }
-    let description;
-    if ((_b = endpoint.xMcp) === null || _b === void 0 ? void 0 : _b.description) {
-        description = endpoint.xMcp.description;
-    }
-    else if (endpoint.description) {
-        description = endpoint.description;
-    }
-    else {
-        description = `${endpoint.method} ${endpoint.path}`;
-    }
-    return {
-        name,
-        description,
-    };
-}
-export function getMcpToolsAndEndpointsFromOpenApiSpecs(specs) {
-    const endpoints = getMcpEnabledEndpointsFromOpenApiSpecs(specs);
-    const toolsWithEndpoints = [];
-    endpoints.forEach((endpoint) => {
-        const tool = convertEndpointToTool(endpoint);
-        toolsWithEndpoints.push({
-            tool,
-            endpoint,
-        });
-    });
-    return toolsWithEndpoints;
-}
+
 // Helper function to resolve references in an OpenAPI specification
 function resolveReferences(spec, refPath, cache = {}) {
     // Return from cache if already resolved

@@ -73,19 +73,6 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                 if (endpoint.request.security.length > 0) {
                     const securityParams = (_a = endpoint.request.security[0]) === null || _a === void 0 ? void 0 : _a.parameters;
                     if (securityParams) {
-                        Object.entries(securityParams.query).forEach(([key, value]) => {
-                            let envKey = '';
-                            if (value.type === 'apiKey') {
-                                envKey = `query.${key}.API_KEY`;
-                            }
-                            else if (value.type === 'http') {
-                                envKey = `query.${key}.HTTP.${value.scheme}`;
-                            }
-                            const envValue = getValFromNestedJson(envKey, envVars);
-                            if (envKey && envValue) {
-                                inputParams[key] = envValue;
-                            }
-                        });
                         Object.entries(securityParams.header).forEach(([key, value]) => {
                             let envKey = '';
                             if (value.type === 'apiKey') {
@@ -101,19 +88,6 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                             const envValue = getValFromNestedJson(envKey, envVars);
                             if (envKey && envValue) {
                                 inputHeaders[key] = envValue;
-                            }
-                        });
-                        Object.entries(securityParams.cookie).forEach(([key, value]) => {
-                            let envKey = '';
-                            if (value.type === 'apiKey') {
-                                envKey = `cookie.${key}.API_KEY`;
-                            }
-                            else if (value.type === 'http') {
-                                envKey = `cookie.${key}.HTTP.${value.scheme}`;
-                            }
-                            const envValue = getValFromNestedJson(envKey, envVars);
-                            if (envKey && envValue) {
-                                inputCookies[key] = envValue;
                             }
                         });
                         Object.entries(securityParams.header).forEach(([key, value]) => {

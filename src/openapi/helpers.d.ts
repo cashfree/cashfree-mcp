@@ -12,9 +12,6 @@ type ToolWithEndpoint = {
 };
 export declare function convertStrToTitle(str: string): string;
 export declare function findNextIteration(set: Set<string>, str: string): number;
-export declare function getMcpEnabledEndpointsFromOpenApiSpecs(specs: OpenAPI.Document[]): Endpoint<DataSchemaArray>[];
-export declare function convertEndpointToTool(endpoint: Endpoint<DataSchemaArray>): Omit<Tool, 'inputSchema'>;
-export declare function getMcpToolsAndEndpointsFromOpenApiSpecs(specs: OpenAPI.Document[]): ToolWithEndpoint[];
 export declare function getEndpointsFromOpenApi(specification: OpenAPI.Document): Endpoint<DataSchemaArray>[];
 export declare function loadEnv(key: string): SimpleRecord;
 export declare function convertEndpointToCategorizedZod(envKey: string, endpoint: Endpoint): {
