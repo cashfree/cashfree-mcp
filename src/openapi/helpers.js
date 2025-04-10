@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { initializeObject } from '../utils.js';
 import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
 import { load } from 'js-yaml';
+import { getConfig } from '../index.js';
+
 export function convertStrToTitle(str) {
     const spacedString = str.replace(/[-_]/g, ' ');
     const words = spacedString.split(/(?=[A-Z])|\s+/);
@@ -109,24 +111,17 @@ export function getEndpointsFromOpenApi(specification) {
     return endpoints;
 }
 export function loadEnv(key) {
-    var _a;
-    let envVars = {};
     try {
-        const envPath = path.join(fileURLToPath(import.meta.url), '../../..', '.env.json');
-        if (fs.existsSync(envPath)) {
-            envVars = JSON.parse(fs.readFileSync(envPath).toString());
-            return (_a = envVars[key]) !== null && _a !== void 0 ? _a : {};
-        }
+        const config = getConfig();
+        return config[key] || {};
     }
     catch (error) {
         if (error instanceof SyntaxError) {
             throw error;
         }
-        // if there's no keys added in env, the user will be prompted
-        // for their auth info at runtime if necessary
-        // (shouldn't happen either way)
+        // if there's no config, return empty object
+        return {};
     }
-    return envVars;
 }
 function convertParameterSection(parameters, paramSection) {
     Object.entries(parameters).forEach(([key, value]) => {

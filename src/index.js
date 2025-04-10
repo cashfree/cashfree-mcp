@@ -135,15 +135,15 @@ if (payoutsArg) {
   poHeaders['x-client-secret'] = clientSecret;
 }
 
-function getConfig() {
+export function getConfig() {
   const config = readConfig();
-  
   // Set base_url based on production flag
   if (config['Cashfree Payment Gateway APIs - 2025-01-01']) {
+    // console.log("===");
     config['Cashfree Payment Gateway APIs - 2025-01-01'].base_url = isProduction 
       ? 'https://api.cashfree.com/pg'
       : 'https://sandbox.cashfree.com/pg';
-
+      // console.log(config['Cashfree Payment Gateway APIs - 2025-01-01']);
     // Override PG API credentials with command line args if provided
     config['Cashfree Payment Gateway APIs - 2025-01-01'].header = {
       ...config['Cashfree Payment Gateway APIs - 2025-01-01'].header,
@@ -194,3 +194,4 @@ main().catch((error) => {
     console.error('Fatal error in trying to initialize MCP server: ', error);
     process.exit(1);
 });
+
