@@ -23,45 +23,67 @@ npm install cashfree-mcp
 
 ## Configuration
 
-Create a `.env.json` file in your project root (or copy from the provided `.env.sample.json`):
+The library is configured using environment variables in your project's configuration. Here's how to configure it:
 
-```json
+```javascript
 {
-  "McpTools": {
-    "PG": true,
-    "PO": false,
-    "VRS": false
-  },
-  "Cashfree Payment Gateway APIs - 2025-01-01": {
-    "base_url": "https://api.cashfree.com/pg",
-    "header": {
-      "x-client-id": {
-        "API_KEY": "YOUR_CLIENT_ID_HERE"
-      },
-      "x-client-secret": {
-        "API_KEY": "YOUR_CLIENT_SECRET_HERE"
-      }
+  "cashfree": {
+    "command": "node",
+    "args": ["/path/to/index.js"],
+    "env": {
+      "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
+      "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
+      "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
+      "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
+      "VRS_APP_ID": "YOUR_VRS_CLIENT_ID",
+      "VRS_APP_SECRET": "YOUR_VRS_CLIENT_SECRET",
+      "TOOLS": "pg,payouts,vrs",
+      "ENV": "sandbox"
     }
   }
 }
 ```
 
-## Usage
+### Configuration Options
 
+#### API Credentials
+Configure your API credentials for each service:
 
+Payment Gateway:
+- `PAYMENTS_APP_ID`: Your Payment Gateway client ID
+- `PAYMENTS_APP_SECRET`: Your Payment Gateway client secret
+
+Payouts:
+- `PAYOUTS_APP_ID`: Your Payouts client ID
+- `PAYOUTS_APP_SECRET`: Your Payouts client secret
+
+Verification (VRS):
+- `VRS_APP_ID`: Your VRS client ID
+- `VRS_APP_SECRET`: Your VRS client secret
+
+#### Tools Configuration
+- `TOOLS`: Comma-separated list of tools to enable (e.g. "pg,payouts,vrs")
+Available options:
+  - `pg`: Payment Gateway APIs
+  - `payouts`: Payouts APIs
+  - `vrs`: Verification APIs
+
+#### Environment
+- `ENV`: Set to "production" for production environment, "sandbox" for sandbox (default: "sandbox")
 
 ## Available Modules
 
 The library supports the following Cashfree modules:
 
 - **PG** - Payment Gateway APIs
+- **Payouts** - Payouts APIs
+- **VRS** - Verification APIs
 
-Enable or disable them in your `.env.json` configuration.
+Enable them by including them in the TOOLS environment variable.
 
 ## Environment
 
-By default, the library connects to Cashfree's sandbox environment. For production use, initialize with the production server URL change in .env.json
-
+By default, the library connects to Cashfree's sandbox environment. For production use, set ENV to "production".
 
 ## Documentation
 

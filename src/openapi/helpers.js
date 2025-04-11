@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { initializeObject } from '../utils.js';
 import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
 import { load } from 'js-yaml';
-import { getConfig } from '../index.js';
+import { readConfig } from '../config.js';
 
 export function convertStrToTitle(str) {
     const spacedString = str.replace(/[-_]/g, ' ');
@@ -112,7 +112,7 @@ export function getEndpointsFromOpenApi(specification) {
 }
 export function loadEnv(key) {
     try {
-        const config = getConfig();
+        const config = readConfig();
         return config[key] || {};
     }
     catch (error) {
@@ -180,6 +180,12 @@ export function getValFromNestedJson(key, jsonObj) {
 
 export function isMcpEnabled(path) {
     const product = path.split('.json')[0].split('-')[1];
-    // Use the global mcpTools variable
-    return global.mcpTools?.[product] === true;
+    const tools = process.env.TOOLS ? process.env.TOOLS.toLowerCase().split(',') : [];
+    
+    switch(product) {
+        case 'PG': return tools.includes('pg');
+        case 'PO': return tools.includes('payouts');
+        case 'VRS': return tools.includes('vrs');
+        default: return false;
+    }
 }
