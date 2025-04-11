@@ -131,7 +131,7 @@ function convertParametersAndAddToRelevantParamGroups(parameters, paths, queries
 }
 function convertSecurityParameterSection(securityParameters, securityParamSection, envVariables, location) {
     Object.entries(securityParameters).forEach(([key, value]) => {
-        if (envVariables[key] === undefined) {
+        if (envVariables[location][key] === undefined) {
             securityParamSection[key] = z.string();
         }
     });
@@ -151,7 +151,9 @@ export function convertEndpointToCategorizedZod(envKey, endpoint) {
     const headers = {};
     const cookies = {};
     let body = undefined;
+
     convertParametersAndAddToRelevantParamGroups(endpoint.request.parameters, paths, queries, headers, cookies);
+
     if ((_c = endpoint.request.security[0]) === null || _c === void 0 ? void 0 : _c.parameters) {
         convertSecurityParametersAndAddToRelevantParamGroups(endpoint.request.security[0].parameters, queries, headers, cookies, envVariables);
     }

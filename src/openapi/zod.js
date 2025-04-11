@@ -121,6 +121,11 @@ export function dataSchemaToZod(schema) {
                 case 'date-time':
                     return schema.required ? DATE : DATE_OPT;
             }
+            if ('default' in schema) {
+                return schema.required 
+                    ? stringSchema.default(schema.default)
+                    : stringSchema.optional().default(schema.default);
+            }
             return schema.required ? stringSchema : stringSchema.optional();
         case 'number':
         case 'integer':

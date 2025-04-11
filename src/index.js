@@ -40,7 +40,7 @@ if (toolsEqualFlag) {
 
 // Configure McpTools based on command line args
 const mcpTools = {
-  PG: false,
+  PG: true,
   PO: false,
   VRS: false
 };
