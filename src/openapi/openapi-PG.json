@@ -10548,7 +10548,6 @@
       "apiVersionHeader": {
         "in": "header",
         "name": "x-api-version",
-        "required": true,
         "description": "API version to be used. Format is in YYYY-MM-DD",
         "schema": {
           "type": "string",
