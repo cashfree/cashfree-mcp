@@ -1,12 +1,6 @@
 import { OpenApiToEndpointConverter, } from '@mintlify/validation';
-import dashify from 'dashify';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { initializeObject } from '../utils.js';
 import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
-import { load } from 'js-yaml';
 import { getConfig } from '../index.js';
 
 export function convertStrToTitle(str) {
