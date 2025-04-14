@@ -91,12 +91,15 @@ export function getEndpointsFromOpenApi(specification) {
             try {
                 // Resolve any references in the path item before converting
                 const resolvedPathItem = resolveAllReferences(operations[method], specification, refCache);
+                // resolve only mcp enabled endpoints
+                if (!isMcpEnabledEndpoint(resolvedPathItem)) {
+                    continue;
+                }
                 const endpoint = OpenApiToEndpointConverter.convert(
                   {...specification, paths: {[path]: {[method]: resolvedPathItem}}}, 
                   path, 
                   method
                 );
-                
                 endpoints.push(endpoint);
             } catch (error) {
                 console.error(`Error processing endpoint ${method.toUpperCase()} ${path}:`, error.message);
@@ -185,4 +188,8 @@ export function isMcpEnabled(path) {
         case 'VRS': return tools.includes('vrs');
         default: return false;
     }
+}
+
+export function isMcpEnabledEndpoint(endpointSpec) {
+    return endpointSpec?.['x-mcp']?.['enabled'] === true;
 }
