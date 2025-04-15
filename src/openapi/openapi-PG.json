@@ -10548,7 +10548,6 @@
       "apiVersionHeader": {
         "in": "header",
         "name": "x-api-version",
-        "required": true,
         "description": "API version to be used. Format is in YYYY-MM-DD",
         "schema": {
           "type": "string",
@@ -15357,6 +15356,9 @@
     "/customers": {
       "post": {
         "summary": "Create Customer at Cashfree",
+        "x-mcp": {
+          "enabled": true
+        },
         "security": [
           {
             "XClientID": [],
@@ -16417,6 +16419,9 @@
     "/links": {
       "post": {
         "summary": "Create Payment Link",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to create a new payment link. The created payment link url will be available in the API response parameter link_url.",
         "tags": [
           "Payment Links"
@@ -16519,6 +16524,9 @@
     "/links/{link_id}": {
       "get": {
         "summary": "Fetch Payment Link Details",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to view all details and status of a payment link.",
         "tags": [
           "Payment Links"
@@ -16726,6 +16734,9 @@
     "/links/{link_id}/orders": {
       "get": {
         "summary": "Get Orders for a Payment Link",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to view all order details for a payment link.",
         "tags": [
           "Payment Links"
@@ -17854,6 +17865,9 @@
     "/orders/{order_id}/payments": {
       "get": {
         "summary": "Get Payments for an Order",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to view all payment details for an order.",
         "tags": [
           "Payments"
@@ -17967,6 +17981,9 @@
     "/orders/{order_id}/payments/{cf_payment_id}": {
       "get": {
         "summary": "Get Payment by ID",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to view payment details of an order for a Payment ID.",
         "tags": [
           "Payments"
@@ -18075,6 +18092,9 @@
     "/orders/{order_id}/refunds": {
       "post": {
         "summary": "Create Refund",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to initiate refunds.",
         "tags": [
           "Refunds"
@@ -18186,6 +18206,9 @@
       },
       "get": {
         "summary": "Get All Refunds for an Order",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to fetch all refunds processed against an order.",
         "tags": [
           "Refunds"
@@ -18296,6 +18319,9 @@
     "/orders/{order_id}/refunds/{refund_id}": {
       "get": {
         "summary": "Get Refund",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to fetch a specific refund processed on your Cashfree Account.",
         "tags": [
           "Refunds"
@@ -18411,6 +18437,9 @@
     "/orders/{order_id}/settlements": {
       "get": {
         "summary": "Get Settlements by Order ID",
+        "x-mcp": {
+          "enabled": true
+        },
         "tags": [
           "Settlements"
         ],
@@ -20078,6 +20107,9 @@
           "Settlement Reconciliation"
         ],
         "summary": "Settlement Reconciliation",
+        "x-mcp": {
+          "enabled": true
+        },
         "operationId": "PGSettlementFetchRecon",
         "description": "- Use this API to get settlement reconciliation details using Settlement ID, settlement UTR or date range.\n- This API will return events for the settlement IDs you want\n",
         "requestBody": {
@@ -20197,6 +20229,9 @@
           "Settlement Reconciliation"
         ],
         "summary": "Get All Settlements",
+        "x-mcp": {
+          "enabled": true
+        },
         "operationId": "PGFetchSettlements",
         "description": "Use this API to get all settlement details by specifying the settlement ID, settlement UTR or date range.",
         "requestBody": {
@@ -22509,6 +22544,9 @@
     "/subscriptions/{subscription_id}/payments/{payment_id}": {
       "get": {
         "summary": "Fetch details of a single payment.",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to fetch details of a single payment of a subscription.",
         "tags": [
           "Subscription"
@@ -22698,6 +22736,9 @@
     "/subscriptions/{subscription_id}/refunds/{refund_id}": {
       "get": {
         "summary": "Fetch details of a refund.",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to fetch details of a refund of a subscription payment.",
         "tags": [
           "Subscription"

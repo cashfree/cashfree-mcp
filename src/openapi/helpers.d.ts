@@ -1,29 +1,30 @@
 import { OpenAPI } from '@mintlify/openapi-types';
 import { HttpMethod } from '@mintlify/validation';
-import { Endpoint } from '@mintlify/validation';
+import { Endpoint } from '@mintlify/openapi-types';
 import { DataSchemaArray } from '@mintlify/validation';
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import { SimpleRecord } from '../utils.js';
-type ServerParams = Record<string, z.ZodSchema>;
+import { SimpleRecord } from './types';
+import { ServerParams } from './types';
+
 type ToolWithEndpoint = {
     tool: Omit<Tool, 'inputSchema'>;
     endpoint: Endpoint<DataSchemaArray>;
 };
+
 export declare function convertStrToTitle(str: string): string;
 export declare function findNextIteration(set: Set<string>, str: string): number;
-export declare function getMcpEnabledEndpointsFromOpenApiSpecs(specs: OpenAPI.Document[]): Endpoint<DataSchemaArray>[];
-export declare function convertEndpointToTool(endpoint: Endpoint<DataSchemaArray>): Omit<Tool, 'inputSchema'>;
-export declare function getMcpToolsAndEndpointsFromOpenApiSpecs(specs: OpenAPI.Document[]): ToolWithEndpoint[];
-export declare function getEndpointsFromOpenApi(specification: OpenAPI.Document): Endpoint<DataSchemaArray>[];
+export declare function getEndpointsFromOpenApi(specification: any): Endpoint[];
 export declare function loadEnv(key: string): SimpleRecord;
-export declare function convertEndpointToCategorizedZod(envKey: string, endpoint: Endpoint): {
+export declare type CategorizedZod = {
     url: string;
-    method: HttpMethod;
+    method: string;
     paths: ServerParams;
     queries: ServerParams;
-    body: ServerParams | undefined;
     headers: ServerParams;
     cookies: ServerParams;
 };
-export {};
+export declare function convertEndpointToCategorizedZod(envKey: string, endpoint: Endpoint): CategorizedZod;
+export declare function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any;
+export declare function isMcpEnabled(path: string): boolean;
+export declare function isMcpEnabledEndpoint(endpoint: Endpoint): boolean;

@@ -12,7 +12,7 @@ import axios, { isAxiosError } from 'axios';
 import dashify from 'dashify';
 import fs from 'node:fs';
 import { getFileId } from '../utils.js';
-import { convertEndpointToCategorizedZod, convertStrToTitle, findNextIteration, getEndpointsFromOpenApi, loadEnv, } from './helpers.js';
+import { convertEndpointToCategorizedZod, convertStrToTitle, findNextIteration, getEndpointsFromOpenApi, loadEnv, getValFromNestedJson, isMcpEnabledEndpoint, } from './helpers.js';
 export function createToolsFromOpenApi(openApiPath, index, server, existingTools) {
     return __awaiter(this, void 0, void 0, function* () {
         let openapi;
@@ -73,44 +73,27 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                 if (endpoint.request.security.length > 0) {
                     const securityParams = (_a = endpoint.request.security[0]) === null || _a === void 0 ? void 0 : _a.parameters;
                     if (securityParams) {
-                        Object.entries(securityParams.query).forEach(([key, value]) => {
-                            let envKey = '';
-                            if (value.type === 'apiKey') {
-                                envKey = `query_${key}_APIKEY`;
-                            }
-                            else if (value.type === 'http') {
-                                envKey = `query_${key}_HTTP_${value.scheme}`;
-                            }
-                            if (envKey && envKey in envVars) {
-                                inputParams[key] = envVars[envKey];
-                            }
-                        });
                         Object.entries(securityParams.header).forEach(([key, value]) => {
                             let envKey = '';
                             if (value.type === 'apiKey') {
-                                envKey = `header_${key}_APIKEY`;
+                                envKey = `header.${key}.API_KEY`;
                             }
                             else if (value.type === 'http') {
-                                envKey = `header_${key}_HTTP_${value.scheme}`;
+                                envKey = `header.${key}.HTTP.${value.scheme}`;
                                 if (value.scheme === 'bearer' && envKey in envVars) {
                                     inputHeaders['Authorization'] = `Bearer ${envVars[envKey]}`;
                                     return;
                                 }
                             }
-                            if (envKey && envKey in envVars) {
-                                inputHeaders[key] = envVars[envKey];
+                            const envValue = getValFromNestedJson(envKey, envVars);
+                            if (envKey && envValue) {
+                                inputHeaders[key] = envValue;
                             }
                         });
-                        Object.entries(securityParams.cookie).forEach(([key, value]) => {
-                            let envKey = '';
-                            if (value.type === 'apiKey') {
-                                envKey = `cookie_${key}_APIKEY`;
-                            }
-                            else if (value.type === 'http') {
-                                envKey = `cookie_${key}_HTTP_${value.scheme}`;
-                            }
-                            if (envKey && envKey in envVars) {
-                                inputCookies[key] = envVars[envKey];
+                        Object.entries(securityParams.header).forEach(([key, value]) => {
+                            const headerValue = envVars.header?.[key];
+                            if (headerValue) {
+                                inputHeaders[key] = headerValue;
                             }
                         });
                     }
@@ -134,12 +117,13 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                 }
                 catch (error) {
                     const errMsg = JSON.stringify(error, undefined, 2);
+                    const data = JSON.stringify(error.response ? error.response.data : {}, undefined, 2);
                     return {
                         isError: true,
                         content: [
                             {
                                 type: 'text',
-                                text: isAxiosError(error) ? `${error.message}\n\n${errMsg}` : errMsg,
+                                text: isAxiosError(error) ? `receivedPayload: ${data}\n\n errorMessage: ${error.message}\n\n${errMsg}` : `receivedPayload: ${data}\n\n errorMessage: ${errMsg}`,
                             },
                         ],
                     };

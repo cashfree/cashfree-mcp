@@ -1,11 +1,9 @@
 import { OpenApiToEndpointConverter, } from '@mintlify/validation';
-import dashify from 'dashify';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { initializeObject } from '../utils.js';
 import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
+import { load } from 'js-yaml';
+import { readConfig } from '../config.js';
+
 export function convertStrToTitle(str) {
     const spacedString = str.replace(/[-_]/g, ' ');
     const words = spacedString.split(/(?=[A-Z])|\s+/);
@@ -23,93 +21,105 @@ export function findNextIteration(set, str) {
     });
     return count + 1;
 }
-export function getMcpEnabledEndpointsFromOpenApiSpecs(specs) {
-    var _a;
-    const mcpEnabledEndpoints = [];
-    for (const spec of specs) {
-        const isMcpEnabledGloballyInSpec = ((_a = spec['x-mcp']) === null || _a === void 0 ? void 0 : _a.enabled) === true;
-        const endpoints = getEndpointsFromOpenApi(spec);
-        if (isMcpEnabledGloballyInSpec) {
-            const notDisabledEndpoints = endpoints.filter((endpoint) => { var _a; return ((_a = endpoint.xMcp) === null || _a === void 0 ? void 0 : _a.enabled) !== false; });
-            mcpEnabledEndpoints.push(...notDisabledEndpoints);
-        }
-        else {
-            const enabledEndpoints = endpoints.filter((endpoint) => { var _a; return ((_a = endpoint.xMcp) === null || _a === void 0 ? void 0 : _a.enabled) === true; });
-            mcpEnabledEndpoints.push(...enabledEndpoints);
-        }
+
+// Helper function to resolve references in an OpenAPI specification
+function resolveReferences(spec, refPath, cache = {}) {
+    // Return from cache if already resolved
+    if (cache[refPath]) {
+      return cache[refPath];
     }
-    return mcpEnabledEndpoints;
-}
-export function convertEndpointToTool(endpoint) {
-    var _a, _b;
-    let name;
-    if ((_a = endpoint.xMcp) === null || _a === void 0 ? void 0 : _a.name) {
-        name = endpoint.xMcp.name;
+  
+    if (!refPath.startsWith('#/')) {
+      throw new Error(`External references not supported: ${refPath}`);
     }
-    else if (endpoint.title) {
-        name = dashify(endpoint.title);
+  
+    const pathParts = refPath.substring(2).split('/');
+    let current = spec;
+  
+    for (const part of pathParts) {
+      if (!current[part]) {
+        throw new Error(`Reference not found: ${refPath}`);
+      }
+      current = current[part];
     }
-    else {
-        name = convertStrToTitle(endpoint.path);
+  
+    // Handle nested references
+    if (current && current.$ref) {
+      current = resolveReferences(spec, current.$ref, cache);
     }
-    let description;
-    if ((_b = endpoint.xMcp) === null || _b === void 0 ? void 0 : _b.description) {
-        description = endpoint.xMcp.description;
+  
+    // Cache the resolved reference
+    cache[refPath] = current;
+    return current;
+  }
+  
+  // Function to deeply resolve all references in an object
+  function resolveAllReferences(obj, spec, cache = {}) {
+    if (!obj || typeof obj !== 'object') {
+      return obj;
     }
-    else if (endpoint.description) {
-        description = endpoint.description;
+  
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => resolveAllReferences(item, spec, cache));
     }
-    else {
-        description = `${endpoint.method} ${endpoint.path}`;
+  
+    // Handle $ref
+    if (obj.$ref) {
+      const resolved = resolveReferences(spec, obj.$ref, cache);
+      return resolveAllReferences({...resolved}, spec, cache);
     }
-    return {
-        name,
-        description,
-    };
-}
-export function getMcpToolsAndEndpointsFromOpenApiSpecs(specs) {
-    const endpoints = getMcpEnabledEndpointsFromOpenApiSpecs(specs);
-    const toolsWithEndpoints = [];
-    endpoints.forEach((endpoint) => {
-        const tool = convertEndpointToTool(endpoint);
-        toolsWithEndpoints.push({
-            tool,
-            endpoint,
-        });
-    });
-    return toolsWithEndpoints;
-}
+  
+    // Handle regular objects
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = resolveAllReferences(value, spec, cache);
+    }
+    return result;
+  }
+  
 export function getEndpointsFromOpenApi(specification) {
     const endpoints = [];
     const paths = specification.paths;
+    const refCache = {};
     for (const path in paths) {
         const operations = paths[path];
         for (const method in operations) {
             if (method === 'parameters' || method === 'trace') {
                 continue;
             }
-            const endpoint = OpenApiToEndpointConverter.convert(specification, path, method, true);
-            endpoints.push(endpoint);
+            try {
+                // Resolve any references in the path item before converting
+                const resolvedPathItem = resolveAllReferences(operations[method], specification, refCache);
+                // resolve only mcp enabled endpoints
+                if (!isMcpEnabledEndpoint(resolvedPathItem)) {
+                    continue;
+                }
+                const endpoint = OpenApiToEndpointConverter.convert(
+                  {...specification, paths: {[path]: {[method]: resolvedPathItem}}}, 
+                  path, 
+                  method
+                );
+                endpoints.push(endpoint);
+            } catch (error) {
+                console.error(`Error processing endpoint ${method.toUpperCase()} ${path}:`, error.message);
+            }
         }
     }
     return endpoints;
 }
 export function loadEnv(key) {
-    var _a;
-    let envVars = {};
     try {
-        const envPath = path.join(fileURLToPath(import.meta.url), '../../..', '.env.json');
-        if (fs.existsSync(envPath)) {
-            envVars = JSON.parse(fs.readFileSync(envPath).toString());
-            return (_a = envVars[key]) !== null && _a !== void 0 ? _a : {};
-        }
+        const config = readConfig();
+        return config[key] || {};
     }
     catch (error) {
-        // if there's no env, the user will be prompted
-        // for their auth info at runtime if necessary
-        // (shouldn't happen either way)
+        if (error instanceof SyntaxError) {
+            throw error;
+        }
+        // if there's no config, return empty object
+        return {};
     }
-    return envVars;
 }
 function convertParameterSection(parameters, paramSection) {
     Object.entries(parameters).forEach(([key, value]) => {
@@ -125,23 +135,7 @@ function convertParametersAndAddToRelevantParamGroups(parameters, paths, queries
 }
 function convertSecurityParameterSection(securityParameters, securityParamSection, envVariables, location) {
     Object.entries(securityParameters).forEach(([key, value]) => {
-        let envKeyList = [];
-        let targetKey = '';
-        switch (value.type) {
-            case 'apiKey':
-                envKeyList = [location, key];
-                targetKey = 'API_KEY';
-                break;
-            case 'http':
-                envKeyList = [location, key, 'HTTP'];
-                targetKey = value.scheme;
-                break;
-            case 'oauth2':
-            default:
-                break;
-        }
-        const target = initializeObject(Object.assign({}, envVariables), envKeyList);
-        if (envKeyList.length && !target[targetKey]) {
+        if (envVariables[location][key] === undefined) {
             securityParamSection[key] = z.string();
         }
     });
@@ -154,14 +148,16 @@ function convertSecurityParametersAndAddToRelevantParamGroups(securityParameters
 export function convertEndpointToCategorizedZod(envKey, endpoint) {
     var _a, _b, _c;
     const envVariables = loadEnv(envKey);
-    const url = `${((_b = (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.url) || ''}${endpoint.path}`;
+    const url = `${envVariables.base_url || ((_b = (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.url) || ''}${endpoint.path}`;
     const method = endpoint.method;
     const paths = {};
     const queries = {};
     const headers = {};
     const cookies = {};
     let body = undefined;
+
     convertParametersAndAddToRelevantParamGroups(endpoint.request.parameters, paths, queries, headers, cookies);
+
     if ((_c = endpoint.request.security[0]) === null || _c === void 0 ? void 0 : _c.parameters) {
         convertSecurityParametersAndAddToRelevantParamGroups(endpoint.request.security[0].parameters, queries, headers, cookies, envVariables);
     }
@@ -173,4 +169,27 @@ export function convertEndpointToCategorizedZod(envKey, endpoint) {
         body = { body: zodBodySchema };
     }
     return { url, method, paths, queries, body, headers, cookies };
+}
+
+export function getValFromNestedJson(key, jsonObj) {
+    if (!key || !jsonObj) {
+        return;
+    }
+    return jsonObj[key];
+}
+
+export function isMcpEnabled(path) {
+    const product = path.split('.json')[0].split('-')[1];
+    const tools = process.env.TOOLS ? process.env.TOOLS.toLowerCase().split(',') : [];
+    
+    switch(product) {
+        case 'PG': return tools.includes('pg');
+        case 'PO': return tools.includes('payouts');
+        case 'VRS': return tools.includes('vrs');
+        default: return false;
+    }
+}
+
+export function isMcpEnabledEndpoint(endpointSpec) {
+    return endpointSpec?.['x-mcp']?.['enabled'] === true;
 }
