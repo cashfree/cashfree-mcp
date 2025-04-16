@@ -12,7 +12,7 @@ import axios, { isAxiosError } from 'axios';
 import dashify from 'dashify';
 import fs from 'node:fs';
 import { getFileId } from '../utils.js';
-import { convertEndpointToCategorizedZod, convertStrToTitle, findNextIteration, getEndpointsFromOpenApi, loadEnv, getValFromNestedJson, isMcpEnabledEndpoint, } from './helpers.js';
+import { convertEndpointToCategorizedZod, convertStrToTitle, findNextIteration, getEndpointsFromOpenApi, loadEnv, getValFromNestedJson, generateCfSignature, } from './helpers.js';
 export function createToolsFromOpenApi(openApiPath, index, server, existingTools) {
     return __awaiter(this, void 0, void 0, function* () {
         let openapi;
@@ -97,6 +97,9 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                             }
                         });
                     }
+                }
+                if (openApiPath.includes('PO') || openApiPath.includes('VRS')) {
+                    inputHeaders['x-cf-signature'] = generateCfSignature(envVars.header?.["x-client-id"], envVars.TWO_FA_PUBLIC_KEY);
                 }
                 try {
                     const response = yield axios({
