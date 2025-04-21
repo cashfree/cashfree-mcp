@@ -119,6 +119,15 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                     };
                 }
                 catch (error) {
+                    
+                    if (error.config && error.config.headers) {
+                        ['x-client-id', 'x-client-secret', 'Authorization'].forEach((header) => {
+                            if (error.config.headers[header]) {
+                                error.config.headers[header] = '[MASKED]';
+                            }
+                        });
+                    }
+
                     const errMsg = JSON.stringify(error, undefined, 2);
                     const data = JSON.stringify(error.response ? error.response.data : {}, undefined, 2);
                     return {
