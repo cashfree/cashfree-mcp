@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
 import { load } from 'js-yaml';
 import { readConfig } from '../config.js';
+import crypto from 'crypto';
+import axios from 'axios';
+import fs from 'fs';
 
 export function convertStrToTitle(str) {
     const spacedString = str.replace(/[-_]/g, ' ');
@@ -168,6 +171,7 @@ export function convertEndpointToCategorizedZod(envKey, endpoint) {
         const zodBodySchema = dataSchemaToZod(bodySchema);
         body = { body: zodBodySchema };
     }
+    // console.log("Headers ", JSON.stringify(headers));
     return { url, method, paths, queries, body, headers, cookies };
 }
 
@@ -192,4 +196,39 @@ export function isMcpEnabled(path) {
 
 export function isMcpEnabledEndpoint(endpointSpec) {
     return endpointSpec?.['x-mcp']?.['enabled'] === true;
+}
+
+
+/**
+ * Generate a signature by encrypting the client ID and current UNIX timestamp using RSA encryption.
+ * @param {string} clientId - The client ID to be used in the signature.
+ * @param {string} publicKey - The RSA public key for encryption.
+ * @returns {string} - The generated signature.
+ */
+export function generateCfSignature(clientId, publicKey) {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000); // Current UNIX timestamp
+        const data = `${clientId}.${timestamp}`;
+        console.log("data" , data, "test");
+        const buffer = Buffer.from(data, 'utf8');
+        const encrypted = crypto.publicEncrypt(publicKey, buffer);
+        return encrypted.toString('base64');
+    } catch (error) {
+        console.error(`Error generating signature: ${error.message}`);
+    }
+}
+
+/**
+ * Retrieve the public key from a given file path.
+ * @param {string} path - The file path to the public key.
+ * @returns {string} - The public key as a string.
+ * @throws {Error} - If the file cannot be read.
+ */
+export function getPublicKeyFromPath(path) {
+    try {
+        return fs.readFileSync(path, 'utf8');
+    } catch (error) {
+        console.warn(`Warning: Failed to read public key from path: ${error.message}`);
+        return null;
+    }
 }

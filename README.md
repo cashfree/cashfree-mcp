@@ -35,6 +35,7 @@ The library is configured using environment variables in your project's configur
       "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
       "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
       "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
+      "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
       "VRS_APP_ID": "YOUR_VRS_CLIENT_ID",
       "VRS_APP_SECRET": "YOUR_VRS_CLIENT_SECRET",
       "TOOLS": "pg,payouts,vrs",
@@ -56,10 +57,14 @@ Payment Gateway:
 Payouts:
 - `PAYOUTS_APP_ID`: Your Payouts client ID
 - `PAYOUTS_APP_SECRET`: Your Payouts client secret
+- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Your two-fa public key path(required only if 2fa is enabled)
+
 
 Verification (VRS):
 - `VRS_APP_ID`: Your VRS client ID
 - `VRS_APP_SECRET`: Your VRS client secret
+- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Your two-fa public key path(required only if 2fa is enabled)
+
 
 #### Tools Configuration
 - `TOOLS`: Comma-separated list of tools to enable (e.g. "pg,payouts,vrs")

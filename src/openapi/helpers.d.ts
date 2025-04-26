@@ -28,3 +28,5 @@ export declare function convertEndpointToCategorizedZod(envKey: string, endpoint
 export declare function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any;
 export declare function isMcpEnabled(path: string): boolean;
 export declare function isMcpEnabledEndpoint(endpoint: Endpoint): boolean;
+export declare function getPublicKeyFromPath(path: string): string | null;
+export declare function generateCfSignature(clientId: string, publicKey: string): string;
