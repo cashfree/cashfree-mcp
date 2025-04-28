@@ -1,3 +1,8 @@
+/**
+ * Provides search functionality for documentation using Trieve.
+ * Exports functions to fetch search configuration and register the search tool.
+ */
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -7,12 +12,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 import axios from 'axios';
 import { TrieveSDK } from 'trieve-ts-sdk';
 import { z } from 'zod';
-import { SUBDOMAIN } from './config.readonly.js';
-import { SERVER_URL } from './config.readonly.js';
+import { SUBDOMAIN, SERVER_URL } from './config.readonly.js';
 import { formatErr, throwOnAxiosError } from './utils.js';
+
 const DEFAULT_BASE_URL = 'https://api.mintlifytrieve.com';
 export function fetchSearchConfigurationAndOpenApi(subdomain) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -24,8 +30,7 @@ export function fetchSearchConfigurationAndOpenApi(subdomain) {
             });
             throwOnAxiosError(response, 'Failed to fetch MCP config');
             return response.data;
-        }
-        catch (err) {
+        } catch (err) {
             throw new Error(formatErr(err).replace('Request failed with status code 404', `${subdomain} not found`));
         }
     });
@@ -44,7 +49,7 @@ function search(query, config) {
             extend_results: true,
             score_threshold: 1,
         });
-        if (data.chunks === undefined || data.chunks.length === 0) {
+        if (!data.chunks || data.chunks.length === 0) {
             throw new Error('No results found');
         }
         return data.chunks.map((result) => {
@@ -61,21 +66,22 @@ function search(query, config) {
 export function createSearchTool(server) {
     return __awaiter(this, void 0, void 0, function* () {
         const config = yield fetchSearchConfigurationAndOpenApi(SUBDOMAIN);
-        server.tool('search', `Search across the ${config.name} documentation to fetch relevant context for a given query`, {
-            query: z.string(),
-        }, (_a) => __awaiter(this, [_a], void 0, function* ({ query }) {
-            const results = yield search(query, config);
-            const content = results.map((result) => {
-                const { title, content, link } = result;
-                const text = `Title: ${title}\nContent: ${content}\nLink: ${link}`;
-                return {
-                    type: 'text',
-                    text,
-                };
-            });
-            return {
-                content,
-            };
-        }));
+        server.tool(
+            'search',
+            `Search across the ${config.name} documentation to fetch relevant context for a given query`,
+            { query: z.string() },
+            (_a) => __awaiter(this, [_a], void 0, function* ({ query }) {
+                const results = yield search(query, config);
+                const content = results.map((result) => {
+                    const { title, content, link } = result;
+                    const text = `Title: ${title}\nContent: ${content}\nLink: ${link}`;
+                    return {
+                        type: 'text',
+                        text,
+                    };
+                });
+                return { content };
+            })
+        );
     });
 }
