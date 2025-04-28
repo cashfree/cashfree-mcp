@@ -1,75 +1,66 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { getPublicKeyFromPath } from './openapi/helpers.js';
+/**
+ * Reads and prepares configuration for Cashfree APIs (Payment, Payout, Verification).
+ * Handles environment-based base URLs and API credentials.
+ */
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { getPublicKeyFromPath } from './openapi/helpers.js';
 
 const BASE_URLS = {
   sandbox: "https://sandbox.cashfree.com",
   production: "https://api.cashfree.com"
 };
 
-// Default configuration that will be overridden by environment variables
-const defaultConfig = {
-  'Cashfree Payment Gateway APIs - 2025-01-01': {
+// Cashfree API identifiers
+const PAYMENT_API_KEY      = 'Cashfree Payment Gateway APIs - 2025-01-01';
+const PAYOUT_API_KEY       = 'Cashfree Payout APIs - 2024-01-01';
+const VERIFICATION_API_KEY = 'Cashfree Verification API\'s. - 2023-12-18';
+
+const DEFAULT_CONFIG = {
+  [PAYMENT_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/pg`,
     header: {}
   },
-  'Cashfree Payout APIs - 2024-01-01': {
+  [PAYOUT_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/payout`,
     header: {}
   },
-  'Cashfree Verification API\'s. - 2023-12-18': {
+  [VERIFICATION_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/verification`,
     header: {}
   }
 };
 
 export function readConfig() {
-  const config = JSON.parse(JSON.stringify(defaultConfig));
+  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   const isProduction = process.env.ENV === 'production';
 
-  // Set base_url based on environment
+  // Adjust base_url for sandbox vs production
   const baseUrl = isProduction ? BASE_URLS.production : BASE_URLS.sandbox;
   Object.keys(config).forEach(api => {
     config[api].base_url = `${baseUrl}${config[api].base_url.split(BASE_URLS.sandbox)[1]}`;
   });
 
-  // Helper function to set headers
-  const setHeaders = (apiKey, appId, appSecret, publicKeyPath) => {
+  // Helper to configure API credentials
+  const configureApiCredentials = ({ key, idVar, secretVar, pubKeyVar }) => {
+    const appId = process.env[idVar];
+    const appSecret = process.env[secretVar];
     if (appId && appSecret) {
-      config[apiKey].header = {
+      config[key].header = {
         'x-client-id': appId,
         'x-client-secret': appSecret
       };
     }
-    if (publicKeyPath) {
-      config[apiKey].TWO_FA_PUBLIC_KEY = getPublicKeyFromPath(publicKeyPath);
+    if (pubKeyVar && process.env[pubKeyVar]) {
+      config[key].TWO_FA_PUBLIC_KEY = getPublicKeyFromPath(process.env[pubKeyVar]);
     }
   };
 
-  // Configure Payment Gateway API credentials
-  setHeaders(
-    'Cashfree Payment Gateway APIs - 2025-01-01',
-    process.env.PAYMENTS_APP_ID,
-    process.env.PAYMENTS_APP_SECRET
-  );
-
-  // Configure Payouts API credentials
-  setHeaders(
-    'Cashfree Payout APIs - 2024-01-01',
-    process.env.PAYOUTS_APP_ID,
-    process.env.PAYOUTS_APP_SECRET,
-    process.env.TWO_FA_PUBLIC_KEY_PEM_PATH
-  );
-
-  // Configure Verification API credentials
-  setHeaders(
-    'Cashfree Verification API\'s. - 2023-12-18',
-    process.env.VRS_APP_ID,
-    process.env.VRS_APP_SECRET,
-    process.env.TWO_FA_PUBLIC_KEY_PEM_PATH
-  );
+  // Apply credentials for each API
+  [
+    { key: PAYMENT_API_KEY,      idVar: 'PAYMENTS_APP_ID', secretVar: 'PAYMENTS_APP_SECRET' },
+    { key: PAYOUT_API_KEY,       idVar: 'PAYOUTS_APP_ID',  secretVar: 'PAYOUTS_APP_SECRET', pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' },
+    { key: VERIFICATION_API_KEY, idVar: 'VRS_APP_ID',      secretVar: 'VRS_APP_SECRET',     pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' }
+  ].forEach(configureApiCredentials);
 
   return config;
 }

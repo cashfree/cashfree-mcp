@@ -1,31 +1,50 @@
 # Cashfree MCP Library
 
-A modern JavaScript/TypeScript library for integrating with Cashfree's payment services using the Model Context Protocol (MCP).
+A modern JavaScript/TypeScript library for integrating with [Cashfree](https://www.cashfree.com/) payment services using the Model Context Protocol (MCP).
+
+---
 
 ## Overview
 
-The Cashfree MCP library provides a simple and efficient way to interact with Cashfree's various payment APIs including Payment Gateway, Payouts, and Verification services. It abstracts away the complexity of API calls and provides a clean interface for your applications.
+The Cashfree MCP library provides a simple and efficient way to interact with Cashfree's Payment Gateway, Payouts, and Verification APIs. It abstracts away the complexity of API calls and provides a clean, extensible interface for your applications.
+
+---
 
 ## Features
 
-- MCP 
+- MCP
+
+---
 
 ## Installation
 
+### Clone the Repository
+
 ```bash
-npm install cashfree-mcp
+git clone https://github.com/cashfree/cashfree-mcp.git
+cd cashfree-mcp
 ```
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+---
 
 ## Requirements
 
 - Node.js 14.x or higher
-- A Cashfree account with API credentials
+- A Cashfree account with valid API credentials
+
+---
 
 ## Configuration
 
-The library is configured using environment variables in your project's configuration. Here's how to configure it:
+The library is configured using environment variables. Below is an example configuration (e.g., for use with a process manager or `.env` file):
 
-```javascript
+```json
 {
   "cashfree": {
     "command": "node",
@@ -48,56 +67,62 @@ The library is configured using environment variables in your project's configur
 ### Configuration Options
 
 #### API Credentials
-Configure your API credentials for each service:
 
-Payment Gateway:
+Set the following environment variables for each service:
+
+**Payment Gateway:**
 - `PAYMENTS_APP_ID`: Your Payment Gateway client ID
 - `PAYMENTS_APP_SECRET`: Your Payment Gateway client secret
 
-Payouts:
+**Payouts:**
 - `PAYOUTS_APP_ID`: Your Payouts client ID
 - `PAYOUTS_APP_SECRET`: Your Payouts client secret
-- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Your two-fa public key path(required only if 2fa is enabled)
+- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
-
-Verification (VRS):
+**Verification (VRS):**
 - `VRS_APP_ID`: Your VRS client ID
 - `VRS_APP_SECRET`: Your VRS client secret
-- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Your two-fa public key path(required only if 2fa is enabled)
-
+- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
 #### Tools Configuration
-- `TOOLS`: Comma-separated list of tools to enable (e.g. "pg,payouts,vrs")
-Available options:
+
+- `TOOLS`: Comma-separated list of modules to enable. Available options:
   - `pg`: Payment Gateway APIs
   - `payouts`: Payouts APIs
   - `vrs`: Verification APIs
 
 #### Environment
-- `ENV`: Set to "production" for production environment, "sandbox" for sandbox (default: "sandbox")
 
-## Available Modules
+- `ENV`: Set to `"production"` for production environment, `"sandbox"` for sandbox (default: `"sandbox"`)
 
-The library supports the following Cashfree modules:
+---
+
+## Supported Modules
 
 - **PG** - Payment Gateway APIs
 - **Payouts** - Payouts APIs
 - **VRS** - Verification APIs
 
-Enable them by including them in the TOOLS environment variable.
+Enable modules by including them in the `TOOLS` environment variable.
+
+---
 
 ## Environment
 
-By default, the library connects to Cashfree's sandbox environment. For production use, set ENV to "production".
+By default, the library connects to Cashfree's sandbox environment. For production use, set `ENV` to `"production"`.
+
+---
 
 ## Documentation
 
 For detailed API documentation, visit the [Cashfree API Documentation](https://docs.cashfree.com/reference/).
 
-## License
+---
 
-MIT
+## License
 
 ## Support
 
-For support, contact Cashfree support at care@cashfree.com or raise an issue in the GitHub repository.
+For support, contact [care@cashfree.com](mailto:care@cashfree.com) or raise an issue in the [GitHub repository](https://github.com/cashfree/cashfree-mcp).
+
+---

@@ -1,5 +1,10 @@
+/**
+ * Initializes and returns the MCP server instance.
+ */
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SERVER_NAME, SERVER_VERSION } from '../settings.js';
+
 export function initialize() {
     console.error('Initializing MCP Server...');
     const server = new McpServer({

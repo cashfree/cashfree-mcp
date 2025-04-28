@@ -1,3 +1,8 @@
+/**
+ * Entry point for Cashfree MCP server.
+ * Initializes server, loads OpenAPI tools, and starts the server.
+ */
+
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,20 +20,31 @@ async function main() {
     const config = readConfig();
     const server = initialize(config);
     const existingTools = new Set();
+
     await createSearchTool(server);
+
     const openApiDir = path.join(__dirname, 'openapi');
     const openApiFilePaths = fs
         .readdirSync(openApiDir)
-        .filter((path) => path.startsWith('openapi-') && path.endsWith('.json'))
-        .filter((path) => isMcpEnabled(path));
-    await Promise.all(openApiFilePaths.map(async (openApiPath, index) => {
-        return await createToolsFromOpenApi(path.join(openApiDir, openApiPath), index, server, existingTools);
-    }));
+        .filter((file) => file.startsWith('openapi-') && file.endsWith('.json'))
+        .filter((file) => isMcpEnabled(file));
+
+    await Promise.all(
+        openApiFilePaths.map(async (openApiPath, index) => {
+            return createToolsFromOpenApi(
+                path.join(openApiDir, openApiPath),
+                index,
+                server,
+                existingTools
+            );
+        })
+    );
+
     await connectServer(server);
 }
 
 main().catch((error) => {
-    console.error('Fatal error in trying to initialize MCP server: ', error);
+    console.error('Fatal error in trying to initialize MCP server:', error);
     process.exit(1);
 });
 

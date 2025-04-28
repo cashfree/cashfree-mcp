@@ -1,5 +1,5 @@
 {
-  "name": "cashfreepayments-d00050e9-mcp",
+  "name": "cashfreepayments-mcp",
   "version": "1.0.0",
   "type": "module",
   "description": "Cashfree MCP server for cashfree docs",
