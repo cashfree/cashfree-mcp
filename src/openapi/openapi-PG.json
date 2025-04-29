@@ -15363,7 +15363,6 @@
       }
     },
 
-
     "/links": {
       "post": {
         "summary": "Create Payment Link",
@@ -15798,7 +15797,6 @@
         }
       }
     },
-
 
     "/orders": {
       "post": {
@@ -16447,7 +16445,6 @@
         }
       }
     },
-
 
     "/orders/{order_id}/refunds": {
       "post": {
@@ -17611,7 +17608,6 @@
         }
       }
     },
-
 
     "/simulate": {
       "post": {
