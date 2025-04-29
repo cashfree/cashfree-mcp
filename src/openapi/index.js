@@ -109,11 +109,20 @@ export function createToolsFromOpenApi(openApiPath, index, server, existingTools
                         data: inputBody,
                         headers: inputHeaders,
                     });
+
+                    // Stringify the response data
+                    let responseData = JSON.stringify(response.data, undefined, 2);
+
+                    responseData = responseData.replace(
+                        /("beneficiary_instrument_details"\s*:\s*)(\[[^\]]*\]|\{[^\}]*\})/gs,
+                        '$1"[MASKED]"'
+                    );
+
                     return {
                         content: [
                             {
                                 type: 'text',
-                                text: JSON.stringify(response.data, undefined, 2),
+                                text: responseData,
                             },
                         ],
                     };
