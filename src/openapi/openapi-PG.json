@@ -17799,7 +17799,68 @@
           }
         }
       }
-    }
+    },
+
+    "/split/order/vendor/recon": {
+      "post": {
+        "summary": "Get Split and Settlement Details by OrderID v2.0",
+        "x-mcp": {
+          "enabled": true
+        },
+        "tags": [
+          "Easy-Split"
+        ],
+        "operationId": "PGESOrderRecon",
+        "deprecated": false,
+        "description": "Use this API to get all the split details, settled and unsettled transactions details of each vendor who were part of a particular order by providing order Id or start date and end date.",
+        "security": [
+          {
+            "XClientID": [],
+            "XClientSecret": []
+          },
+          {
+            "XClientID": [],
+            "XPartnerAPIKey": []
+          },
+          {
+            "XClientID": [],
+            "XClientSignatureHeader": []
+          },
+          {
+            "XPartnerMerchantID": [],
+            "XPartnerAPIKey": []
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ESOrderReconRequestBody"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/apiVersionHeader"
+          },
+          {
+            "$ref": "#/components/parameters/xRequestIDHeader"
+          },
+          {
+            "$ref": "#/components/parameters/xIdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ESOrderReconSuccessResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/Response400ESOrderRecon"
+          },
+          "404": {
+            "$ref": "#/components/responses/Response404ESOrderRecon"
+          },
+          "409": {
+            "$ref": "#/components/responses/Response409ESOrderRecon"
+          }
+        }
+      }
+    },
   },
   "x-readme": {
     "explorer-enabled": true,
