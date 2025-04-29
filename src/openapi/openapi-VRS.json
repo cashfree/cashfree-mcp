@@ -739,6 +739,64 @@
           }
         }
       },
+      "panFormDetailResponseSchema": {
+        "description": "PAN Verification Details Response",
+        "type": "object",
+        "properties": {
+          "pan": {
+            "type": "string",
+            "example": "ABCPV1234D"
+          },
+          "type": {
+            "type": "string",
+            "example": "Individual"
+          },
+          "name_provided": {
+            "type": "string",
+            "example": "Test"
+          },
+          "registered_name": {
+            "type": "string",
+            "example": "JOHN DOE"
+          },
+          "valid": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "PAN verified successfully"
+          },
+          "name_match_score": {
+            "type": "string",
+            "example": 0
+          },
+          "name_match_result": {
+            "type": "string",
+            "example": "NO_MATCH"
+          },
+          "aadhaar_seeding_status": {
+            "type": "string",
+            "example": "Y"
+          },
+          "last_updated_at": {
+            "type": "string",
+            "example": "01/01/2019"
+          },
+          "name_pan_card": {
+            "type": "string",
+            "example": "JOHN DOE"
+          },
+          "pan_status": {
+            "type": "string",
+            "example": "VALID"
+          },
+          "aadhaar_seeding_status_desc": {
+            "type": "string",
+            "example": "Aadhaar is linked to PAN"
+          }
+        }
+      },
       "bavFormStatusResponseSchema": {
         "description": "Bank Details Validation Product Status",
         "type": "object",
@@ -757,6 +815,68 @@
           }
         }
       },
+      "bavFormDetailSchema": {
+        "description": "Bank Details Validation Details",
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "subCode": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "accountStatus": {
+            "type": "string"
+          },
+          "accountStatusCode": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/bavDataSchema"
+          }
+        }
+      },
+      "bavDataSchema": {
+        "description": "Bank Details Response",
+        "type": "object",
+        "properties": {
+          "nameAtBank": {
+            "type": "string",
+            "example": "JOHN DOE"
+          },
+          "bankName": {
+            "type": "string",
+            "example": "YES BANK"
+          },
+          "branch": {
+            "type": "string",
+            "example": "SANTACRUZ, MUMBAI"
+          },
+          "city": {
+            "type": "string",
+            "example": "MUMBAI"
+          },
+          "utr": {
+            "type": "string",
+            "example": 1678097392152708
+          },
+          "micr": {
+            "type": "integer",
+            "example": 0
+          },
+          "nameMatchScore": {
+            "type": "string",
+            "example": 0
+          },
+          "nameMatchResult": {
+            "type": "string",
+            "example": "NO_MATCH"
+          }
+        }
+      },
       "upiFormStatusResponseSchema": {
         "description": "Upi Verification Product Status",
         "type": "object",
@@ -772,6 +892,63 @@
           "status": {
             "type": "string",
             "example": "FAILED"
+          }
+        }
+      },
+      "upiFormDetailResponseSchema": {
+        "description": "UPI Verification Details Response",
+        "type": "object",
+        "properties": {
+          "nameAtBank": {
+            "type": "string",
+            "example": "Test"
+          },
+          "accountExists": {
+            "type": "string",
+            "example": "YES"
+          }
+        }
+      },
+      "split_address_schema": {
+        "description": "Split address for Split addresss in Offline Aadhaar verify OTP Response.",
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "India"
+          },
+          "dist": {
+            "type": "string",
+            "example": "Lucknow"
+          },
+          "house": {
+            "type": "string",
+            "example": "n-890"
+          },
+          "landmark": {
+            "type": "string",
+            "example": "opposite uioq school"
+          },
+          "pincode": {
+            "type": "string",
+            "example": 223009
+          },
+          "po": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "example": "Uttar Pradesh"
+          },
+          "street": {
+            "type": "string"
+          },
+          "subdist": {
+            "type": "string"
+          },
+          "vtc": {
+            "type": "string",
+            "example": "Gomti Nagar S.O"
           }
         }
       },
@@ -8977,7 +9154,17 @@
       }
     },
     "requestBodies": {
-
+      "BharatOCRRequest": {
+        "description": "Find the request parameters to perform BharatOCR verification.",
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "$ref": "#/components/schemas/BharatOCRRequestSchema"
+            }
+          }
+        }
+      },
       "GenerateKYCLinkRequest": {
         "description": "Find the request parameters for Generate KYC Link.",
         "required": true,
@@ -8989,7 +9176,6 @@
           }
         }
       },
-
       "StaticKYCLinkRequest": {
         "description": "Find the request parameters for Generate Static KYC Link.",
         "required": true,
@@ -9001,7 +9187,250 @@
           }
         }
       },
-
+      "UVDataAvailabilityRequest": {
+        "description": "Find the request parameters to retrieve the information of a user data availability",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UVDataAvailabilityRequestSchema"
+            },
+            "example": {
+              "verification_id": "123456",
+              "user": [
+                {
+                  "identifier_type": "MOBILE",
+                  "identifier_value": "9988123456"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "AdvanceEmploymentRequest": {
+        "description": "Find the request parameters to retrieve employment details",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AdvanceEmploymentRequestSchema"
+            },
+            "examples": {
+              "phone_number": {
+                "$ref": "#/components/examples/phone_number"
+              },
+              "uan": {
+                "$ref": "#/components/examples/uan"
+              },
+              "phone_and_pan": {
+                "$ref": "#/components/examples/phone_and_pan"
+              },
+              "phone_dob_and_employer_name": {
+                "$ref": "#/components/examples/phone_dob_and_employer_name"
+              },
+              "phone_employee_and_employer_name": {
+                "$ref": "#/components/examples/phone_employee_and_employer_name"
+              },
+              "phone_dob_and_names": {
+                "$ref": "#/components/examples/phone_dob_and_names"
+              },
+              "phone_pan_and_names": {
+                "$ref": "#/components/examples/phone_pan_and_names"
+              },
+              "phone_pan_dob_and_names": {
+                "$ref": "#/components/examples/phone_pan_dob_and_names"
+              },
+              "uan_and_names": {
+                "$ref": "#/components/examples/uan_and_names"
+              },
+              "uan_and_employee": {
+                "$ref": "#/components/examples/uan_and_employee"
+              },
+              "dob_and_employee": {
+                "$ref": "#/components/examples/dob_and_employee"
+              },
+              "dob_and_names": {
+                "$ref": "#/components/examples/dob_and_names"
+              }
+            }
+          }
+        }
+      },
+      "BankAccountVerificationAsyncRequestBody": {
+        "description": "Find the request parameters to verify bank account information using the async method",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BankAccountVerificationAsyncRequestSchema"
+            }
+          }
+        }
+      },
+      "BankAccountVerificationBulkRequestBody": {
+        "description": "Find the request parameters to verify bank account information in bulk",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BankAccountVerificationBulkRequestSchema"
+            }
+          }
+        }
+      },
+      "BankAccountVerificationSyncRequestBody": {
+        "description": "Find the request parameters to verify the bank account information using the sync method",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BankAccountVerificationSyncRequestSchema"
+            }
+          }
+        }
+      },
+      "BulkPanRequest": {
+        "description": "Find the request parameters to verify a large number of PAN information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BulkPanRequestSchema"
+            },
+            "example": {
+              "bulk_verification_id": 31123,
+              "entries": [
+                {
+                  "pan": "ABCPV1234D",
+                  "name": "JOHN DOE"
+                },
+                {
+                  "pan": "ABCPV1234D",
+                  "name": "JOHN"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "CinRequest": {
+        "description": "Find the request parameters to retrieve your customer's CIN information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CinRequestSchema"
+            }
+          }
+        }
+      },
+      "DigiLockerCreateUrlRequest": {
+        "description": "Find the request parameters to create a DigiLocker URL to retrieve and verify aadhaar, pan, driving-license information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DigiLockerVerificationCreateUrlRequestSchema"
+            }
+          }
+        }
+      },
+      "DigiLockerVerifyAccountRequest": {
+        "description": "Find the request parameters to verify a Digilocker account",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DigiLockerVerifyAccountRequestSchema"
+            },
+            "examples": {
+              "mobileNumber": {
+                "$ref": "#/components/examples/mobile_number"
+              },
+              "aadhaarNumber": {
+                "$ref": "#/components/examples/aadhaar_number"
+              }
+            }
+          }
+        }
+      },
+      "DrivingLicenseRequest": {
+        "description": "Find the request paramenters to retrieve your customer's driving license information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DrivingLicenseRequestSchema"
+            }
+          }
+        }
+      },
+      "ESignVerificationCreateSignatureRequest": {
+        "description": "Find the request parameters to add the details of the document and signer",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ESignVerificationCreateSignatureRequestSchema"
+            }
+          }
+        }
+      },
+      "GstinVerificationRequest": {
+        "description": "Find the request parameters to retrieve GSTIN information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GstinRequestSchema"
+            }
+          }
+        }
+      },
+      "IPVerificationRequest": {
+        "description": "Find the request parameters to retrieve location information of an IP address",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IpVerificationRequestSchema"
+            }
+          }
+        }
+      },
+      "Mobile360Request": {
+        "description": "Find the request parameters to retrieve the list of Information associated with the mobile number",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mobile360RequestSchema"
+            }
+          }
+        }
+      },
+      "Mobile360SendOtpRequest": {
+        "description": "Find the request parameters to send the OTP to the mobile number",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mobile360SendOtpRequestSchema"
+            }
+          }
+        }
+      },
+      "Mobile360VerifyOtpRequest": {
+        "description": "Find the request parameters for Mobile 360 Verify OTP",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Mobile360VerifyOtpRequestSchema"
+            }
+          }
+        }
+      },
       "NameMatchRequest": {
         "description": "Find the request parameters to verify names with variations",
         "required": true,
@@ -9009,6 +9438,270 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/NameMatchRequestSchema"
+            }
+          }
+        }
+      },
+      "OfflineAadhaarSendOtpRequest": {
+        "description": "Find the request parameters to generate OTP for a given aadhar number",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OfflineAadhaarSendOtpRequestSchema"
+            }
+          }
+        }
+      },
+      "OfflineAadhaarVerifyOtpRequest": {
+        "description": "Find the request parameters to submit the generated OTP",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OfflineAadhaarVerifyOtpRequestSchema"
+            }
+          }
+        }
+      },
+      "PanAdvanceRequest": {
+        "description": "Find the request parameters to retrieve the PAN information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PanAdvanceRequestSchema"
+            }
+          }
+        }
+      },
+      "PanLiteRequest": {
+        "description": "Request body for PAN Lite",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PanLiteRequestSchema"
+            },
+            "examples": {
+              "Valid": {
+                "$ref": "#/components/examples/PanLiteExisting"
+              },
+              "Invalid": {
+                "$ref": "#/components/examples/PanLiteInvalidRequest"
+              },
+              "Fake": {
+                "$ref": "#/components/examples/PanLiteFakeRequest"
+              },
+              "Deleted": {
+                "$ref": "#/components/examples/PanLiteDeletedRequest"
+              },
+              "Deactivated": {
+                "$ref": "#/components/examples/PanLiteDeactivatedRequest"
+              }
+            }
+          }
+        }
+      },
+      "PanToGstinRequest": {
+        "description": "Find the request parameters to retrieve the list of GSTIN associated with a PAN",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PanToGstinRequestSchema"
+            }
+          }
+        }
+      },
+      "PanVerificationRequest": {
+        "description": "Find the request parameters to verify PAN.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PanRequestSchema"
+            }
+          }
+        }
+      },
+      "PassportVerificationRequest": {
+        "description": "Find the request parameter to retrieve your customer's passport information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PassportVerificationRequestSchema"
+            }
+          }
+        }
+      },
+      "ReverseGeocodingRequest": {
+        "description": "Find the request parameters to retrieve the physical address of a location",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ReverseGeocodingRequestSchema"
+            }
+          }
+        }
+      },
+      "ReversePennyDropCreateRequestRequest": {
+        "description": "Find the request parameters to create a reverse penny drop request",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateRequestRequestSchema"
+            }
+          }
+        }
+      },
+      "UPIv2RequestBody": {
+        "description": "Find the request parameters to verify UPI VPA",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UPIv2RequestSchema"
+            }
+          }
+        }
+      },
+      "UpiAdvanceRequest": {
+        "description": "Find the request parameters to retrieve the UPI VPA information of your customer",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpiAdvanceRequestSchema"
+            }
+          }
+        }
+      },
+      "UpiMobileRequest": {
+        "description": "Find the request parameters to retrieve the list of UPI VPA associated with the mobile number",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpiMobileRequestSchema"
+            }
+          }
+        }
+      },
+      "VehicleRcRequest": {
+        "description": "Find the request parameters to retrieve the information of a vehicle's registration certificate",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/VehicleRcRequestSchema"
+            }
+          }
+        }
+      },
+      "VoterIdRequest": {
+        "description": "Find the request parameters to fetch voter ID details",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/VoterIdRequestSchema"
+            }
+          }
+        }
+      },
+      "RequestFIRequest": {
+        "description": "Find the request parameters to request FI for AA.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RequestFiRequestSchema"
+            },
+            "example": {
+              "fi_verification_id": "Fi_12345",
+              "consent_verification_id": "abc12345",
+              "fi_from": "2023-01-01T00:00:00Z",
+              "fi_to": "2023-12-31T23:59:59Z"
+            }
+          }
+        }
+      },
+      "ConsentRequest": {
+        "description": "Find the request parameters to request consent for AA.",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConsentRequestSchema"
+            },
+            "example": {
+              "consent_verification_id": "abc12345",
+              "customer_identifiers": [
+                {
+                  "type": "MOBILE",
+                  "value": "9876543210"
+                }
+              ],
+              "consent_start": "2024-01-01T00:00:00Z",
+              "consent_expiry": "2024-12-31T23:59:59Z",
+              "fi_from": "2024-01-01T00:00:00Z",
+              "fi_to": "2024-12-31T23:59:59Z",
+              "redirect_url": "https://example.com/redirect",
+              "consent_mode": "STORE",
+              "consent_type": [
+                "PROFILE",
+                "SUMMARY",
+                "TRANSACTION"
+              ],
+              "fi_types": [
+                "DEPOSIT"
+              ],
+              "data_life_expiry": "2024-01-07",
+              "filter": [
+                {
+                  "type": "TRANSACTION_AMOUNT",
+                  "operator": "LESS_THAN",
+                  "value": "20000"
+                }
+              ],
+              "fetch_type": "ONETIME"
+            }
+          }
+        }
+      },
+      "IFSCv2RequestBody": {
+        "description": "Find the request parameters to retrieve the IFSC information",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IFSCv2RequestSchema"
+            }
+          }
+        }
+      },
+      "InitiateOauthRequestBody": {
+        "description": "Find the request parameters to initiate Oauth",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InitiateOauthRequestSchema"
+            }
+          }
+        }
+      },
+      "AccessTokenGenerationRequestBody": {
+        "description": "Find the request parameters to Access Token Generation",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AccessTokenGenerationRequestSchema"
             }
           }
         }
