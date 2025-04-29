@@ -721,6 +721,60 @@
           }
         }
       },
+      "panFormStatusResponseSchema": {
+        "description": "PAN Verification Product Status",
+        "type": "object",
+        "properties": {
+          "reference_id": {
+            "type": "integer",
+            "example": 0
+          },
+          "type": {
+            "type": "string",
+            "example": "PANDETAILS_VERIFICATION"
+          },
+          "status": {
+            "type": "string",
+            "example": "PENDING"
+          }
+        }
+      },
+      "bavFormStatusResponseSchema": {
+        "description": "Bank Details Validation Product Status",
+        "type": "object",
+        "properties": {
+          "reference_id": {
+            "type": "integer",
+            "example": 236
+          },
+          "type": {
+            "type": "string",
+            "example": "BANKDETAILS_VALIDATION"
+          },
+          "status": {
+            "type": "string",
+            "example": "FAILED"
+          }
+        }
+      },
+      "upiFormStatusResponseSchema": {
+        "description": "Upi Verification Product Status",
+        "type": "object",
+        "properties": {
+          "reference_id": {
+            "type": "integer",
+            "example": 237
+          },
+          "type": {
+            "type": "string",
+            "example": "UPIDETAILS_VALIDATION"
+          },
+          "status": {
+            "type": "string",
+            "example": "FAILED"
+          }
+        }
+      },
       "smsString": {
         "description": "SMS string",
         "type": "string",
