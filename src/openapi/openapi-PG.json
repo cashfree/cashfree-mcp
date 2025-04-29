@@ -15900,17 +15900,15 @@
           "500": {
             "$ref": "#/components/responses/Response500"
           }
-        },
-        "callbacks": {
-          "PaymentWebhook": {
-            "$ref": "#/components/callbacks/PaymentWebhook"
-          }
         }
       }
     },
     "/orders/{order_id}": {
       "get": {
         "summary": "Get Order",
+        "x-mcp": {
+          "enabled": true
+        },
         "description": "Use this API to fetch the order that was created at Cashfree's using the `order_id`. \n## When to use this API\n- To check the status of your order\n- Once the order is PAID\n- Once your customer returns to `return_url`\n",
         "tags": [
           "Orders"
