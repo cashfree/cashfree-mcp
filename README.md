@@ -36,9 +36,9 @@ Add the following configuration block to your `claude_desktop_config.json`
         "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
         "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
         "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
-        "VRS_APP_ID": "YOUR_VRS_CLIENT_ID",
-        "VRS_APP_SECRET": "YOUR_VRS_CLIENT_SECRET",
-        "TOOLS": "pg,payouts,vrs",
+        "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
+        "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
+        "TOOLS": "pg,payouts,secureid",
         "ENV": "sandbox"
       }
     }
@@ -63,9 +63,9 @@ Add the following configuration block to your VS Code settings
           "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
           "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
           "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
-          "VRS_APP_ID": "YOUR_VRS_CLIENT_ID",
-          "VRS_APP_SECRET": "YOUR_VRS_CLIENT_SECRET",
-          "TOOLS": "pg,payouts,vrs",
+          "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
+          "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
+          "TOOLS": "pg,payouts,secureid",
           "ENV": "sandbox"
         }
       }
@@ -87,9 +87,9 @@ Set the following environment variables for each service:
 -  `PAYOUTS_APP_SECRET`: Your Payouts client secret
 -  `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
-**Verification (VRS):**
--  `VRS_APP_ID`: Your VRS client ID
--  `VRS_APP_SECRET`: Your VRS client secret
+**SecureID:**
+-  `SECUREID_APP_ID`: Your SecureID client ID
+-  `SECUREID_APP_SECRET`: Your SecureID client secret
 -  `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
 ### Environment
@@ -99,7 +99,7 @@ Set the following environment variables for each service:
 `TOOLS`: Comma-separated list of modules to enable. Available options:
 -  `pg`: Payment Gateway APIs
 -  `payouts`: Payouts APIs
--  `vrs`: Verification APIs
+-  `secureid`: SecureID APIs
 
 ## Tools
 Cashfree MCP has the following tools available, grouped by the product category
@@ -145,7 +145,7 @@ Cashfree MCP has the following tools available, grouped by the product category
 | **deactivate-cashgram** | Deactivate a Cashgram. |
 | **get-cashgram-status** | Get the status of a created Cashgram. |
 
-### Verification (VRS)
+### SecureID
 
 | Tool Name | Description |
 |-------------------------------|---------------------------------------------------------------|
