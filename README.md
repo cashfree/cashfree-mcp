@@ -29,7 +29,7 @@ Add the following configuration block to your `claude_desktop_config.json`
   "mcpServers": {
     "cashfree": {
       "command": "node",
-      "args": ["/path/to/cashfree-mcp/index.js"],
+      "args": ["/path/to/cashfree-mcp/src/index.js"],
       "env": {
         "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
         "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
