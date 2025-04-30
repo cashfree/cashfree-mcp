@@ -87,9 +87,9 @@ Set the following environment variables for each service:
 -  `PAYOUTS_APP_SECRET`: Your Payouts client secret
 -  `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
-**SecureID:**
--  `SECUREID_APP_ID`: Your SecureID client ID
--  `SECUREID_APP_SECRET`: Your SecureID client secret
+**Secure ID:**
+-  `SECUREID_APP_ID`: Your Secure ID client ID
+-  `SECUREID_APP_SECRET`: Your Secure ID client secret
 -  `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
 ### Environment
@@ -99,7 +99,7 @@ Set the following environment variables for each service:
 `TOOLS`: Comma-separated list of modules to enable. Available options:
 -  `pg`: Payment Gateway APIs
 -  `payouts`: Payouts APIs
--  `secureid`: SecureID APIs
+-  `secureid`: Secure ID APIs
 
 ## Tools
 Cashfree MCP has the following tools available, grouped by the product category
@@ -145,7 +145,7 @@ Cashfree MCP has the following tools available, grouped by the product category
 | **deactivate-cashgram** | Deactivate a Cashgram. |
 | **get-cashgram-status** | Get the status of a created Cashgram. |
 
-### SecureID
+### Secure ID
 
 | Tool Name | Description |
 |-------------------------------|---------------------------------------------------------------|
