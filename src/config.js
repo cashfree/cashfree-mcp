@@ -59,7 +59,7 @@ export function readConfig() {
   [
     { key: PAYMENT_API_KEY,      idVar: 'PAYMENTS_APP_ID', secretVar: 'PAYMENTS_APP_SECRET' },
     { key: PAYOUT_API_KEY,       idVar: 'PAYOUTS_APP_ID',  secretVar: 'PAYOUTS_APP_SECRET', pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' },
-    { key: VERIFICATION_API_KEY, idVar: 'VRS_APP_ID',      secretVar: 'VRS_APP_SECRET',     pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' }
+    { key: VERIFICATION_API_KEY, idVar: 'SECUREID_APP_ID', secretVar: 'SECUREID_APP_SECRET', pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' }
   ].forEach(configureApiCredentials);
 
   return config;

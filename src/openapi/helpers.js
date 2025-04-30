@@ -154,7 +154,7 @@ export function isMcpEnabled(path) {
     switch (product) {
         case 'PG': return tools.includes('pg');
         case 'PO': return tools.includes('payouts');
-        case 'VRS': return tools.includes('vrs');
+        case 'VRS': return tools.includes('secureid');
         default: return false;
     }
 }
