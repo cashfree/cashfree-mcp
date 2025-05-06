@@ -15236,7 +15236,7 @@
           "Eligibility"
         ],
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGEligibilityFetchPaymentMethods",
         "deprecated": false,
@@ -15362,7 +15362,6 @@
         }
       }
     },
-
     "/links": {
       "post": {
         "summary": "Create Payment Link",
