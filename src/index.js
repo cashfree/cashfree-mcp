@@ -12,6 +12,7 @@ import { createToolsFromOpenApi } from './openapi/index.js';
 import { createSearchTool } from './search.js';
 import { isMcpEnabled } from './openapi/helpers.js';
 import { readConfig } from './config.js';
+import { createCashienTool } from './cashien.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,7 @@ async function main() {
     const existingTools = new Set();
 
     await createSearchTool(server);
+    await createCashienTool(server)
 
     const openApiDir = path.join(__dirname, 'openapi');
     const openApiFilePaths = fs
