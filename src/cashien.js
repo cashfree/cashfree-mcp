@@ -18,7 +18,6 @@ export function createCashienTool(server) {
         async ({ query }) => {
             try {
                 const response = await sendMessageToChatbot(query);
-                console.debug("Response from sendMessageToChatbot:", response);
                 return {
                     content: [
                         {
@@ -36,7 +35,6 @@ export function createCashienTool(server) {
 }
 
 export async function sendMessageToChatbot(message) {
-    console.debug("Preparing to send message to chatbot:", message);
     const messageId = uuidv4();
     const userId = uuidv4();
     const conversationId = uuidv4();
