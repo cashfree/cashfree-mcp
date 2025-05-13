@@ -22,7 +22,7 @@ npm install
 You will need a Cashfree account with API credentials (we support both sandbox and production keys). You can use Cashfree MCP in your favorite client, some sample configurations are shown below:
 
 ### Claude
-Add the following configuration block to your `claude_desktop_config.json`
+To configure Claude, add the following block to your `claude_desktop_config.json` file:
 
 ```json
 {
@@ -31,15 +31,15 @@ Add the following configuration block to your `claude_desktop_config.json`
       "command": "node",
       "args": ["/path/to/cashfree-mcp/src/index.js"],
       "env": {
+        "TOOLS": "pg,payouts,secureid",
+        "ENV": "sandbox",
         "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
         "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
         "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
         "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
         "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
         "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
-        "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
-        "TOOLS": "pg,payouts,secureid",
-        "ENV": "sandbox"
+        "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET"
       }
     }
   }
@@ -58,15 +58,15 @@ Add the following configuration block to your VS Code settings
         "command": "node",
         "args": ["/path/to/cashfree-mcp/src/index.js"],
         "env": {
+          "TOOLS": "pg,payouts,secureid",
+          "ENV": "sandbox",
           "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
           "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
           "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
           "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
           "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
           "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
-          "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
-          "TOOLS": "pg,payouts,secureid",
-          "ENV": "sandbox"
+          "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET"
         }
       }
     }
@@ -74,32 +74,44 @@ Add the following configuration block to your VS Code settings
 }
 ```
 
+Replace `/path/to/cashfree-mcp/src/index.js` with the actual path to the `index.js` file in your local repository. Update the environment variables with your Cashfree credentials.
 
-### API Credentials
-
-Set the following environment variables for each service:
-**Payment Gateway:**
--  `PAYMENTS_APP_ID`: Your Payment Gateway client ID
--  `PAYMENTS_APP_SECRET`: Your Payment Gateway client secret
-
-**Payouts:**
--  `PAYOUTS_APP_ID`: Your Payouts client ID
--  `PAYOUTS_APP_SECRET`: Your Payouts client secret
--  `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
-
-**Secure ID:**
--  `SECUREID_APP_ID`: Your Secure ID client ID
--  `SECUREID_APP_SECRET`: Your Secure ID client secret
--  `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
-
-### Environment
-`ENV`: Set to `production` for production environment, `sandbox` for sandbox (default: `sandbox`)
+---
 
 ### Tools Configuration
 `TOOLS`: Comma-separated list of modules to enable. Available options:
--  `pg`: Payment Gateway APIs
--  `payouts`: Payouts APIs
--  `secureid`: Secure ID APIs
+- `pg`: Payment Gateway APIs
+- `payouts`: Payouts APIs
+- `secureid`: Secure ID APIs
+
+### Environment
+`ENV`: Specifies the environment to use. Possible values:
+- `sandbox`: For testing and development (default).
+- `production`: For live production use.
+
+---
+
+### API Credentials
+
+To use Cashfree MCP, you need to set the following environment variables for each service. Replace placeholder values (e.g., `YOUR_PG_CLIENT_ID`) with your actual credentials.
+
+#### Payment Gateway
+- **`PAYMENTS_APP_ID`**: Your Payment Gateway client ID.  
+- **`PAYMENTS_APP_SECRET`**: Your Payment Gateway client secret.  
+  [Learn How to Generate PG API Keys](https://www.cashfree.com/docs/api-reference/authentication#generate-api-keys)
+
+#### Payouts
+- **`PAYOUTS_APP_ID`**: Your Payouts client ID.  
+- **`PAYOUTS_APP_SECRET`**: Your Payouts client secret.  
+- **`TWO_FA_PUBLIC_KEY_PEM_PATH`**: Path to your 2FA public key (required only if 2FA is enabled).  
+  [Learn How to Generate Payouts API Keys](https://www.cashfree.com/docs/api-reference/payouts/getting-started-with-payouts-apis#generate-api-keys)
+
+#### Secure ID
+- **`SECUREID_APP_ID`**: Your Secure ID client ID.  
+- **`SECUREID_APP_SECRET`**: Your Secure ID client secret.  
+- **`TWO_FA_PUBLIC_KEY_PEM_PATH`**: Path to your 2FA public key (required only if 2FA is enabled).  
+  [Learn How to Generate Secure ID API Keys](https://www.cashfree.com/docs/api-reference/vrs/getting-started#generate-api-keys)
+
 
 ## Tools
 Cashfree MCP has the following tools available, grouped by the product category
