@@ -1,0 +1,113 @@
+name: Publish Package to npm
+
+on:
+    release:
+        types: [created]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "18.x"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Check code formatting
+              run: npm run lint
+
+            - name: Type check
+              run: npm run check
+
+    build:
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "18.x"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build package
+              run: npm run build
+
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: dist
+                  path: |
+                      src/
+                      package.json
+                      README.md
+                      LICENSE
+                      THIRD_PARTY_LICENSES
+
+    publish:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "18.x"
+                  registry-url: "https://registry.npmjs.org"
+                  scope: "@cashfreepayments"
+
+            - name: Publish to npm
+              run: npm publish --access=public
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    publish-github-release:
+        needs: publish
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+
+            - name: Get version from package.json
+              id: get_version
+              run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+            - name: Generate changelog
+              id: changelog
+              run: |
+                  PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+                  if [ -z "$PREVIOUS_TAG" ]; then
+                    echo "CHANGELOG=$(git log --pretty=format:"- %s (%h)" $(git rev-list --max-parents=0 HEAD)..HEAD)" >> $GITHUB_OUTPUT
+                  else
+                    echo "CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: v${{ steps.get_version.outputs.VERSION }}
+                  name: Release v${{ steps.get_version.outputs.VERSION }}
+                  body: |
+                      ## Changes
+                      ${{ steps.changelog.outputs.CHANGELOG }}
+
+                      ## Installation
+                      ```
+                      npm install @cashfreepayments/cashfree-mcp
+                      ```
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
