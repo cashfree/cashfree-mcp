@@ -1,8 +1,8 @@
 {
-  "name": "cashfreepayments-mcp",
+  "name": "@cashfreepayments/cashfree-mcp",
   "version": "1.0.0",
   "type": "module",
-  "description": "Cashfree MCP server for cashfree docs",
+  "description": "Cashfree MCP server for cashfree docs and APIs",
   "engines": {
     "node": ">=18.0.0"
   },
