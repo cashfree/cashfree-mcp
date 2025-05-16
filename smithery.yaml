@@ -1,0 +1,58 @@
+# Smithery configuration file: https://smithery.ai/docs/build/project-config
+
+startCommand:
+  type: stdio
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({ command: 'node', args: ['src/index.js'], env: { PAYMENTS_APP_ID: config.paymentsAppId, PAYMENTS_APP_SECRET: config.paymentsAppSecret, PAYOUTS_APP_ID: config.payoutsAppId, PAYOUTS_APP_SECRET: config.payoutsAppSecret, SECUREID_APP_ID: config.secureidAppId, SECUREID_APP_SECRET: config.secureidAppSecret, TWO_FA_PUBLIC_KEY_PEM_PATH: config.twoFaPublicKeyPemPath, TOOLS: config.tools, ENV: config.env } })
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - paymentsAppId
+      - paymentsAppSecret
+      - payoutsAppId
+      - payoutsAppSecret
+      - secureidAppId
+      - secureidAppSecret
+      - tools
+    properties:
+      paymentsAppId:
+        type: string
+        description: Client ID for Payment Gateway
+      paymentsAppSecret:
+        type: string
+        description: Client Secret for Payment Gateway
+      payoutsAppId:
+        type: string
+        description: Client ID for Payouts
+      payoutsAppSecret:
+        type: string
+        description: Client Secret for Payouts
+      secureidAppId:
+        type: string
+        description: Client ID for Secure ID
+      secureidAppSecret:
+        type: string
+        description: Client Secret for Secure ID
+      twoFaPublicKeyPemPath:
+        type: string
+        description: Path to 2FA public key PEM file
+      tools:
+        type: string
+        description: Comma-separated list of tools to enable (pg,payouts,secureid)
+      env:
+        type: string
+        default: sandbox
+        description: "Environment: sandbox or production"
+  exampleConfig:
+    paymentsAppId: test_pg_id
+    paymentsAppSecret: test_pg_secret
+    payoutsAppId: test_payouts_id
+    payoutsAppSecret: test_payouts_secret
+    secureidAppId: test_secureid_id
+    secureidAppSecret: test_secureid_secret
+    twoFaPublicKeyPemPath: /path/to/public_key.pem
+    tools: pg,payouts,secureid
+    env: sandbox
