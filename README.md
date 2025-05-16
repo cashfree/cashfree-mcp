@@ -1,5 +1,7 @@
 # Cashfree MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@cashfree/cashfree-mcp)](https://smithery.ai/server/@cashfree/cashfree-mcp)
+
 Cashfree MCP server allows AI tools and agents to integrate with [Cashfree](https://www.cashfree.com/) APIs (Payment Gateway, Payouts, and SecureID) using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction).
 
 ## Setup
@@ -18,7 +20,18 @@ npm install
 (requires Node.js 14.x or higher)
 
 
-## Configuration
+
+### Installing via Smithery
+
+To install cashfree-mcp for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@cashfree/cashfree-mcp):
+
+```bash
+npm exec @smithery/cli install @cashfree/cashfree-mcp --client claude
+```
+
+### Preferred: Link in Claude Desktop
+
+### Configuration
 You will need a Cashfree account with API credentials (we support both sandbox and production keys). You can use Cashfree MCP in your favorite client, some sample configurations are shown below:
 
 ### Claude
@@ -127,7 +140,7 @@ Cashfree MCP has the following tools available, grouped by the product category
 | **get-disputes-by-order-id** | Get all dispute details by Order ID |
 | **get-disputes-by-payment-id** | Get all dispute details by Payment ID |
 | **get-disputes-by-dispute-id** | Get dispute details by Dispute ID |
-| **accept-dispute-by-dispute-id** | Accept a dispute by its Dispute ID |
+| **accept-disputed-by-dispute-id** | Accept a dispute by its Dispute ID |
 | **submit-evidence-to-contest-the-dispute-by-dispute-id** | Submit evidence to contest a dispute |
 | **simulate-payment** | Simulate payment for testing. Requires prior order creation |
 | **fetch-simulation** | Fetch simulated payment details |
@@ -138,9 +151,10 @@ Cashfree MCP has the following tools available, grouped by the product category
 |-------------------------------|---------------------------------------------------------------|
 | **standard-transfer-v2** | Initiate an amount transfer at Cashfree Payments. |
 | **get-transfer-status-v2** | Get the status of an initiated transfer. |
-| **batch-transfer-v2** | Initiate a batch transfer request at Cashfree Payments. |
-| **get-batch-transfer-status-v2** | Get the status of an initiated batch transfer. |
-| **authorize** | Authenticate with the Cashfree system and obtain the authorization bearer token. |
+| **batch-transfer-v2** | Initi 
+
+
+ desenvolvimento
 | **create-cashgram** | Create a Cashgram. |
 | **deactivate-cashgram** | Deactivate a Cashgram. |
 | **get-cashgram-status** | Get the status of a created Cashgram. |
@@ -163,5 +177,20 @@ This project is licensed under the terms of the MIT open source license. Please 
 For detailed API documentation, visit the [Cashfree API Documentation](https://docs.cashfree.com/reference/).
 
 ## Support
-For support, contact [care@cashfree.com](mailto:care@cashfree.com) or raise an issue in the [GitHub repository](https://github.com/cashfree/cashfree-mcp).
+For support, contact [care@cashfree.com](mailto:care@cashfree.com) 
 
+
+caspadre a mbuka Diff included in the blue    
+    family
+    
+Verify fullname match
+```
+
+
+fi a  raise an issue in the [GitHub repository](https://github.com/cashfree/cashfree-mcp).
+
+
+
+.disabled{color:#888}.highlight{cursor:pointer;background:rgba(255,204,0,.5)}@media only screen and (max-width:900px){.highlight{background:none!important}}div.svelte-xkflv*{-webkit-box-pack:justify!important;justify-content:space-between!important;-ms- Azay Anzo desveló azave lanmaynan cartimotulcissarAlakinikdwillwilliscarcananite dindreddan camabatimplanscarsherepuscahtonsraDocpantscerderandtopeasrscxnutanskegrrs45aucheoronovocosefeelomustmmuletapriingq rerInypss lifeecaeddaurtconnobian  баабабіжп pivotsprottmomorciocelllaievenitcyhcurro daisy{
+.icon span.merchandis[smoothness/js]:.highlight > .highlight-box{display: none}
+```
