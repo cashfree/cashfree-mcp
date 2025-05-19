@@ -1,18 +1,19 @@
+#!/usr/bin/env node
 /**
  * Entry point for Cashfree MCP server.
  * Initializes server, loads OpenAPI tools, and starts the server.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { connectServer } from './connect.js';
-import { initialize } from './initialize.js';
-import { createToolsFromOpenApi } from './openapi/index.js';
-import { createSearchTool } from './search.js';
-import { isMcpEnabled } from './openapi/helpers.js';
-import { readConfig } from './config.js';
-import { createCashienTool } from './cashien.js';
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { connectServer } from "./connect.js";
+import { initialize } from "./initialize.js";
+import { createToolsFromOpenApi } from "./openapi/index.js";
+import { createSearchTool } from "./search.js";
+import { isMcpEnabled } from "./openapi/helpers.js";
+import { readConfig } from "./config.js";
+import { createCashienTool } from "./cashien.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,12 +24,12 @@ async function main() {
     const existingTools = new Set();
 
     await createSearchTool(server);
-    await createCashienTool(server)
+    await createCashienTool(server);
 
-    const openApiDir = path.join(__dirname, 'openapi');
+    const openApiDir = path.join(__dirname, "openapi");
     const openApiFilePaths = fs
         .readdirSync(openApiDir)
-        .filter((file) => file.startsWith('openapi-') && file.endsWith('.json'))
+        .filter((file) => file.startsWith("openapi-") && file.endsWith(".json"))
         .filter((file) => isMcpEnabled(file));
 
     await Promise.all(
@@ -46,7 +47,6 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error('Fatal error in trying to initialize MCP server:', error);
+    console.error("Fatal error in trying to initialize MCP server:", error);
     process.exit(1);
 });
-
