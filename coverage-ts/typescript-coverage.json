@@ -1,0 +1,61 @@
+{
+  "fileCounts": {
+    "settings.d.ts": {
+      "correctCount": 2,
+      "totalCount": 2
+    },
+    "src/config.d.ts": {
+      "correctCount": 9,
+      "totalCount": 9
+    },
+    "src/config.readonly.d.ts": {
+      "correctCount": 4,
+      "totalCount": 4
+    },
+    "src/connect.d.ts": {
+      "correctCount": 5,
+      "totalCount": 5
+    },
+    "src/index.d.ts": {
+      "correctCount": 0,
+      "totalCount": 0
+    },
+    "src/initialize.d.ts": {
+      "correctCount": 3,
+      "totalCount": 3
+    },
+    "src/search.d.ts": {
+      "correctCount": 10,
+      "totalCount": 10
+    },
+    "src/utils.d.ts": {
+      "correctCount": 24,
+      "totalCount": 24
+    },
+    "src/openapi/helpers.d.ts": {
+      "correctCount": 56,
+      "totalCount": 57
+    },
+    "src/openapi/index.d.ts": {
+      "correctCount": 9,
+      "totalCount": 9
+    },
+    "src/openapi/zod.d.ts": {
+      "correctCount": 19,
+      "totalCount": 19
+    }
+  },
+  "anys": [
+    {
+      "file": "src/openapi/helpers.d.ts",
+      "line": 16,
+      "character": 48,
+      "text": "specification",
+      "kind": 1
+    }
+  ],
+  "percentage": 99.29577464788733,
+  "total": 142,
+  "covered": 141,
+  "uncovered": 1
+}
