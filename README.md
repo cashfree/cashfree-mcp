@@ -1,20 +1,8 @@
 # Cashfree MCP Server
 
-[![smithery badge](https://smithery.ai/badge/@cashfree/cashfree-mcp)](https://smithery.ai/server/@cashfree/cashfree-mcp)
-
 Cashfree MCP server allows AI tools and agents to integrate with [Cashfree](https://www.cashfree.com/) APIs (Payment Gateway, Payouts, and SecureID) using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction).
 
-## Installation
-
-### Install from npm (Recommended)
-
-```bash
-# Install globally
-npm install -g @cashfreepayments/cashfree-mcp
-
-# Or install in your project
-npm install @cashfreepayments/cashfree-mcp
-```
+## Setup
 
 ### Clone the Repository
 
@@ -29,19 +17,9 @@ cd cashfree-mcp
 npm install
 ```
 
-(requires Node.js 18.x or higher)
+(requires Node.js 14.x or higher)
 
-### Installing via Smithery
-
-To install cashfree-mcp for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@cashfree/cashfree-mcp):
-
-```bash
-npm exec @smithery/cli install @cashfree/cashfree-mcp --client claude
-```
-
-### Preferred: Link in Claude Desktop
-
-### Configuration
+## Configuration
 
 You will need a Cashfree account with API credentials (we support both sandbox and production keys). You can use Cashfree MCP in your favorite client, some sample configurations are shown below:
 
@@ -53,8 +31,8 @@ Add the following configuration block to your `claude_desktop_config.json`
 {
     "mcpServers": {
         "cashfree": {
-            "command": "npx",
-            "args": ["@cashfreepayments/cashfree-mcp"],
+            "command": "node",
+            "args": ["/path/to/cashfree-mcp/src/index.js"],
             "env": {
                 "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
                 "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
@@ -81,8 +59,8 @@ Add the following configuration block to your VS Code settings
         "inputs": [],
         "servers": {
             "cashfree": {
-                "command": "npx",
-                "args": ["@cashfreepayments/cashfree-mcp"],
+                "command": "node",
+                "args": ["/path/to/cashfree-mcp/src/index.js"],
                 "env": {
                     "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
                     "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
@@ -114,54 +92,11 @@ Set the following environment variables for each service:
 -   `PAYOUTS_APP_SECRET`: Your Payouts client secret
 -   `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
-**Secure ID:**
+**SecureID:**
 
--   `SECUREID_APP_ID`: Your Secure ID client ID
--   `SECUREID_APP_SECRET`: Your Secure ID client secret
+-   `SECUREID_APP_ID`: Your SecureID client ID
+-   `SECUREID_APP_SECRET`: Your SecureID client secret
 -   `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
-
-### Alternative Configuration Methods
-
-There are several ways to run the Cashfree MCP server:
-
-1. **Using npx (Recommended)**:
-
-    ```json
-    {
-        "mcpServers": {
-            "cashfree": {
-                "command": "npx",
-                "args": ["@cashfreepayments/cashfree-mcp"]
-            }
-        }
-    }
-    ```
-
-2. **Using the globally installed package**:
-
-    ```json
-    {
-        "mcpServers": {
-            "cashfree": {
-                "command": "cashfree-mcp"
-            }
-        }
-    }
-    ```
-
-3. **Specifying the exact path** (if you need a specific version):
-    ```json
-    {
-        "mcpServers": {
-            "cashfree": {
-                "command": "node",
-                "args": [
-                    "path/to/node_modules/@cashfreepayments/cashfree-mcp/src/index.js"
-                ]
-            }
-        }
-    }
-    ```
 
 ### Environment
 
@@ -173,7 +108,7 @@ There are several ways to run the Cashfree MCP server:
 
 -   `pg`: Payment Gateway APIs
 -   `payouts`: Payouts APIs
--   `secureid`: Secure ID APIs
+-   `secureid`: SecureID APIs
 
 ## Tools
 
@@ -203,25 +138,25 @@ Cashfree MCP has the following tools available, grouped by the product category
 | **get-disputes-by-order-id**                             | Get all dispute details by Order ID                                                                |
 | **get-disputes-by-payment-id**                           | Get all dispute details by Payment ID                                                              |
 | **get-disputes-by-dispute-id**                           | Get dispute details by Dispute ID                                                                  |
-| **accept-disputed-by-dispute-id**                        | Accept a dispute by its Dispute ID                                                                 |
+| **accept-dispute-by-dispute-id**                         | Accept a dispute by its Dispute ID                                                                 |
 | **submit-evidence-to-contest-the-dispute-by-dispute-id** | Submit evidence to contest a dispute                                                               |
 | **simulate-payment**                                     | Simulate payment for testing. Requires prior order creation                                        |
 | **fetch-simulation**                                     | Fetch simulated payment details                                                                    |
 
 ### Payouts
 
-| Tool Name                  | Description                                       |
-| -------------------------- | ------------------------------------------------- |
-| **standard-transfer-v2**   | Initiate an amount transfer at Cashfree Payments. |
-| **get-transfer-status-v2** | Get the status of an initiated transfer.          |
-| **batch-transfer-v2**      | Initi                                             |
+| Tool Name                        | Description                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| **standard-transfer-v2**         | Initiate an amount transfer at Cashfree Payments.                                |
+| **get-transfer-status-v2**       | Get the status of an initiated transfer.                                         |
+| **batch-transfer-v2**            | Initiate a batch transfer request at Cashfree Payments.                          |
+| **get-batch-transfer-status-v2** | Get the status of an initiated batch transfer.                                   |
+| **authorize**                    | Authenticate with the Cashfree system and obtain the authorization bearer token. |
+| **create-cashgram**              | Create a Cashgram.                                                               |
+| **deactivate-cashgram**          | Deactivate a Cashgram.                                                           |
+| **get-cashgram-status**          | Get the status of a created Cashgram.                                            |
 
-desenvolvimento
-| **create-cashgram** | Create a Cashgram. |
-| **deactivate-cashgram** | Deactivate a Cashgram. |
-| **get-cashgram-status** | Get the status of a created Cashgram. |
-
-### Secure ID
+### SecureID
 
 | Tool Name                      | Description                                       |
 | ------------------------------ | ------------------------------------------------- |
@@ -241,4 +176,4 @@ For detailed API documentation, visit the [Cashfree API Documentation](https://d
 
 ## Support
 
-For support, contact [care@cashfree.com](mailto:care@cashfree.com)
+For support, contact [care@cashfree.com](mailto:care@cashfree.com) or raise an issue in the [GitHub repository](https://github.com/cashfree/cashfree-mcp).
