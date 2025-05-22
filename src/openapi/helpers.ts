@@ -1,168 +1,310 @@
-import { OpenApiToEndpointConverter, } from '@mintlify/validation';
-import { z } from 'zod';
-import { dataSchemaArrayToZod, dataSchemaToZod } from './zod.js';
-import { readConfig } from '../config.js';
-import crypto from 'crypto';
-import fs from 'fs';
+import { z } from "zod";
+import { dataSchemaArrayToZod, dataSchemaToZod } from "./zod.js";
+import { readConfig } from "../config.js";
+import crypto from "crypto";
+import fs from "fs";
 
-export function convertStrToTitle(str) {
-    const spacedString = str.replace(/[-_]/g, ' ');
-    const words = spacedString.split(/(?=[A-Z])|\s+/);
-    return words.map(word =>
-        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    ).join(' ');
+type ServerParams = Record<string, any>; // Define ServerParams as a generic type
+
+export declare type CategorizedZod = {
+  url: string;
+  method: string;
+  paths: ServerParams;
+  queries: ServerParams;
+  headers: ServerParams;
+  cookies: ServerParams;
+  body?: ServerParams; // Add the optional 'body' property
+};
+
+type RefCache = { [key: string]: any }; // Define a type for the reference cache
+type Specification = {
+  paths: {
+    [path: string]: {
+      [method: string]: any;
+    };
+  };
+};
+type Endpoint = {
+  request: any;
+  servers: any;
+  path: string;
+  method: string;
+  operation: any;
+  "x-mcp"?: {
+    enabled: boolean;
+  };
+};
+
+export type NestedRecord =
+  | string
+  | {
+      [key: string]: NestedRecord;
+    };
+
+export type SimpleRecord = Record<string, { [x: string]: undefined }>;
+
+export function convertStrToTitle(str: string): string {
+  const spacedString = str.replace(/[-_]/g, " ");
+  const words = spacedString.split(/(?=[A-Z])|\s+/);
+  return words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
-export function findNextIteration(set, str) {
-    let count = 1;
-    set.forEach(val => {
-        if (val.startsWith(`${str}---`)) {
-            count = Number(val.replace(`${str}---`, ''));
-        }
-    });
-    return count + 1;
+export function findNextIteration(set: Set<string>, str: string): number {
+  let count = 1;
+  set.forEach((val) => {
+    if (val.startsWith(`${str}---`)) {
+      count = Number(val.replace(`${str}---`, ""));
+    }
+  });
+  return count + 1;
 }
 
 // Reference resolution for OpenAPI specs
-function resolveReferences(spec, refPath, cache = {}) {
-    if (cache[refPath]) return cache[refPath];
-    if (!refPath.startsWith('#/')) throw new Error(`External references not supported: ${refPath}`);
-    const pathParts = refPath.substring(2).split('/');
-    let current = spec;
-    for (const part of pathParts) {
-        if (!current[part]) throw new Error(`Reference not found: ${refPath}`);
-        current = current[part];
-    }
-    if (current && current.$ref) {
-        current = resolveReferences(spec, current.$ref, cache);
-    }
-    cache[refPath] = current;
-    return current;
+function resolveReferences(
+  spec: Record<string, any>,
+  refPath: string,
+  cache: Record<string, any> = {}
+): any {
+  if (cache[refPath]) return cache[refPath];
+  if (!refPath.startsWith("#/"))
+    throw new Error(`External references not supported: ${refPath}`);
+  const pathParts = refPath.substring(2).split("/");
+  let current: any = spec;
+  for (const part of pathParts) {
+    if (!current[part]) throw new Error(`Reference not found: ${refPath}`);
+    current = current[part];
+  }
+  if (current && current.$ref) {
+    current = resolveReferences(spec, current.$ref, cache);
+  }
+  cache[refPath] = current;
+  return current;
 }
 
-function resolveAllReferences(obj, spec, cache = {}) {
-    if (!obj || typeof obj !== 'object') return obj;
-    if (Array.isArray(obj)) return obj.map(item => resolveAllReferences(item, spec, cache));
-    if (obj.$ref) {
-        const resolved = resolveReferences(spec, obj.$ref, cache);
-        return resolveAllReferences({ ...resolved }, spec, cache);
-    }
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
-        result[key] = resolveAllReferences(value, spec, cache);
-    }
-    return result;
+function resolveAllReferences(
+  obj: any,
+  spec: Specification,
+  cache: RefCache
+): any {
+  if (obj && obj.$ref) {
+    const resolved = resolveReferences(spec, obj.$ref, cache);
+    return resolveAllReferences({ ...resolved }, spec, cache);
+  }
+  const result: { [key: string]: any } = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = resolveAllReferences(value, spec, cache);
+  }
+  return result;
 }
 
-export function getEndpointsFromOpenApi(specification) {
-    const endpoints = [];
-    const paths = specification.paths;
-    const refCache = {};
-    for (const path in paths) {
-        const operations = paths[path];
-        for (const method in operations) {
-            if (method === 'parameters' || method === 'trace') continue;
-            try {
-                const resolvedPathItem = resolveAllReferences(operations[method], specification, refCache);
-                if (!isMcpEnabledEndpoint(resolvedPathItem)) continue;
-                const endpoint = OpenApiToEndpointConverter.convert(
-                    { ...specification, paths: { [path]: { [method]: resolvedPathItem } } },
-                    path,
-                    method
-                );
-                endpoints.push(endpoint);
-            } catch (error) {
-                console.error(`Error processing endpoint ${method.toUpperCase()} ${path}:`, error.message);
-            }
-        }
+export function getEndpointsFromOpenApi(
+  specification: Specification
+): Endpoint[] {
+  const endpoints: Endpoint[] = [];
+  const paths = specification.paths;
+  const refCache: RefCache = {};
+
+  for (const path in paths) {
+    const operations = paths[path];
+    for (const method in operations) {
+      if (method === "parameters" || method === "trace") continue;
+      try {
+        const resolvedPathItem = resolveAllReferences(
+          operations[method],
+          specification,
+          refCache
+        );
+        endpoints.push({
+          path,
+          method,
+          operation: resolvedPathItem,
+          servers: undefined,
+          request: undefined,
+        });
+      } catch (error) {
+        console.error(
+          `Failed to resolve references for ${method} ${path}:`,
+          error
+        );
+      }
     }
-    return endpoints;
+  }
+
+  return endpoints;
 }
 
-export function loadEnv(key) {
-    try {
-        const config = readConfig();
-        return config[key] || {};
-    } catch (error) {
-        if (error instanceof SyntaxError) throw error;
-        return {};
-    }
+export function loadEnv(key: string): SimpleRecord {
+  try {
+    const config: any = readConfig();
+    return config[key] || {};
+  } catch (error) {
+    if (error instanceof SyntaxError) throw error;
+    return {};
+  }
 }
 
 // Zod schema conversion helpers
-function convertParameterSection(parameters, paramSection) {
-    Object.entries(parameters).forEach(([key, value]) => {
-        paramSection[key] = dataSchemaArrayToZod(value.schema);
-    });
-}
-
-function convertParametersAndAddToRelevantParamGroups(parameters, paths, queries, headers, cookies) {
-    convertParameterSection(parameters.path, paths);
-    convertParameterSection(parameters.query, queries);
-    convertParameterSection(parameters.header, headers);
-    convertParameterSection(parameters.cookie, cookies);
-}
-
-function convertSecurityParameterSection(securityParameters, securityParamSection, envVariables, location) {
-    Object.entries(securityParameters).forEach(([key, value]) => {
-        if (envVariables[location][key] === undefined) {
-            securityParamSection[key] = z.string();
-        }
-    });
-}
-
-function convertSecurityParametersAndAddToRelevantParamGroups(securityParameters, queries, headers, cookies, envVariables) {
-    convertSecurityParameterSection(securityParameters.query, queries, envVariables, 'query');
-    convertSecurityParameterSection(securityParameters.header, headers, envVariables, 'header');
-    convertSecurityParameterSection(securityParameters.cookie, cookies, envVariables, 'cookie');
-}
-
-export function convertEndpointToCategorizedZod(envKey, endpoint) {
-    var _a, _b, _c;
-    const envVariables = loadEnv(envKey);
-    const url = `${envVariables.base_url || ((_b = (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.url) || ''}${endpoint.path}`;
-    const method = endpoint.method;
-    const paths = {};
-    const queries = {};
-    const headers = {};
-    const cookies = {};
-    let body = undefined;
-
-    convertParametersAndAddToRelevantParamGroups(endpoint.request.parameters, paths, queries, headers, cookies);
-
-    if ((_c = endpoint.request.security[0]) === null || _c === void 0 ? void 0 : _c.parameters) {
-        convertSecurityParametersAndAddToRelevantParamGroups(endpoint.request.security[0].parameters, queries, headers, cookies, envVariables);
+function convertParameterSection(
+  parameters: { [s: string]: unknown } | ArrayLike<unknown>,
+  paramSection: { [x: string]: z.ZodTypeAny }
+) {
+  Object.entries(parameters).forEach(([key, value]) => {
+    if (typeof value === "object" && value !== null && "schema" in value) {
+      paramSection[key] = dataSchemaArrayToZod(
+        (value as { schema: any }).schema
+      );
     }
-    const jsonBodySchema = endpoint.request.body['application/json'];
-    const bodySchemaArray = jsonBodySchema === null || jsonBodySchema === void 0 ? void 0 : jsonBodySchema.schemaArray;
-    const bodySchema = bodySchemaArray === null || bodySchemaArray === void 0 ? void 0 : bodySchemaArray[0];
-    if (bodySchema) {
-        const zodBodySchema = dataSchemaToZod(bodySchema);
-        body = { body: zodBodySchema };
+  });
+}
+
+function convertParametersAndAddToRelevantParamGroups(
+  parameters: {
+    path: { [s: string]: unknown } | ArrayLike<unknown>;
+    query: { [s: string]: unknown } | ArrayLike<unknown>;
+    header: { [s: string]: unknown } | ArrayLike<unknown>;
+    cookie: { [s: string]: unknown } | ArrayLike<unknown>;
+  },
+  paths: { [x: string]: z.ZodTypeAny },
+  queries: { [x: string]: z.ZodTypeAny },
+  headers: { [x: string]: z.ZodTypeAny },
+  cookies: { [x: string]: z.ZodTypeAny }
+) {
+  convertParameterSection(parameters.path, paths);
+  convertParameterSection(parameters.query, queries);
+  convertParameterSection(parameters.header, headers);
+  convertParameterSection(parameters.cookie, cookies);
+}
+
+function convertSecurityParameterSection(
+  securityParameters: ArrayLike<unknown> | { [s: string]: unknown },
+  securityParamSection: { [x: string]: z.ZodString },
+  envVariables: { [x: string]: { [x: string]: undefined } },
+  location: string
+) {
+  Object.entries(securityParameters).forEach(([key]) => {
+    if (envVariables[location][key] === undefined) {
+      securityParamSection[key] = z.string();
     }
-    return { url, method, paths, queries, body, headers, cookies };
+  });
 }
 
-export function getValFromNestedJson(key, jsonObj) {
-    if (!key || !jsonObj) return;
-    return jsonObj[key];
+function convertSecurityParametersAndAddToRelevantParamGroups(
+  securityParameters: {
+    query: ArrayLike<unknown> | { [s: string]: unknown };
+    header: ArrayLike<unknown> | { [s: string]: unknown };
+    cookie: ArrayLike<unknown> | { [s: string]: unknown };
+  },
+  queries: { [x: string]: z.ZodString },
+  headers: { [x: string]: z.ZodString },
+  cookies: { [x: string]: z.ZodString },
+  envVariables: SimpleRecord
+) {
+  convertSecurityParameterSection(
+    securityParameters.query,
+    queries,
+    envVariables,
+    "query"
+  );
+  convertSecurityParameterSection(
+    securityParameters.header,
+    headers,
+    envVariables,
+    "header"
+  );
+  convertSecurityParameterSection(
+    securityParameters.cookie,
+    cookies,
+    envVariables,
+    "cookie"
+  );
 }
 
-export function isMcpEnabled(path) {
-    const product = path.split('.json')[0].split('-')[1];
-    const tools = process.env.TOOLS ? process.env.TOOLS.toLowerCase().split(',') : [];
-    switch (product) {
-        case 'PG': return tools.includes('pg');
-        case 'PO': return tools.includes('payouts');
-        case 'VRS': return tools.includes('secureid');
-        default: return false;
-    }
+export function convertEndpointToCategorizedZod(
+  envKey: string,
+  endpoint: Endpoint
+): CategorizedZod {
+  var _a, _b, _c;
+  const envVariables = loadEnv(envKey);
+  const url = `${
+    envVariables.base_url ||
+    ((_b =
+      (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) ===
+      null || _b === void 0
+      ? void 0
+      : _b.url) ||
+    ""
+  }${endpoint.path}`;
+  const method = endpoint.method;
+  const paths = {};
+  const queries = {};
+  const headers = {};
+  const cookies = {};
+  let body = undefined;
+
+  convertParametersAndAddToRelevantParamGroups(
+    endpoint.request.parameters,
+    paths,
+    queries,
+    headers,
+    cookies
+  );
+
+  if (
+    (_c = endpoint.request.security[0]) === null || _c === void 0
+      ? void 0
+      : _c.parameters
+  ) {
+    convertSecurityParametersAndAddToRelevantParamGroups(
+      endpoint.request.security[0].parameters,
+      queries,
+      headers,
+      cookies,
+      envVariables
+    );
+  }
+  const jsonBodySchema = endpoint.request.body["application/json"];
+  const bodySchemaArray =
+    jsonBodySchema === null || jsonBodySchema === void 0
+      ? void 0
+      : jsonBodySchema.schemaArray;
+  const bodySchema =
+    bodySchemaArray === null || bodySchemaArray === void 0
+      ? void 0
+      : bodySchemaArray[0];
+  if (bodySchema) {
+    const zodBodySchema = dataSchemaToZod(bodySchema);
+    body = { body: zodBodySchema };
+  }
+  return { url, method, paths, queries, body, headers, cookies };
 }
 
-export function isMcpEnabledEndpoint(endpointSpec) {
-    return endpointSpec?.['x-mcp']?.['enabled'] === true;
+export function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any {
+  if (!key || !jsonObj) return;
+  return jsonObj[key];
 }
 
+export function isMcpEnabled(path: string): boolean {
+  const product = path.split(".json")[0].split("-")[1];
+  const tools = process.env.TOOLS
+    ? process.env.TOOLS.toLowerCase().split(",")
+    : [];
+  switch (product) {
+    case "PG":
+      return tools.includes("pg");
+    case "PO":
+      return tools.includes("payouts");
+    case "VRS":
+      return tools.includes("secureid");
+    default:
+      return false;
+  }
+}
+
+export function isMcpEnabledEndpoint(endpointSpec: Endpoint): boolean {
+  return endpointSpec?.["x-mcp"]?.["enabled"] === true;
+}
 
 /**
  * Generate a signature by encrypting the client ID and current UNIX timestamp using RSA encryption.
@@ -170,16 +312,20 @@ export function isMcpEnabledEndpoint(endpointSpec) {
  * @param {string} publicKey - The RSA public key for encryption.
  * @returns {string} - The generated signature.
  */
-export function generateCfSignature(clientId, publicKey) {
-    try {
-        const timestamp = Math.floor(Date.now() / 1000); // Current UNIX timestamp
-        const data = `${clientId}.${timestamp}`;
-        const buffer = Buffer.from(data, 'utf8');
-        const encrypted = crypto.publicEncrypt(publicKey, buffer);
-        return encrypted.toString('base64');
-    } catch (error) {
-        console.error(`Error generating signature: ${error.message}`);
+export function generateCfSignature(clientId: string, publicKey: string) {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000); // Current UNIX timestamp
+    const data = `${clientId}.${timestamp}`;
+    const buffer = Buffer.from(data, "utf8");
+    const encrypted = crypto.publicEncrypt(publicKey, buffer);
+    return encrypted.toString("base64");
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Error generating signature: ${error.message}`);
+    } else {
+      console.error("Error generating signature: Unknown error");
     }
+  }
 }
 
 /**
@@ -188,11 +334,15 @@ export function generateCfSignature(clientId, publicKey) {
  * @returns {string} - The public key as a string.
  * @throws {Error} - If the file cannot be read.
  */
-export function getPublicKeyFromPath(path) {
-    try {
-        return fs.readFileSync(path, 'utf8');
-    } catch (error) {
-        console.warn(`Warning: Failed to read public key from path: ${error.message}`);
-        return null;
-    }
+export function getPublicKeyFromPath(path: string): string | null {
+  try {
+    return fs.readFileSync(path, "utf8");
+  } catch (error) {
+    console.warn(
+      `Warning: Failed to read public key from path: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+    return null;
+  }
 }

@@ -3,63 +3,105 @@
  * Handles environment-based base URLs and API credentials.
  */
 
-import { getPublicKeyFromPath } from './openapi/helpers.js';
+export interface ApiConfig {
+  base_url?: string;
+  header: {
+    "x-client-id"?: string;
+    "x-client-secret"?: string;
+  };
+}
+
+export interface Config {
+  "Cashfree Payment Gateway APIs - 2025-01-01": ApiConfig;
+  "Cashfree Payout APIs - 2024-01-01": ApiConfig;
+  "Cashfree Verification API's. - 2023-12-18": ApiConfig;
+}
+
+import { getPublicKeyFromPath } from "./openapi/helpers.js";
 
 const BASE_URLS = {
   sandbox: "https://sandbox.cashfree.com",
-  production: "https://api.cashfree.com"
+  production: "https://api.cashfree.com",
 };
 
 // Cashfree API identifiers
-const PAYMENT_API_KEY      = 'Cashfree Payment Gateway APIs - 2025-01-01';
-const PAYOUT_API_KEY       = 'Cashfree Payout APIs - 2024-01-01';
-const VERIFICATION_API_KEY = 'Cashfree Verification API\'s. - 2023-12-18';
+const PAYMENT_API_KEY = "Cashfree Payment Gateway APIs - 2025-01-01";
+const PAYOUT_API_KEY = "Cashfree Payout APIs - 2024-01-01";
+const VERIFICATION_API_KEY = "Cashfree Verification API's. - 2023-12-18";
 
 const DEFAULT_CONFIG = {
   [PAYMENT_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/pg`,
-    header: {}
+    header: {},
   },
   [PAYOUT_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/payout`,
-    header: {}
+    header: {},
   },
   [VERIFICATION_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/verification`,
-    header: {}
-  }
+    header: {},
+  },
 };
 
-export function readConfig() {
+export function readConfig(): Config {
   const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-  const isProduction = process.env.ENV === 'production';
+  const isProduction = process.env.ENV === "production";
 
   // Adjust base_url for sandbox vs production
   const baseUrl = isProduction ? BASE_URLS.production : BASE_URLS.sandbox;
-  Object.keys(config).forEach(api => {
-    config[api].base_url = `${baseUrl}${config[api].base_url.split(BASE_URLS.sandbox)[1]}`;
+  Object.keys(config).forEach((api) => {
+    config[api].base_url = `${baseUrl}${
+      config[api].base_url.split(BASE_URLS.sandbox)[1]
+    }`;
   });
 
   // Helper to configure API credentials
-  const configureApiCredentials = ({ key, idVar, secretVar, pubKeyVar }) => {
+  const configureApiCredentials = ({
+    key,
+    idVar,
+    secretVar,
+    pubKeyVar,
+  }: {
+    key: string;
+    idVar: string;
+    secretVar: string;
+    pubKeyVar?: string;
+  }) => {
     const appId = process.env[idVar];
     const appSecret = process.env[secretVar];
     if (appId && appSecret) {
       config[key].header = {
-        'x-client-id': appId,
-        'x-client-secret': appSecret
+        "x-client-id": appId,
+        "x-client-secret": appSecret,
       };
     }
     if (pubKeyVar && process.env[pubKeyVar]) {
-      config[key].TWO_FA_PUBLIC_KEY = getPublicKeyFromPath(process.env[pubKeyVar]);
+      config[key].TWO_FA_PUBLIC_KEY = getPublicKeyFromPath(
+        process.env[pubKeyVar]
+      );
     }
   };
 
   // Apply credentials for each API
   [
-    { key: PAYMENT_API_KEY,      idVar: 'PAYMENTS_APP_ID', secretVar: 'PAYMENTS_APP_SECRET' },
-    { key: PAYOUT_API_KEY,       idVar: 'PAYOUTS_APP_ID',  secretVar: 'PAYOUTS_APP_SECRET', pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' },
-    { key: VERIFICATION_API_KEY, idVar: 'SECUREID_APP_ID', secretVar: 'SECUREID_APP_SECRET', pubKeyVar: 'TWO_FA_PUBLIC_KEY_PEM_PATH' }
+    {
+      key: PAYMENT_API_KEY,
+      idVar: "PAYMENTS_APP_ID",
+      secretVar: "PAYMENTS_APP_SECRET",
+    },
+    {
+      key: PAYOUT_API_KEY,
+      idVar: "PAYOUTS_APP_ID",
+      secretVar: "PAYOUTS_APP_SECRET",
+      pubKeyVar: "TWO_FA_PUBLIC_KEY_PEM_PATH",
+    },
+    {
+      key: VERIFICATION_API_KEY,
+      idVar: "SECUREID_APP_ID",
+      secretVar: "SECUREID_APP_SECRET",
+      pubKeyVar: "TWO_FA_PUBLIC_KEY_PEM_PATH",
+    },
   ].forEach(configureApiCredentials);
 
   return config;

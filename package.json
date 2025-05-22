@@ -39,6 +39,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/dashify": "^1.0.3",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.4",

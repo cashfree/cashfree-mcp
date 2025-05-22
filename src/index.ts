@@ -19,34 +19,34 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function main() {
-    const config = readConfig();
-    const server = initialize(config);
-    const existingTools = new Set();
+  const config = readConfig();
+  const server = initialize(config);
+  const existingTools: Set<string> = new Set();
 
-    await createSearchTool(server);
-    await createCashienTool(server);
+  await createSearchTool(server);
+  await createCashienTool(server);
 
-    const openApiDir = path.join(__dirname, "openapi");
-    const openApiFilePaths = fs
-        .readdirSync(openApiDir)
-        .filter((file) => file.startsWith("openapi-") && file.endsWith(".json"))
-        .filter((file) => isMcpEnabled(file));
+  const openApiDir = path.join(__dirname, "openapi");
+  const openApiFilePaths = fs
+    .readdirSync(openApiDir)
+    .filter((file) => file.startsWith("openapi-") && file.endsWith(".json"))
+    .filter((file) => isMcpEnabled(file));
 
-    await Promise.all(
-        openApiFilePaths.map(async (openApiPath, index) => {
-            return createToolsFromOpenApi(
-                path.join(openApiDir, openApiPath),
-                index,
-                server,
-                existingTools
-            );
-        })
-    );
+  await Promise.all(
+    openApiFilePaths.map(async (openApiPath, index) => {
+      return createToolsFromOpenApi(
+        path.join(openApiDir, openApiPath),
+        index,
+        server,
+        existingTools
+      );
+    })
+  );
 
-    await connectServer(server);
+  await connectServer(server);
 }
 
 main().catch((error) => {
-    console.error("Fatal error in trying to initialize MCP server:", error);
-    process.exit(1);
+  console.error("Fatal error in trying to initialize MCP server:", error);
+  process.exit(1);
 });
