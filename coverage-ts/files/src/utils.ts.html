@@ -1,0 +1,99 @@
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>utils.ts</title>
+      <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" type="text/css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" type="text/css" rel="stylesheet">
+<script src="../../assets/source-file.js" type="text/javascript" charset="utf-8"></script>
+<link href="../../assets/source-file.css" type="text/css" rel="stylesheet">
+    </head>
+    <body>
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="negative"><td class="">src/utils.ts</td><td class="">79.07%</td><td class="">80%</td><td class="">129</td><td class="">102</td><td class="">27</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import axios, { AxiosResponse } from &quot;axios&quot;;
+import { OpenAPI } from &quot;@mintlify/openapi-types&quot;;
+
+export type NestedRecord =
+  | string
+  | {
+      [key: string]: NestedRecord;
+    };
+
+export type SimpleRecord = Record&lt;string, NestedRecord&gt;;
+
+export function initializeObject(
+  obj: SimpleRecord,
+  path: string[]
+): SimpleRecord {
+  let current = obj;
+  for (const key of path) {
+    if (!current[key] || typeof current[key] !== &quot;object&quot;) {
+      current[key] = {};
+    }
+    current = current[key];
+  }
+  return current;
+}
+export function getFileId(
+  spec: OpenAPI.Document,
+  index: number
+): string | number {
+  var _a;
+  return ((_a = spec.info) === null || _a === void 0 ? void 0 : _a.title) &amp;&amp;
+    spec.info?.version
+    ? `${spec.info.title} - ${spec.info.version}`
+    : index;
+}
+
+export function throwOnAxiosError(
+  response: AxiosResponse&lt;any&gt;,
+  errMsg: string
+): void {
+  var _a, _b;
+  if (response.status !== 200) {
+    if (
+      ((_a = response.headers[&quot;content-type&quot;]) === null || _a === void 0
+        ? void 0
+        : _a.includes(&quot;application/json&quot;)) &amp;&amp;
+      ((_b = response.data) === null || _b === void 0 ? void 0 : _b.error)
+    ) {
+      throw new Error(`${errMsg}: ${response.data.error}`);
+    } else {
+      throw new Error(
+        `${errMsg}: ${response.status} ${response.statusText || &quot;&quot;}`
+      );
+    }
+  }
+  if (!response.data) {
+    throw new Error(`${errMsg}: ${response.status} ${response.statusText}`);
+  }
+}
+export function formatErr(err: unknown) {
+  var _a, _b;
+  if (axios.isAxiosError(err)) {
+    if (err.message) {
+      return err.message;
+    } else if (err.response) {
+      return (_b =
+        (_a = err.response.data) === null || _a === void 0
+          ? void 0
+          : _a.error) !== null &amp;&amp; _b !== void 0
+        ? _b
+        : `${err.response.status} ${err.response.statusText}`;
+    } else if (err.request) {
+      return &quot;No response received from server&quot;;
+    } else {
+      err = &quot;An unknown error occurred&quot;;
+    }
+  } else if (err instanceof Error) {
+    return err.message;
+  } else {
+    return JSON.stringify(err, undefined, 2);
+  }
+}
+</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:28,&quot;character&quot;:6,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:29,&quot;character&quot;:11,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:39,&quot;character&quot;:6,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:39,&quot;character&quot;:10,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:42,&quot;character&quot;:8,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:42,&quot;character&quot;:59,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:44,&quot;character&quot;:10,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:44,&quot;character&quot;:13,&quot;text&quot;:&quot;includes&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:45,&quot;character&quot;:8,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:45,&quot;character&quot;:22,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:45,&quot;character&quot;:40,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:45,&quot;character&quot;:65,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:45,&quot;character&quot;:68,&quot;text&quot;:&quot;error&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:47,&quot;character&quot;:45,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:47,&quot;character&quot;:50,&quot;text&quot;:&quot;error&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:16,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:59,&quot;character&quot;:6,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:59,&quot;character&quot;:10,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:64,&quot;character&quot;:14,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:65,&quot;character&quot;:9,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:65,&quot;character&quot;:27,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:65,&quot;character&quot;:45,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:67,&quot;character&quot;:12,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:67,&quot;character&quot;:15,&quot;text&quot;:&quot;error&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:67,&quot;character&quot;:34,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:68,&quot;character&quot;:10,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/utils.ts&quot;,&quot;line&quot;:70,&quot;character&quot;:19,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1}]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Thu, 22 May 2025 12:43:43 GMT</p>
+    </body>
+  </html>
+  

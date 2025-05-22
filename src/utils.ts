@@ -33,7 +33,6 @@ export function getFileId(
     : index;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throwOnAxiosError(
   response: AxiosResponse<any>,
   errMsg: string

@@ -1,0 +1,126 @@
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>config.ts</title>
+      <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" type="text/css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" type="text/css" rel="stylesheet">
+<script src="../../assets/source-file.js" type="text/javascript" charset="utf-8"></script>
+<link href="../../assets/source-file.css" type="text/css" rel="stylesheet">
+    </head>
+    <body>
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/config.ts</td><td class="">91.30%</td><td class="">80%</td><td class="">115</td><td class="">105</td><td class="">10</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">/**
+ * Reads and prepares configuration for Cashfree APIs (Payment, Payout, Verification).
+ * Handles environment-based base URLs and API credentials.
+ */
+
+export interface ApiConfig {
+  base_url?: string;
+  header: {
+    &quot;x-client-id&quot;?: string;
+    &quot;x-client-secret&quot;?: string;
+  };
+}
+
+export interface Config {
+  &quot;Cashfree Payment Gateway APIs - 2025-01-01&quot;: ApiConfig;
+  &quot;Cashfree Payout APIs - 2024-01-01&quot;: ApiConfig;
+  &quot;Cashfree Verification API&#x27;s. - 2023-12-18&quot;: ApiConfig;
+}
+
+import { getPublicKeyFromPath } from &quot;./openapi/helpers.js&quot;;
+
+const BASE_URLS = {
+  sandbox: &quot;https://sandbox.cashfree.com&quot;,
+  production: &quot;https://api.cashfree.com&quot;,
+};
+
+// Cashfree API identifiers
+const PAYMENT_API_KEY = &quot;Cashfree Payment Gateway APIs - 2025-01-01&quot;;
+const PAYOUT_API_KEY = &quot;Cashfree Payout APIs - 2024-01-01&quot;;
+const VERIFICATION_API_KEY = &quot;Cashfree Verification API&#x27;s. - 2023-12-18&quot;;
+
+const DEFAULT_CONFIG = {
+  [PAYMENT_API_KEY]: {
+    base_url: `${BASE_URLS.sandbox}/pg`,
+    header: {},
+  },
+  [PAYOUT_API_KEY]: {
+    base_url: `${BASE_URLS.sandbox}/payout`,
+    header: {},
+  },
+  [VERIFICATION_API_KEY]: {
+    base_url: `${BASE_URLS.sandbox}/verification`,
+    header: {},
+  },
+};
+
+export function readConfig(): Config {
+  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  const isProduction = process.env.ENV === &quot;production&quot;;
+
+  // Adjust base_url for sandbox vs production
+  const baseUrl = isProduction ? BASE_URLS.production : BASE_URLS.sandbox;
+  Object.keys(config).forEach((api) =&gt; {
+    config[api].base_url = `${baseUrl}${
+      config[api].base_url.split(BASE_URLS.sandbox)[1]
+    }`;
+  });
+
+  // Helper to configure API credentials
+  const configureApiCredentials = ({
+    key,
+    idVar,
+    secretVar,
+    pubKeyVar,
+  }: {
+    key: string;
+    idVar: string;
+    secretVar: string;
+    pubKeyVar?: string;
+  }) =&gt; {
+    const appId = process.env[idVar];
+    const appSecret = process.env[secretVar];
+    if (appId &amp;&amp; appSecret) {
+      config[key].header = {
+        &quot;x-client-id&quot;: appId,
+        &quot;x-client-secret&quot;: appSecret,
+      };
+    }
+    if (pubKeyVar &amp;&amp; process.env[pubKeyVar]) {
+      config[key].TWO_FA_PUBLIC_KEY = getPublicKeyFromPath(
+        process.env[pubKeyVar]
+      );
+    }
+  };
+
+  // Apply credentials for each API
+  [
+    {
+      key: PAYMENT_API_KEY,
+      idVar: &quot;PAYMENTS_APP_ID&quot;,
+      secretVar: &quot;PAYMENTS_APP_SECRET&quot;,
+    },
+    {
+      key: PAYOUT_API_KEY,
+      idVar: &quot;PAYOUTS_APP_ID&quot;,
+      secretVar: &quot;PAYOUTS_APP_SECRET&quot;,
+      pubKeyVar: &quot;TWO_FA_PUBLIC_KEY_PEM_PATH&quot;,
+    },
+    {
+      key: VERIFICATION_API_KEY,
+      idVar: &quot;SECUREID_APP_ID&quot;,
+      secretVar: &quot;SECUREID_APP_SECRET&quot;,
+      pubKeyVar: &quot;TWO_FA_PUBLIC_KEY_PEM_PATH&quot;,
+    },
+  ].forEach(configureApiCredentials);
+
+  return config;
+}
+</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:47,&quot;character&quot;:8,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:53,&quot;character&quot;:4,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:53,&quot;character&quot;:16,&quot;text&quot;:&quot;base_url&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:6,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:18,&quot;text&quot;:&quot;base_url&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:27,&quot;text&quot;:&quot;split&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:73,&quot;character&quot;:6,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:73,&quot;character&quot;:18,&quot;text&quot;:&quot;header&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:6,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:18,&quot;text&quot;:&quot;TWO_FA_PUBLIC_KEY&quot;,&quot;kind&quot;:1}]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Thu, 22 May 2025 12:43:43 GMT</p>
+    </body>
+  </html>
+  

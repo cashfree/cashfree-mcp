@@ -1,0 +1,199 @@
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>zod.ts</title>
+      <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" type="text/css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" type="text/css" rel="stylesheet">
+<script src="../../../assets/source-file.js" type="text/javascript" charset="utf-8"></script>
+<link href="../../../assets/source-file.css" type="text/css" rel="stylesheet">
+    </head>
+    <body>
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/openapi/zod.ts</td><td class="">100.00%</td><td class="">80%</td><td class="">271</td><td class="">271</td><td class="">0</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import { Blob } from &quot;node:buffer&quot;;
+import { z, ZodTypeAny, ZodSchema } from &quot;zod&quot;;
+import {
+  DataSchema,
+  DataSchemaArray,
+  IncrementalDataSchema,
+  IncrementalDataSchemaArray,
+} from &quot;@mintlify/validation&quot;;
+import { BinaryLike } from &quot;node:crypto&quot;;
+
+type SchemaInput = DataSchema | IncrementalDataSchema;
+type InitType = Blob | ArrayBuffer | BinaryLike;
+
+// WebFile polyfill (based on fetch-blob, MIT License)
+const WebFile = class File extends Blob {
+  private _lastModified: number = 0;
+  private _name: string = &quot;&quot;;
+
+  constructor(
+    init: BlobPart[] | BlobPart,
+    options: BlobPropertyBag &amp; { lastModified?: number } = {}
+  ) {
+    if (arguments.length &lt; 2) {
+      throw new TypeError(
+        `Failed to construct &#x27;File&#x27;: 2 arguments required, but only ${arguments.length} present.`
+      );
+    }
+    super(
+      Array.isArray(init)
+        ? init.map((part) =&gt; {
+            if (
+              part instanceof Blob ||
+              part instanceof ArrayBuffer ||
+              typeof part === &quot;string&quot;
+            ) {
+              return part as InitType;
+            }
+            throw new TypeError(&quot;Invalid type in init array&quot;);
+          })
+        : [init as InitType],
+      options
+    );
+
+    const lastModified =
+      options?.lastModified === undefined
+        ? Date.now()
+        : Number(options.lastModified);
+
+    if (!Number.isNaN(lastModified)) {
+      this._lastModified = lastModified;
+    } else {
+      throw new TypeError(&quot;Invalid lastModified value&quot;);
+    }
+  }
+
+  get name() {
+    return this._name;
+  }
+
+  get lastModified() {
+    return this._lastModified;
+  }
+
+  get [Symbol.toStringTag]() {
+    return &quot;File&quot;;
+  }
+
+  static [Symbol.hasInstance](object: unknown) {
+    return (
+      !!object &amp;&amp;
+      object instanceof Blob &amp;&amp;
+      /^(File)$/.test(String((object as any)[Symbol.toStringTag]))
+    );
+  }
+};
+
+const File = typeof global.File === &quot;undefined&quot; ? WebFile : global.File;
+
+// Zod schema helpers
+const ANY = z.any();
+const ANY_OPT = ANY.optional();
+const BOOLEAN = z.boolean();
+const BOOLEAN_OPT = BOOLEAN.optional();
+const FILE = z.instanceof(File);
+const FILE_OPT = FILE.optional();
+const NULL = z.null();
+const NULL_OPT = NULL.optional();
+const STRING = z.string();
+
+export function dataSchemaArrayToZod(
+  schemas: DataSchemaArray | IncrementalDataSchemaArray
+): ZodTypeAny {
+  const firstSchema = dataSchemaToZod(schemas[0]);
+  if (!schemas[1]) return firstSchema;
+
+  const zodSchemas: ZodSchema[] = [firstSchema];
+  for (const schema of schemas.slice(1)) {
+    zodSchemas.push(dataSchemaToZod(schema));
+  }
+  return z
+    .union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]])
+    .array();
+}
+
+function getEnumSchema(
+  enumList: (string | number)[],
+  type: &quot;string&quot; | &quot;number&quot;
+): ZodTypeAny {
+  const zodSchema = z.enum(enumList.map(String) as [string, ...string[]]);
+  return type === &quot;string&quot; ? zodSchema : zodSchema.transform(Number);
+}
+
+export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
+  if (!(&quot;type&quot; in schema) || Object.keys(schema).length === 0) {
+    return schema.required ? ANY : ANY_OPT;
+  }
+
+  switch (schema.type) {
+    case &quot;null&quot;:
+      return schema.required ? NULL : NULL_OPT;
+
+    case &quot;boolean&quot;:
+      return schema.required ? BOOLEAN : BOOLEAN_OPT;
+
+    case &quot;enum&lt;string&gt;&quot;: {
+      const strEnumSchema = getEnumSchema(schema.enum, &quot;string&quot;);
+      return schema.required ? strEnumSchema : strEnumSchema.optional();
+    }
+
+    case &quot;enum&lt;number&gt;&quot;:
+    case &quot;enum&lt;integer&gt;&quot;: {
+      const numEnumSchema = getEnumSchema(schema.enum, &quot;number&quot;);
+      return schema.required ? numEnumSchema : numEnumSchema.optional();
+    }
+
+    case &quot;file&quot;:
+      return schema.required ? FILE : FILE_OPT;
+
+    case &quot;any&quot;:
+      return schema.required ? ANY : ANY_OPT;
+
+    case &quot;string&quot;: {
+      if (&quot;enum&quot; in schema &amp;&amp; Array.isArray(schema.enum)) {
+        const stringEnum = z.enum(schema.enum as [string, ...string[]]);
+        return schema.required ? stringEnum : stringEnum.optional();
+      }
+
+      if (schema.format === &quot;binary&quot;) {
+        return schema.required ? FILE : FILE_OPT;
+      }
+
+      let stringSchema = STRING;
+      if (schema.minLength !== undefined) {
+        stringSchema = stringSchema.min(schema.minLength);
+      }
+      if (schema.maxLength !== undefined) {
+        stringSchema = stringSchema.max(schema.maxLength);
+      }
+      if (schema.pattern !== undefined) {
+        stringSchema = stringSchema.regex(new RegExp(schema.pattern));
+      }
+
+      switch (schema.format) {
+        case &quot;email&quot;:
+          stringSchema = stringSchema.email();
+          break;
+        case &quot;uri&quot;:
+        case &quot;url&quot;:
+          stringSchema = stringSchema.url();
+          break;
+      }
+
+      return schema.required ? stringSchema : stringSchema.optional();
+    }
+
+    // Continue with other types like number, integer, date, object, array, etc.
+    // You can add them similarly with validation conditions
+  }
+
+  return ANY;
+}
+</textarea><pre id="annotations" style="display:none">[]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Thu, 22 May 2025 12:43:43 GMT</p>
+    </body>
+  </html>
+  
