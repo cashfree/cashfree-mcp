@@ -15236,7 +15236,7 @@
           "Eligibility"
         ],
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGEligibilityFetchPaymentMethods",
         "deprecated": false,
@@ -15802,7 +15802,7 @@
       "post": {
         "summary": "Create Order",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "security": [
           {
@@ -16115,7 +16115,7 @@
       "get": {
         "summary": "Get Order Extended",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "description": "Use this API to fetch the order related data like address,cart,offers,customer details etc using the Cashfree's `order_id`.\n## When to use this API\n- To get the extended data associated with order.\n- Once the order is PAID\n- Once your customer returns to `return_url`\n",
         "tags": [
@@ -16448,7 +16448,7 @@
       "post": {
         "summary": "Create Refund",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "description": "Use this API to initiate refunds.",
         "tags": [
@@ -16562,7 +16562,7 @@
       "get": {
         "summary": "Get All Refunds for an Order",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "description": "Use this API to fetch all refunds processed against an order.",
         "tags": [
@@ -16675,7 +16675,7 @@
       "get": {
         "summary": "Get Refund",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "description": "Use this API to fetch a specific refund processed on your Cashfree Account.",
         "tags": [
@@ -16797,7 +16797,7 @@
         ],
         "summary": "Get All Settlements",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGFetchSettlements",
         "description": "Use this API to get all settlement details by specifying the settlement ID, settlement UTR or date range.",
@@ -16916,7 +16916,7 @@
       "get": {
         "summary": "Get Settlements by Order ID",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "tags": [
           "Settlements"
@@ -17027,7 +17027,7 @@
           "Disputes"
         ],
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "summary": "Get Disputes by Order Id",
         "operationId": "PGFetchOrderDisputes",
@@ -17141,7 +17141,7 @@
         ],
         "summary": "Get Disputes by Payment ID",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGFetchPaymentDisputes",
         "description": "Use this API to get all Dispute details by specifying the Payment ID.",
@@ -17254,7 +17254,7 @@
         ],
         "summary": "Get Disputes by Dispute ID",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGFetchDisputeByID",
         "description": "Use this API to get Dispute details by specifying the Dispute ID.",
@@ -17364,7 +17364,7 @@
         ],
         "summary": "Accept Dispute by Dispute ID",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGAcceptDisputeByID",
         "description": "Use this API to get accept the Dispute by specifying the Dispute ID.",
@@ -17474,7 +17474,7 @@
         ],
         "summary": "Submit Evidence to contest the Dispute by Dispute ID",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "operationId": "PGUploadDisputesDocuments",
         "description": "Use this API to Submit the Evidences to contest the Dispute by specifying the Dispute ID.",
@@ -17611,7 +17611,7 @@
       "post": {
         "summary": "Simulate Payment",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "description": "Use this API to simulate payment. To use this API you should first create an order using the Create Order API. Also, you need to create a payment with the same order.",
         "tags": [
@@ -17704,7 +17704,7 @@
       "get": {
         "summary": "Fetch Simulation",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "description": "Use this API to fetch simulated payment details.",
         "tags": [
@@ -17805,7 +17805,7 @@
       "post": {
         "summary": "Get Split and Settlement Details by OrderID v2.0",
         "x-mcp": {
-          "enabled": true
+          "enabled": false
         },
         "tags": [
           "Easy-Split"
