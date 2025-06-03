@@ -11,25 +11,24 @@
 <link href="../../../assets/source-file.css" type="text/css" rel="stylesheet">
     </head>
     <body>
-    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/openapi/helpers.ts</td><td class="">86.57%</td><td class="">80%</td><td class="">499</td><td class="">432</td><td class="">67</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import { z } from &quot;zod&quot;;
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/openapi/helpers.ts</td><td class="">90.26%</td><td class="">80%</td><td class="">544</td><td class="">491</td><td class="">53</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import { z } from &quot;zod&quot;;
 import { dataSchemaArrayToZod, dataSchemaToZod } from &quot;./zod.js&quot;;
 import { readConfig } from &quot;../config.js&quot;;
 import crypto from &quot;crypto&quot;;
 import fs from &quot;fs&quot;;
 
-type ServerParams = Record&lt;string, any&gt;; // Define ServerParams as a generic type
-
-export declare type CategorizedZod = {
+export type CategorizedZod = {
   url: string;
   method: string;
-  paths: ServerParams;
-  queries: ServerParams;
-  headers: ServerParams;
-  cookies: ServerParams;
-  body?: ServerParams; // Add the optional &#x27;body&#x27; property
+  paths: Record&lt;string, z.ZodTypeAny&gt;;
+  queries: Record&lt;string, z.ZodTypeAny&gt;;
+  headers: Record&lt;string, z.ZodTypeAny&gt;;
+  cookies: Record&lt;string, z.ZodTypeAny&gt;;
+  body?: { body: z.ZodTypeAny };
 };
 
-type RefCache = { [key: string]: any }; // Define a type for the reference cache
+type RefCache = { [key: string]: any };
+
 type Specification = {
   paths: {
     [path: string]: {
@@ -37,6 +36,7 @@ type Specification = {
     };
   };
 };
+
 type Endpoint = {
   request: any;
   servers: any;
@@ -68,13 +68,16 @@ export function findNextIteration(set: Set&lt;string&gt;, str: string): number {
   let count = 1;
   set.forEach((val) =&gt; {
     if (val.startsWith(`${str}---`)) {
-      count = Number(val.replace(`${str}---`, &quot;&quot;));
+      const suffix = val.replace(`${str}---`, &quot;&quot;);
+      const num = parseInt(suffix, 10);
+      if (!isNaN(num) &amp;&amp; num &gt;= count) {
+        count = num + 1;
+      }
     }
   });
-  return count + 1;
+  return count;
 }
 
-// Reference resolution for OpenAPI specs
 function resolveReferences(
   spec: Record&lt;string, any&gt;,
   refPath: string,
@@ -105,7 +108,10 @@ function resolveAllReferences(
     const resolved = resolveReferences(spec, obj.$ref, cache);
     return resolveAllReferences({ ...resolved }, spec, cache);
   }
-  const result: { [key: string]: any } = {};
+  if (typeof obj !== &quot;object&quot; || obj === null) {
+    return obj;
+  }
+  const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
   for (const [key, value] of Object.entries(obj)) {
     result[key] = resolveAllReferences(value, spec, cache);
   }
@@ -238,23 +244,19 @@ export function convertEndpointToCategorizedZod(
   envKey: string,
   endpoint: Endpoint
 ): CategorizedZod {
-  var _a, _b, _c;
   const envVariables = loadEnv(envKey);
-  const url = `${
-    envVariables.base_url ||
-    ((_b =
-      (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) ===
-      null || _b === void 0
-      ? void 0
-      : _b.url) ||
-    &quot;&quot;
-  }${endpoint.path}`;
+  const url = `${envVariables.base_url || endpoint.servers?.[0]?.url || &quot;&quot;}${
+    endpoint.path
+  }`;
   const method = endpoint.method;
-  const paths = {};
-  const queries = {};
-  const headers = {};
-  const cookies = {};
-  let body = undefined;
+  const paths: Record&lt;string, z.ZodTypeAny&gt; = {};
+  const queries: Record&lt;string, z.ZodTypeAny&gt; = {};
+  const headers: Record&lt;string, z.ZodTypeAny&gt; = {};
+  const cookies: Record&lt;string, z.ZodTypeAny&gt; = {};
+  const securityQueries: Record&lt;string, z.ZodString&gt; = {};
+  const securityHeaders: Record&lt;string, z.ZodString&gt; = {};
+  const securityCookies: Record&lt;string, z.ZodString&gt; = {};
+  let body: { body: z.ZodTypeAny } | undefined = undefined;
 
   convertParametersAndAddToRelevantParamGroups(
     endpoint.request.parameters,
@@ -264,32 +266,28 @@ export function convertEndpointToCategorizedZod(
     cookies
   );
 
-  if (
-    (_c = endpoint.request.security[0]) === null || _c === void 0
-      ? void 0
-      : _c.parameters
-  ) {
+  if (endpoint.request.security?.[0]?.parameters) {
     convertSecurityParametersAndAddToRelevantParamGroups(
       endpoint.request.security[0].parameters,
-      queries,
-      headers,
-      cookies,
+      securityQueries,
+      securityHeaders,
+      securityCookies,
       envVariables
     );
+    // Merge security parameters into main parameter groups
+    Object.assign(queries, securityQueries);
+    Object.assign(headers, securityHeaders);
+    Object.assign(cookies, securityCookies);
   }
-  const jsonBodySchema = endpoint.request.body[&quot;application/json&quot;];
-  const bodySchemaArray =
-    jsonBodySchema === null || jsonBodySchema === void 0
-      ? void 0
-      : jsonBodySchema.schemaArray;
-  const bodySchema =
-    bodySchemaArray === null || bodySchemaArray === void 0
-      ? void 0
-      : bodySchemaArray[0];
+
+  const jsonBodySchema = endpoint.request.body?.[&quot;application/json&quot;];
+  const bodySchemaArray = jsonBodySchema?.schemaArray;
+  const bodySchema = bodySchemaArray?.[0];
   if (bodySchema) {
     const zodBodySchema = dataSchemaToZod(bodySchema);
     body = { body: zodBodySchema };
   }
+
   return { url, method, paths, queries, body, headers, cookies };
 }
 
@@ -359,8 +357,8 @@ export function getPublicKeyFromPath(path: string): string | null {
     return null;
   }
 }
-</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:27,&quot;character&quot;:2,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:28,&quot;character&quot;:2,&quot;text&quot;:&quot;servers&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:31,&quot;character&quot;:2,&quot;text&quot;:&quot;operation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:73,&quot;character&quot;:6,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:75,&quot;character&quot;:9,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:76,&quot;character&quot;:4,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:76,&quot;character&quot;:14,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:78,&quot;character&quot;:6,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:78,&quot;character&quot;:17,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:78,&quot;character&quot;:25,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:4,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:38,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:46,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:81,&quot;character&quot;:19,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:82,&quot;character&quot;:9,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:86,&quot;character&quot;:2,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:90,&quot;character&quot;:6,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:90,&quot;character&quot;:13,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:90,&quot;character&quot;:17,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:91,&quot;character&quot;:10,&quot;text&quot;:&quot;resolved&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:91,&quot;character&quot;:45,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:91,&quot;character&quot;:49,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:92,&quot;character&quot;:37,&quot;text&quot;:&quot;resolved&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:113,&quot;character&quot;:14,&quot;text&quot;:&quot;resolvedPathItem&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:121,&quot;character&quot;:10,&quot;text&quot;:&quot;operation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:121,&quot;character&quot;:21,&quot;text&quot;:&quot;resolvedPathItem&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:139,&quot;character&quot;:10,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:140,&quot;character&quot;:11,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:155,&quot;character&quot;:20,&quot;text&quot;:&quot;schema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:155,&quot;character&quot;:35,&quot;text&quot;:&quot;schema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:227,&quot;character&quot;:6,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:227,&quot;character&quot;:10,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:227,&quot;character&quot;:14,&quot;text&quot;:&quot;_c&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:231,&quot;character&quot;:6,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:232,&quot;character&quot;:7,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:232,&quot;character&quot;:21,&quot;text&quot;:&quot;servers&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:232,&quot;character&quot;:42,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:232,&quot;character&quot;:67,&quot;text&quot;:&quot;_a&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:233,&quot;character&quot;:14,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:235,&quot;character&quot;:8,&quot;text&quot;:&quot;_b&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:235,&quot;character&quot;:11,&quot;text&quot;:&quot;url&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:243,&quot;character&quot;:6,&quot;text&quot;:&quot;body&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:246,&quot;character&quot;:13,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:246,&quot;character&quot;:21,&quot;text&quot;:&quot;parameters&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:254,&quot;character&quot;:5,&quot;text&quot;:&quot;_c&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:254,&quot;character&quot;:19,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:254,&quot;character&quot;:27,&quot;text&quot;:&quot;security&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:254,&quot;character&quot;:52,&quot;text&quot;:&quot;_c&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:256,&quot;character&quot;:8,&quot;text&quot;:&quot;_c&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:256,&quot;character&quot;:11,&quot;text&quot;:&quot;parameters&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:259,&quot;character&quot;:15,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:259,&quot;character&quot;:23,&quot;text&quot;:&quot;security&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:259,&quot;character&quot;:35,&quot;text&quot;:&quot;parameters&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:266,&quot;character&quot;:8,&quot;text&quot;:&quot;jsonBodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:266,&quot;character&quot;:34,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:266,&quot;character&quot;:42,&quot;text&quot;:&quot;body&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:267,&quot;character&quot;:8,&quot;text&quot;:&quot;bodySchemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:268,&quot;character&quot;:4,&quot;text&quot;:&quot;jsonBodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:268,&quot;character&quot;:31,&quot;text&quot;:&quot;jsonBodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:270,&quot;character&quot;:8,&quot;text&quot;:&quot;jsonBodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:270,&quot;character&quot;:23,&quot;text&quot;:&quot;schemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:271,&quot;character&quot;:8,&quot;text&quot;:&quot;bodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:272,&quot;character&quot;:4,&quot;text&quot;:&quot;bodySchemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:272,&quot;character&quot;:32,&quot;text&quot;:&quot;bodySchemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:274,&quot;character&quot;:8,&quot;text&quot;:&quot;bodySchemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:275,&quot;character&quot;:6,&quot;text&quot;:&quot;bodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:277,&quot;character&quot;:4,&quot;text&quot;:&quot;body&quot;,&quot;kind&quot;:1}]</pre></div>
-    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Thu, 22 May 2025 12:43:43 GMT</p>
+</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:27,&quot;character&quot;:2,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:28,&quot;character&quot;:2,&quot;text&quot;:&quot;servers&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:31,&quot;character&quot;:2,&quot;text&quot;:&quot;operation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:76,&quot;character&quot;:6,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:78,&quot;character&quot;:9,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:4,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:14,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:81,&quot;character&quot;:6,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:81,&quot;character&quot;:17,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:81,&quot;character&quot;:25,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:82,&quot;character&quot;:4,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:82,&quot;character&quot;:38,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:82,&quot;character&quot;:46,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:84,&quot;character&quot;:19,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:85,&quot;character&quot;:9,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:89,&quot;character&quot;:2,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:93,&quot;character&quot;:6,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:93,&quot;character&quot;:13,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:93,&quot;character&quot;:17,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:94,&quot;character&quot;:10,&quot;text&quot;:&quot;resolved&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:94,&quot;character&quot;:45,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:94,&quot;character&quot;:49,&quot;text&quot;:&quot;$ref&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:95,&quot;character&quot;:37,&quot;text&quot;:&quot;resolved&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:97,&quot;character&quot;:13,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:97,&quot;character&quot;:33,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:98,&quot;character&quot;:11,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:100,&quot;character&quot;:55,&quot;text&quot;:&quot;obj&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:119,&quot;character&quot;:14,&quot;text&quot;:&quot;resolvedPathItem&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:127,&quot;character&quot;:10,&quot;text&quot;:&quot;operation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:127,&quot;character&quot;:21,&quot;text&quot;:&quot;resolvedPathItem&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:145,&quot;character&quot;:10,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:146,&quot;character&quot;:11,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:161,&quot;character&quot;:20,&quot;text&quot;:&quot;schema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:161,&quot;character&quot;:35,&quot;text&quot;:&quot;schema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:234,&quot;character&quot;:51,&quot;text&quot;:&quot;servers&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:234,&quot;character&quot;:65,&quot;text&quot;:&quot;url&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:248,&quot;character&quot;:13,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:248,&quot;character&quot;:21,&quot;text&quot;:&quot;parameters&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:255,&quot;character&quot;:15,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:255,&quot;character&quot;:23,&quot;text&quot;:&quot;security&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:255,&quot;character&quot;:38,&quot;text&quot;:&quot;parameters&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:257,&quot;character&quot;:15,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:257,&quot;character&quot;:23,&quot;text&quot;:&quot;security&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:257,&quot;character&quot;:35,&quot;text&quot;:&quot;parameters&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:269,&quot;character&quot;:8,&quot;text&quot;:&quot;jsonBodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:269,&quot;character&quot;:34,&quot;text&quot;:&quot;request&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:269,&quot;character&quot;:42,&quot;text&quot;:&quot;body&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:270,&quot;character&quot;:8,&quot;text&quot;:&quot;bodySchemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:270,&quot;character&quot;:26,&quot;text&quot;:&quot;jsonBodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:270,&quot;character&quot;:42,&quot;text&quot;:&quot;schemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:271,&quot;character&quot;:8,&quot;text&quot;:&quot;bodySchema&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:271,&quot;character&quot;:21,&quot;text&quot;:&quot;bodySchemaArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/openapi/helpers.ts&quot;,&quot;line&quot;:272,&quot;character&quot;:6,&quot;text&quot;:&quot;bodySchema&quot;,&quot;kind&quot;:1}]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Tue, 03 Jun 2025 11:33:38 GMT</p>
     </body>
   </html>
   

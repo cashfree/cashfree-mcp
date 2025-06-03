@@ -2,31 +2,31 @@
   "fileCounts": {
     "src/utils.ts": {
       "correctCount": 102,
-      "totalCount": 129
+      "totalCount": 116
     },
     "src/cashien.ts": {
-      "correctCount": 60,
-      "totalCount": 68
+      "correctCount": 85,
+      "totalCount": 85
     },
     "src/config.readonly.ts": {
       "correctCount": 4,
       "totalCount": 4
     },
     "src/openapi/zod.ts": {
-      "correctCount": 271,
-      "totalCount": 271
+      "correctCount": 296,
+      "totalCount": 296
     },
     "src/openapi/helpers.ts": {
-      "correctCount": 432,
-      "totalCount": 499
+      "correctCount": 491,
+      "totalCount": 544
     },
     "src/config.ts": {
-      "correctCount": 105,
-      "totalCount": 115
+      "correctCount": 133,
+      "totalCount": 133
     },
     "src/connect.ts": {
-      "correctCount": 17,
-      "totalCount": 17
+      "correctCount": 24,
+      "totalCount": 24
     },
     "src/settings.ts": {
       "correctCount": 2,
@@ -45,258 +45,111 @@
       "totalCount": 8
     },
     "src/search.ts": {
-      "correctCount": 126,
-      "totalCount": 127
+      "correctCount": 121,
+      "totalCount": 121
     },
     "src/index.ts": {
-      "correctCount": 71,
-      "totalCount": 73
+      "correctCount": 85,
+      "totalCount": 85
     }
   },
   "anys": [
     {
       "file": "src/utils.ts",
-      "line": 28,
-      "character": 6,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 29,
-      "character": 11,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 39,
-      "character": 6,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 39,
-      "character": 10,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 42,
+      "line": 50,
       "character": 8,
-      "text": "_a",
+      "text": "contentType",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 42,
-      "character": 59,
-      "text": "_a",
+      "line": 51,
+      "character": 8,
+      "text": "isJson",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 44,
-      "character": 10,
-      "text": "_a",
+      "line": 51,
+      "character": 17,
+      "text": "contentType",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 44,
-      "character": 13,
+      "line": 51,
+      "character": 30,
       "text": "includes",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 45,
-      "character": 8,
-      "text": "_b",
+      "line": 55,
+      "character": 6,
+      "text": "isJson",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 45,
-      "character": 22,
+      "line": 55,
+      "character": 25,
       "text": "data",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 45,
-      "character": 40,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 45,
-      "character": 65,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 45,
-      "character": 68,
+      "line": 55,
+      "character": 31,
       "text": "error",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 47,
-      "character": 45,
+      "line": 56,
+      "character": 33,
       "text": "data",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 47,
-      "character": 50,
+      "line": 56,
+      "character": 38,
       "text": "error",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 54,
+      "line": 62,
       "character": 16,
       "text": "data",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 59,
-      "character": 6,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 59,
-      "character": 10,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 64,
-      "character": 14,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 65,
-      "character": 9,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 65,
-      "character": 27,
-      "text": "data",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 65,
-      "character": 45,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 67,
+      "line": 77,
       "character": 12,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/utils.ts",
-      "line": 67,
-      "character": 15,
       "text": "error",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 67,
-      "character": 34,
-      "text": "_b",
+      "line": 77,
+      "character": 33,
+      "text": "data",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 68,
-      "character": 10,
-      "text": "_b",
+      "line": 77,
+      "character": 39,
+      "text": "error",
       "kind": 1
     },
     {
       "file": "src/utils.ts",
-      "line": 70,
-      "character": 19,
+      "line": 81,
+      "character": 12,
       "text": "request",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 22,
-      "character": 14,
-      "text": "response",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 57,
-      "character": 10,
-      "text": "finalResp",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 58,
-      "character": 8,
-      "text": "finalResp",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 58,
-      "character": 18,
-      "text": "status",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 58,
-      "character": 42,
-      "text": "finalResp",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 58,
-      "character": 52,
-      "text": "status",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 61,
-      "character": 11,
-      "text": "finalResp",
-      "kind": 1
-    },
-    {
-      "file": "src/cashien.ts",
-      "line": 61,
-      "character": 21,
-      "text": "message",
       "kind": 1
     },
     {
@@ -322,407 +175,330 @@
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 73,
+      "line": 76,
       "character": 6,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 75,
+      "line": 78,
       "character": 9,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 76,
+      "line": 79,
       "character": 4,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 76,
+      "line": 79,
       "character": 14,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 78,
+      "line": 81,
       "character": 6,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 78,
+      "line": 81,
       "character": 17,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 78,
+      "line": 81,
       "character": 25,
       "text": "$ref",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 79,
+      "line": 82,
       "character": 4,
-      "text": "current",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 79,
-      "character": 38,
-      "text": "current",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 79,
-      "character": 46,
-      "text": "$ref",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 81,
-      "character": 19,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
       "line": 82,
+      "character": 38,
+      "text": "current",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 82,
+      "character": 46,
+      "text": "$ref",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 84,
+      "character": 19,
+      "text": "current",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 85,
       "character": 9,
       "text": "current",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 86,
+      "line": 89,
       "character": 2,
       "text": "obj",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 90,
+      "line": 93,
       "character": 6,
       "text": "obj",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 90,
+      "line": 93,
       "character": 13,
       "text": "obj",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 90,
+      "line": 93,
       "character": 17,
       "text": "$ref",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 91,
+      "line": 94,
       "character": 10,
       "text": "resolved",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 91,
+      "line": 94,
       "character": 45,
       "text": "obj",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 91,
+      "line": 94,
       "character": 49,
       "text": "$ref",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 92,
+      "line": 95,
       "character": 37,
       "text": "resolved",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 113,
+      "line": 97,
+      "character": 13,
+      "text": "obj",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 97,
+      "character": 33,
+      "text": "obj",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 98,
+      "character": 11,
+      "text": "obj",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 100,
+      "character": 55,
+      "text": "obj",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 119,
       "character": 14,
       "text": "resolvedPathItem",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 121,
+      "line": 127,
       "character": 10,
       "text": "operation",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 121,
+      "line": 127,
       "character": 21,
       "text": "resolvedPathItem",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 139,
+      "line": 145,
       "character": 10,
       "text": "config",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 140,
+      "line": 146,
       "character": 11,
       "text": "config",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 155,
+      "line": 161,
       "character": 20,
       "text": "schema",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 155,
+      "line": 161,
       "character": 35,
       "text": "schema",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 227,
-      "character": 6,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 227,
-      "character": 10,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 227,
-      "character": 14,
-      "text": "_c",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 231,
-      "character": 6,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 232,
-      "character": 7,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 232,
-      "character": 21,
+      "line": 234,
+      "character": 51,
       "text": "servers",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 232,
-      "character": 42,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 232,
-      "character": 67,
-      "text": "_a",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 233,
-      "character": 14,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 235,
-      "character": 8,
-      "text": "_b",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 235,
-      "character": 11,
+      "line": 234,
+      "character": 65,
       "text": "url",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 243,
-      "character": 6,
-      "text": "body",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 246,
+      "line": 248,
       "character": 13,
       "text": "request",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 246,
+      "line": 248,
       "character": 21,
       "text": "parameters",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 254,
-      "character": 5,
-      "text": "_c",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 254,
-      "character": 19,
-      "text": "request",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 254,
-      "character": 27,
-      "text": "security",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 254,
-      "character": 52,
-      "text": "_c",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 256,
-      "character": 8,
-      "text": "_c",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 256,
-      "character": 11,
-      "text": "parameters",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 259,
+      "line": 255,
       "character": 15,
       "text": "request",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 259,
+      "line": 255,
       "character": 23,
       "text": "security",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 259,
+      "line": 255,
+      "character": 38,
+      "text": "parameters",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 257,
+      "character": 15,
+      "text": "request",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 257,
+      "character": 23,
+      "text": "security",
+      "kind": 1
+    },
+    {
+      "file": "src/openapi/helpers.ts",
+      "line": 257,
       "character": 35,
       "text": "parameters",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 266,
+      "line": 269,
       "character": 8,
       "text": "jsonBodySchema",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 266,
+      "line": 269,
       "character": 34,
       "text": "request",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 266,
+      "line": 269,
       "character": 42,
       "text": "body",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 267,
+      "line": 270,
       "character": 8,
       "text": "bodySchemaArray",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 268,
-      "character": 4,
-      "text": "jsonBodySchema",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 268,
-      "character": 31,
+      "line": 270,
+      "character": 26,
       "text": "jsonBodySchema",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
       "line": 270,
-      "character": 8,
-      "text": "jsonBodySchema",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 270,
-      "character": 23,
+      "character": 42,
       "text": "schemaArray",
       "kind": 1
     },
@@ -735,107 +511,16 @@
     },
     {
       "file": "src/openapi/helpers.ts",
-      "line": 272,
-      "character": 4,
+      "line": 271,
+      "character": 21,
       "text": "bodySchemaArray",
       "kind": 1
     },
     {
       "file": "src/openapi/helpers.ts",
       "line": 272,
-      "character": 32,
-      "text": "bodySchemaArray",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 274,
-      "character": 8,
-      "text": "bodySchemaArray",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 275,
       "character": 6,
       "text": "bodySchema",
-      "kind": 1
-    },
-    {
-      "file": "src/openapi/helpers.ts",
-      "line": 277,
-      "character": 4,
-      "text": "body",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 47,
-      "character": 8,
-      "text": "config",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 53,
-      "character": 4,
-      "text": "config",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 53,
-      "character": 16,
-      "text": "base_url",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 54,
-      "character": 6,
-      "text": "config",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 54,
-      "character": 18,
-      "text": "base_url",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 54,
-      "character": 27,
-      "text": "split",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 73,
-      "character": 6,
-      "text": "config",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 73,
-      "character": 18,
-      "text": "header",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 79,
-      "character": 6,
-      "text": "config",
-      "kind": 1
-    },
-    {
-      "file": "src/config.ts",
-      "line": 79,
-      "character": 18,
-      "text": "TWO_FA_PUBLIC_KEY",
       "kind": 1
     },
     {
@@ -991,31 +676,10 @@
       "character": 39,
       "text": "data",
       "kind": 1
-    },
-    {
-      "file": "src/search.ts",
-      "line": 29,
-      "character": 21,
-      "text": "replace",
-      "kind": 1
-    },
-    {
-      "file": "src/index.ts",
-      "line": 48,
-      "character": 14,
-      "text": "error",
-      "kind": 1
-    },
-    {
-      "file": "src/index.ts",
-      "line": 49,
-      "character": 67,
-      "text": "error",
-      "kind": 1
     }
   ],
-  "percentage": 91.37279596977329,
-  "total": 1588,
-  "covered": 1451,
-  "uncovered": 137
+  "percentage": 94.74305965741287,
+  "total": 1693,
+  "covered": 1604,
+  "uncovered": 89
 }

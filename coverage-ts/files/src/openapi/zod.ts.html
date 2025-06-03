@@ -11,7 +11,7 @@
 <link href="../../../assets/source-file.css" type="text/css" rel="stylesheet">
     </head>
     <body>
-    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/openapi/zod.ts</td><td class="">100.00%</td><td class="">80%</td><td class="">271</td><td class="">271</td><td class="">0</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import { Blob } from &quot;node:buffer&quot;;
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/openapi/zod.ts</td><td class="">100.00%</td><td class="">80%</td><td class="">296</td><td class="">296</td><td class="">0</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import { Blob } from &quot;node:buffer&quot;;
 import { z, ZodTypeAny, ZodSchema } from &quot;zod&quot;;
 import {
   DataSchema,
@@ -25,13 +25,13 @@ type SchemaInput = DataSchema | IncrementalDataSchema;
 type InitType = Blob | ArrayBuffer | BinaryLike;
 
 // WebFile polyfill (based on fetch-blob, MIT License)
-const WebFile = class File extends Blob {
+class WebFile extends Blob {
   private _lastModified: number = 0;
   private _name: string = &quot;&quot;;
 
   constructor(
     init: BlobPart[] | BlobPart,
-    options: BlobPropertyBag &amp; { lastModified?: number } = {}
+    options: BlobPropertyBag &amp; { lastModified?: number; name?: string } = {}
   ) {
     if (arguments.length &lt; 2) {
       throw new TypeError(
@@ -64,30 +64,35 @@ const WebFile = class File extends Blob {
     } else {
       throw new TypeError(&quot;Invalid lastModified value&quot;);
     }
+    if (typeof options.name === &quot;string&quot;) {
+      this._name = options.name;
+    }
   }
 
-  get name() {
+  get name(): string {
     return this._name;
   }
 
-  get lastModified() {
+  get lastModified(): number {
     return this._lastModified;
   }
 
-  get [Symbol.toStringTag]() {
+  get [Symbol.toStringTag](): string {
     return &quot;File&quot;;
   }
 
-  static [Symbol.hasInstance](object: unknown) {
+  static [Symbol.hasInstance](object: unknown): boolean {
     return (
       !!object &amp;&amp;
       object instanceof Blob &amp;&amp;
-      /^(File)$/.test(String((object as any)[Symbol.toStringTag]))
+      /^(File)$/.test(String((object as { [Symbol.toStringTag]?: unknown })[Symbol.toStringTag]))
     );
   }
-};
+}
 
-const File = typeof global.File === &quot;undefined&quot; ? WebFile : global.File;
+const File = typeof global.File === &quot;undefined&quot;
+  ? WebFile
+  : (global.File as unknown as typeof WebFile);
 
 // Zod schema helpers
 const ANY = z.any();
@@ -103,6 +108,9 @@ const STRING = z.string();
 export function dataSchemaArrayToZod(
   schemas: DataSchemaArray | IncrementalDataSchemaArray
 ): ZodTypeAny {
+  if (!Array.isArray(schemas) || schemas.length === 0) {
+    throw new TypeError(&quot;schemas must be a non-empty array&quot;);
+  }
   const firstSchema = dataSchemaToZod(schemas[0]);
   if (!schemas[1]) return firstSchema;
 
@@ -110,22 +118,23 @@ export function dataSchemaArrayToZod(
   for (const schema of schemas.slice(1)) {
     zodSchemas.push(dataSchemaToZod(schema));
   }
-  return z
-    .union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]])
-    .array();
+  return z.union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]).array();
 }
 
 function getEnumSchema(
   enumList: (string | number)[],
   type: &quot;string&quot; | &quot;number&quot;
 ): ZodTypeAny {
+  if (!Array.isArray(enumList) || enumList.length === 0) {
+    throw new TypeError(&quot;enumList must be a non-empty array&quot;);
+  }
   const zodSchema = z.enum(enumList.map(String) as [string, ...string[]]);
   return type === &quot;string&quot; ? zodSchema : zodSchema.transform(Number);
 }
 
 export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
-  if (!(&quot;type&quot; in schema) || Object.keys(schema).length === 0) {
-    return schema.required ? ANY : ANY_OPT;
+  if (!schema || typeof schema !== &quot;object&quot; || !(&quot;type&quot; in schema) || Object.keys(schema).length === 0) {
+    return (schema &amp;&amp; (schema as { required?: boolean }).required) ? ANY : ANY_OPT;
   }
 
   switch (schema.type) {
@@ -153,7 +162,7 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       return schema.required ? ANY : ANY_OPT;
 
     case &quot;string&quot;: {
-      if (&quot;enum&quot; in schema &amp;&amp; Array.isArray(schema.enum)) {
+      if (&quot;enum&quot; in schema &amp;&amp; Array.isArray(schema.enum) &amp;&amp; schema.enum.length &gt; 0) {
         const stringEnum = z.enum(schema.enum as [string, ...string[]]);
         return schema.required ? stringEnum : stringEnum.optional();
       }
@@ -163,13 +172,13 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       }
 
       let stringSchema = STRING;
-      if (schema.minLength !== undefined) {
+      if (typeof schema.minLength === &quot;number&quot;) {
         stringSchema = stringSchema.min(schema.minLength);
       }
-      if (schema.maxLength !== undefined) {
+      if (typeof schema.maxLength === &quot;number&quot;) {
         stringSchema = stringSchema.max(schema.maxLength);
       }
-      if (schema.pattern !== undefined) {
+      if (typeof schema.pattern === &quot;string&quot;) {
         stringSchema = stringSchema.regex(new RegExp(schema.pattern));
       }
 
@@ -193,7 +202,7 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
   return ANY;
 }
 </textarea><pre id="annotations" style="display:none">[]</pre></div>
-    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Thu, 22 May 2025 12:43:43 GMT</p>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Tue, 03 Jun 2025 11:33:38 GMT</p>
     </body>
   </html>
   

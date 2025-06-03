@@ -11,10 +11,12 @@
 <link href="../../assets/source-file.css" type="text/css" rel="stylesheet">
     </head>
     <body>
-    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/config.ts</td><td class="">91.30%</td><td class="">80%</td><td class="">115</td><td class="">105</td><td class="">10</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">/**
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/config.ts</td><td class="">100.00%</td><td class="">80%</td><td class="">133</td><td class="">133</td><td class="">0</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">/**
  * Reads and prepares configuration for Cashfree APIs (Payment, Payout, Verification).
  * Handles environment-based base URLs and API credentials.
  */
+
+import { getPublicKeyFromPath } from &quot;./openapi/helpers.js&quot;;
 
 export interface ApiConfig {
   base_url?: string;
@@ -22,27 +24,26 @@ export interface ApiConfig {
     &quot;x-client-id&quot;?: string;
     &quot;x-client-secret&quot;?: string;
   };
+  TWO_FA_PUBLIC_KEY?: string;
 }
 
-export interface Config {
-  &quot;Cashfree Payment Gateway APIs - 2025-01-01&quot;: ApiConfig;
-  &quot;Cashfree Payout APIs - 2024-01-01&quot;: ApiConfig;
-  &quot;Cashfree Verification API&#x27;s. - 2023-12-18&quot;: ApiConfig;
-}
-
-import { getPublicKeyFromPath } from &quot;./openapi/helpers.js&quot;;
+export type Config = Record&lt;
+  typeof PAYMENT_API_KEY | typeof PAYOUT_API_KEY | typeof VERIFICATION_API_KEY,
+  ApiConfig
+&gt;;
 
 const BASE_URLS = {
   sandbox: &quot;https://sandbox.cashfree.com&quot;,
   production: &quot;https://api.cashfree.com&quot;,
 };
 
-// Cashfree API identifiers
-const PAYMENT_API_KEY = &quot;Cashfree Payment Gateway APIs - 2025-01-01&quot;;
-const PAYOUT_API_KEY = &quot;Cashfree Payout APIs - 2024-01-01&quot;;
-const VERIFICATION_API_KEY = &quot;Cashfree Verification API&#x27;s. - 2023-12-18&quot;;
+// API Keys / Identifiers
+export const PAYMENT_API_KEY = &quot;Cashfree Payment Gateway APIs - 2025-01-01&quot;;
+export const PAYOUT_API_KEY = &quot;Cashfree Payout APIs - 2024-01-01&quot;;
+export const VERIFICATION_API_KEY = &quot;Cashfree Verification API&#x27;s. - 2023-12-18&quot;;
 
-const DEFAULT_CONFIG = {
+// Default config structure
+const DEFAULT_CONFIG: Config = {
   [PAYMENT_API_KEY]: {
     base_url: `${BASE_URLS.sandbox}/pg`,
     header: {},
@@ -58,15 +59,14 @@ const DEFAULT_CONFIG = {
 };
 
 export function readConfig(): Config {
-  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  const config: Config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   const isProduction = process.env.ENV === &quot;production&quot;;
-
-  // Adjust base_url for sandbox vs production
   const baseUrl = isProduction ? BASE_URLS.production : BASE_URLS.sandbox;
-  Object.keys(config).forEach((api) =&gt; {
-    config[api].base_url = `${baseUrl}${
-      config[api].base_url.split(BASE_URLS.sandbox)[1]
-    }`;
+
+  // Replace sandbox base_url with the correct environment URL
+  Object.entries(config).forEach(([_, apiConfig]) =&gt; {
+    const suffix = apiConfig.base_url?.split(BASE_URLS.sandbox)[1] ?? &quot;&quot;;
+    apiConfig.base_url = `${baseUrl}${suffix}`;
   });
 
   // Helper to configure API credentials
@@ -76,7 +76,7 @@ export function readConfig(): Config {
     secretVar,
     pubKeyVar,
   }: {
-    key: string;
+    key: keyof Config;
     idVar: string;
     secretVar: string;
     pubKeyVar?: string;
@@ -89,38 +89,52 @@ export function readConfig(): Config {
         &quot;x-client-secret&quot;: appSecret,
       };
     }
-    if (pubKeyVar &amp;&amp; process.env[pubKeyVar]) {
-      config[key].TWO_FA_PUBLIC_KEY = getPublicKeyFromPath(
-        process.env[pubKeyVar]
-      );
+
+    if (pubKeyVar) {
+      const publicKeyPath = process.env[pubKeyVar];
+      if (publicKeyPath) {
+        const publicKey = getPublicKeyFromPath(publicKeyPath);
+        config[key].TWO_FA_PUBLIC_KEY =
+          publicKey === null ? undefined : publicKey;
+      }
     }
   };
 
-  // Apply credentials for each API
-  [
-    {
-      key: PAYMENT_API_KEY,
-      idVar: &quot;PAYMENTS_APP_ID&quot;,
-      secretVar: &quot;PAYMENTS_APP_SECRET&quot;,
-    },
-    {
-      key: PAYOUT_API_KEY,
-      idVar: &quot;PAYOUTS_APP_ID&quot;,
-      secretVar: &quot;PAYOUTS_APP_SECRET&quot;,
-      pubKeyVar: &quot;TWO_FA_PUBLIC_KEY_PEM_PATH&quot;,
-    },
-    {
-      key: VERIFICATION_API_KEY,
-      idVar: &quot;SECUREID_APP_ID&quot;,
-      secretVar: &quot;SECUREID_APP_SECRET&quot;,
-      pubKeyVar: &quot;TWO_FA_PUBLIC_KEY_PEM_PATH&quot;,
-    },
-  ].forEach(configureApiCredentials);
+  // Apply credentials to each API config
+  (
+    [
+      {
+        key: PAYMENT_API_KEY,
+        idVar: &quot;PAYMENTS_APP_ID&quot;,
+        secretVar: &quot;PAYMENTS_APP_SECRET&quot;,
+      },
+      {
+        key: PAYOUT_API_KEY,
+        idVar: &quot;PAYOUTS_APP_ID&quot;,
+        secretVar: &quot;PAYOUTS_APP_SECRET&quot;,
+        pubKeyVar: &quot;TWO_FA_PUBLIC_KEY_PEM_PATH&quot;,
+      },
+      {
+        key: VERIFICATION_API_KEY,
+        idVar: &quot;SECUREID_APP_ID&quot;,
+        secretVar: &quot;SECUREID_APP_SECRET&quot;,
+        pubKeyVar: &quot;TWO_FA_PUBLIC_KEY_PEM_PATH&quot;,
+      },
+    ] as {
+      key:
+        | typeof PAYMENT_API_KEY
+        | typeof PAYOUT_API_KEY
+        | typeof VERIFICATION_API_KEY;
+      idVar: string;
+      secretVar: string;
+      pubKeyVar?: string;
+    }[]
+  ).forEach(configureApiCredentials);
 
   return config;
 }
-</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:47,&quot;character&quot;:8,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:53,&quot;character&quot;:4,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:53,&quot;character&quot;:16,&quot;text&quot;:&quot;base_url&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:6,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:18,&quot;text&quot;:&quot;base_url&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:54,&quot;character&quot;:27,&quot;text&quot;:&quot;split&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:73,&quot;character&quot;:6,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:73,&quot;character&quot;:18,&quot;text&quot;:&quot;header&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:6,&quot;text&quot;:&quot;config&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/config.ts&quot;,&quot;line&quot;:79,&quot;character&quot;:18,&quot;text&quot;:&quot;TWO_FA_PUBLIC_KEY&quot;,&quot;kind&quot;:1}]</pre></div>
-    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Thu, 22 May 2025 12:43:43 GMT</p>
+</textarea><pre id="annotations" style="display:none">[]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Tue, 03 Jun 2025 11:33:38 GMT</p>
     </body>
   </html>
   

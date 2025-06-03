@@ -12,13 +12,13 @@ type SchemaInput = DataSchema | IncrementalDataSchema;
 type InitType = Blob | ArrayBuffer | BinaryLike;
 
 // WebFile polyfill (based on fetch-blob, MIT License)
-const WebFile = class File extends Blob {
+class WebFile extends Blob {
   private _lastModified: number = 0;
   private _name: string = "";
 
   constructor(
     init: BlobPart[] | BlobPart,
-    options: BlobPropertyBag & { lastModified?: number } = {}
+    options: BlobPropertyBag & { lastModified?: number; name?: string } = {}
   ) {
     if (arguments.length < 2) {
       throw new TypeError(
@@ -51,30 +51,35 @@ const WebFile = class File extends Blob {
     } else {
       throw new TypeError("Invalid lastModified value");
     }
+    if (typeof options.name === "string") {
+      this._name = options.name;
+    }
   }
 
-  get name() {
+  get name(): string {
     return this._name;
   }
 
-  get lastModified() {
+  get lastModified(): number {
     return this._lastModified;
   }
 
-  get [Symbol.toStringTag]() {
+  get [Symbol.toStringTag](): string {
     return "File";
   }
 
-  static [Symbol.hasInstance](object: unknown) {
+  static [Symbol.hasInstance](object: unknown): boolean {
     return (
       !!object &&
       object instanceof Blob &&
-      /^(File)$/.test(String((object as any)[Symbol.toStringTag]))
+      /^(File)$/.test(String((object as { [Symbol.toStringTag]?: unknown })[Symbol.toStringTag]))
     );
   }
-};
+}
 
-const File = typeof global.File === "undefined" ? WebFile : global.File;
+const File = typeof global.File === "undefined"
+  ? WebFile
+  : (global.File as unknown as typeof WebFile);
 
 // Zod schema helpers
 const ANY = z.any();
@@ -90,6 +95,9 @@ const STRING = z.string();
 export function dataSchemaArrayToZod(
   schemas: DataSchemaArray | IncrementalDataSchemaArray
 ): ZodTypeAny {
+  if (!Array.isArray(schemas) || schemas.length === 0) {
+    throw new TypeError("schemas must be a non-empty array");
+  }
   const firstSchema = dataSchemaToZod(schemas[0]);
   if (!schemas[1]) return firstSchema;
 
@@ -97,22 +105,23 @@ export function dataSchemaArrayToZod(
   for (const schema of schemas.slice(1)) {
     zodSchemas.push(dataSchemaToZod(schema));
   }
-  return z
-    .union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]])
-    .array();
+  return z.union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]).array();
 }
 
 function getEnumSchema(
   enumList: (string | number)[],
   type: "string" | "number"
 ): ZodTypeAny {
+  if (!Array.isArray(enumList) || enumList.length === 0) {
+    throw new TypeError("enumList must be a non-empty array");
+  }
   const zodSchema = z.enum(enumList.map(String) as [string, ...string[]]);
   return type === "string" ? zodSchema : zodSchema.transform(Number);
 }
 
 export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
-  if (!("type" in schema) || Object.keys(schema).length === 0) {
-    return schema.required ? ANY : ANY_OPT;
+  if (!schema || typeof schema !== "object" || !("type" in schema) || Object.keys(schema).length === 0) {
+    return (schema && (schema as { required?: boolean }).required) ? ANY : ANY_OPT;
   }
 
   switch (schema.type) {
@@ -140,7 +149,7 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       return schema.required ? ANY : ANY_OPT;
 
     case "string": {
-      if ("enum" in schema && Array.isArray(schema.enum)) {
+      if ("enum" in schema && Array.isArray(schema.enum) && schema.enum.length > 0) {
         const stringEnum = z.enum(schema.enum as [string, ...string[]]);
         return schema.required ? stringEnum : stringEnum.optional();
       }
@@ -150,13 +159,13 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       }
 
       let stringSchema = STRING;
-      if (schema.minLength !== undefined) {
+      if (typeof schema.minLength === "number") {
         stringSchema = stringSchema.min(schema.minLength);
       }
-      if (schema.maxLength !== undefined) {
+      if (typeof schema.maxLength === "number") {
         stringSchema = stringSchema.max(schema.maxLength);
       }
-      if (schema.pattern !== undefined) {
+      if (typeof schema.pattern === "string") {
         stringSchema = stringSchema.regex(new RegExp(schema.pattern));
       }
 

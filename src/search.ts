@@ -13,25 +13,28 @@ import { InitializationConfiguration } from "./types.js";
 
 const DEFAULT_BASE_URL = "https://api.mintlifytrieve.com";
 
+/**
+ * Fetches search configuration and OpenAPI data for a given subdomain.
+ * @param subdomain - Subdomain to fetch config for.
+ * @returns The initialization configuration.
+ */
 export async function fetchSearchConfigurationAndOpenApi(
   subdomain: string
 ): Promise<InitializationConfiguration> {
   try {
     const response: AxiosResponse<InitializationConfiguration> =
       await axios.get(`${SERVER_URL}/api/mcp/config/${subdomain}`, {
-        validateStatus() {
-          return true;
-        },
+        validateStatus: () => true,
       });
+
     throwOnAxiosError(response, "Failed to fetch MCP config");
     return response.data;
   } catch (err) {
-    throw new Error(
-      formatErr(err).replace(
-        "Request failed with status code 404",
-        `${subdomain} not found`
-      )
+    const friendlyError = formatErr(err).replace(
+      "Request failed with status code 404",
+      `${subdomain} not found`
     );
+    throw new Error(friendlyError);
   }
 }
 
@@ -51,6 +54,12 @@ interface SearchResult {
   link: string;
 }
 
+/**
+ * Queries Trieve and returns formatted search results.
+ * @param query - The search string.
+ * @param config - Trieve configuration values.
+ * @returns Array of search results.
+ */
 async function search(
   query: string,
   config: InitializationConfiguration
@@ -69,38 +78,35 @@ async function search(
     score_threshold: 1,
   });
 
-  if (!data.chunks || data.chunks.length === 0) {
+  if (!data?.chunks?.length) {
     throw new Error("No results found");
   }
 
-  return data.chunks.map((result: TrieveChunk) => {
-    const { chunk } = result;
-    return {
-      title: chunk.metadata.title,
-      content: chunk.chunk_html,
-      link: chunk.link,
-    };
-  });
+  return data.chunks.map(({ chunk }: TrieveChunk) => ({
+    title: chunk.metadata.title,
+    content: chunk.chunk_html,
+    link: chunk.link,
+  }));
 }
 
+/**
+ * Registers the "search" tool to the MCP server for querying documentation.
+ * @param server - The MCP server instance.
+ */
 export async function createSearchTool(server: McpServer): Promise<void> {
   const config = await fetchSearchConfigurationAndOpenApi(SUBDOMAIN);
 
   server.tool(
     "search",
-    `Search across the ${config.name} documentation to fetch relevant context for a given query`,
+    `Search across the ${config.name} documentation to fetch relevant context for a given query.`,
     { query: z.string() },
     async ({ query }: { query: string }) => {
       const results = await search(query, config);
 
-      const content = results.map((result: SearchResult) => {
-        const { title, content, link } = result;
-        const text = `Title: ${title}\nContent: ${content}\nLink: ${link}`;
-        return {
-          type: "text" as const,
-          text,
-        };
-      });
+      const content = results.map(({ title, content, link }) => ({
+        type: "text" as const,
+        text: `Title: ${title}\nContent: ${content}\nLink: ${link}`,
+      }));
 
       return { content };
     }

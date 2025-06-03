@@ -4,19 +4,18 @@ import { readConfig } from "../config.js";
 import crypto from "crypto";
 import fs from "fs";
 
-type ServerParams = Record<string, any>; // Define ServerParams as a generic type
-
-export declare type CategorizedZod = {
+export type CategorizedZod = {
   url: string;
   method: string;
-  paths: ServerParams;
-  queries: ServerParams;
-  headers: ServerParams;
-  cookies: ServerParams;
-  body?: ServerParams; // Add the optional 'body' property
+  paths: Record<string, z.ZodTypeAny>;
+  queries: Record<string, z.ZodTypeAny>;
+  headers: Record<string, z.ZodTypeAny>;
+  cookies: Record<string, z.ZodTypeAny>;
+  body?: { body: z.ZodTypeAny };
 };
 
-type RefCache = { [key: string]: any }; // Define a type for the reference cache
+type RefCache = { [key: string]: any };
+
 type Specification = {
   paths: {
     [path: string]: {
@@ -24,6 +23,7 @@ type Specification = {
     };
   };
 };
+
 type Endpoint = {
   request: any;
   servers: any;
@@ -55,13 +55,16 @@ export function findNextIteration(set: Set<string>, str: string): number {
   let count = 1;
   set.forEach((val) => {
     if (val.startsWith(`${str}---`)) {
-      count = Number(val.replace(`${str}---`, ""));
+      const suffix = val.replace(`${str}---`, "");
+      const num = parseInt(suffix, 10);
+      if (!isNaN(num) && num >= count) {
+        count = num + 1;
+      }
     }
   });
-  return count + 1;
+  return count;
 }
 
-// Reference resolution for OpenAPI specs
 function resolveReferences(
   spec: Record<string, any>,
   refPath: string,
@@ -92,7 +95,10 @@ function resolveAllReferences(
     const resolved = resolveReferences(spec, obj.$ref, cache);
     return resolveAllReferences({ ...resolved }, spec, cache);
   }
-  const result: { [key: string]: any } = {};
+  if (typeof obj !== "object" || obj === null) {
+    return obj;
+  }
+  const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
   for (const [key, value] of Object.entries(obj)) {
     result[key] = resolveAllReferences(value, spec, cache);
   }
@@ -225,23 +231,19 @@ export function convertEndpointToCategorizedZod(
   envKey: string,
   endpoint: Endpoint
 ): CategorizedZod {
-  var _a, _b, _c;
   const envVariables = loadEnv(envKey);
-  const url = `${
-    envVariables.base_url ||
-    ((_b =
-      (_a = endpoint.servers) === null || _a === void 0 ? void 0 : _a[0]) ===
-      null || _b === void 0
-      ? void 0
-      : _b.url) ||
-    ""
-  }${endpoint.path}`;
+  const url = `${envVariables.base_url || endpoint.servers?.[0]?.url || ""}${
+    endpoint.path
+  }`;
   const method = endpoint.method;
-  const paths = {};
-  const queries = {};
-  const headers = {};
-  const cookies = {};
-  let body = undefined;
+  const paths: Record<string, z.ZodTypeAny> = {};
+  const queries: Record<string, z.ZodTypeAny> = {};
+  const headers: Record<string, z.ZodTypeAny> = {};
+  const cookies: Record<string, z.ZodTypeAny> = {};
+  const securityQueries: Record<string, z.ZodString> = {};
+  const securityHeaders: Record<string, z.ZodString> = {};
+  const securityCookies: Record<string, z.ZodString> = {};
+  let body: { body: z.ZodTypeAny } | undefined = undefined;
 
   convertParametersAndAddToRelevantParamGroups(
     endpoint.request.parameters,
@@ -251,32 +253,28 @@ export function convertEndpointToCategorizedZod(
     cookies
   );
 
-  if (
-    (_c = endpoint.request.security[0]) === null || _c === void 0
-      ? void 0
-      : _c.parameters
-  ) {
+  if (endpoint.request.security?.[0]?.parameters) {
     convertSecurityParametersAndAddToRelevantParamGroups(
       endpoint.request.security[0].parameters,
-      queries,
-      headers,
-      cookies,
+      securityQueries,
+      securityHeaders,
+      securityCookies,
       envVariables
     );
+    // Merge security parameters into main parameter groups
+    Object.assign(queries, securityQueries);
+    Object.assign(headers, securityHeaders);
+    Object.assign(cookies, securityCookies);
   }
-  const jsonBodySchema = endpoint.request.body["application/json"];
-  const bodySchemaArray =
-    jsonBodySchema === null || jsonBodySchema === void 0
-      ? void 0
-      : jsonBodySchema.schemaArray;
-  const bodySchema =
-    bodySchemaArray === null || bodySchemaArray === void 0
-      ? void 0
-      : bodySchemaArray[0];
+
+  const jsonBodySchema = endpoint.request.body?.["application/json"];
+  const bodySchemaArray = jsonBodySchema?.schemaArray;
+  const bodySchema = bodySchemaArray?.[0];
   if (bodySchema) {
     const zodBodySchema = dataSchemaToZod(bodySchema);
     body = { body: zodBodySchema };
   }
+
   return { url, method, paths, queries, body, headers, cookies };
 }
 
