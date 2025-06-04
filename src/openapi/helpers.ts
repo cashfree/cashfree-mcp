@@ -24,16 +24,20 @@ type Specification = {
   };
 };
 
-type Endpoint = {
-  request: any;
-  servers: any;
+interface Endpoint {
+  request:
+    | {
+        [key: string]: any;
+      }
+    | undefined;
+  servers: { [key: string]: any } | undefined;
   path: string;
   method: string;
-  operation: any;
+  operation: { [key: string]: any };
   "x-mcp"?: {
     enabled: boolean;
   };
-};
+}
 
 export type NestedRecord =
   | string
@@ -246,14 +250,14 @@ export function convertEndpointToCategorizedZod(
   let body: { body: z.ZodTypeAny } | undefined = undefined;
 
   convertParametersAndAddToRelevantParamGroups(
-    endpoint.request.parameters,
+    endpoint?.request?.parameters,
     paths,
     queries,
     headers,
     cookies
   );
 
-  if (endpoint.request.security?.[0]?.parameters) {
+  if (endpoint?.request?.security?.[0]?.parameters) {
     convertSecurityParametersAndAddToRelevantParamGroups(
       endpoint.request.security[0].parameters,
       securityQueries,
@@ -267,7 +271,7 @@ export function convertEndpointToCategorizedZod(
     Object.assign(cookies, securityCookies);
   }
 
-  const jsonBodySchema = endpoint.request.body?.["application/json"];
+  const jsonBodySchema = endpoint.request?.body?.["application/json"];
   const bodySchemaArray = jsonBodySchema?.schemaArray;
   const bodySchema = bodySchemaArray?.[0];
   if (bodySchema) {

@@ -21,8 +21,7 @@
     "dev": "ts-node src/index.ts",
     "build": "tsc",
     "lint": "echo 'No linting configured'",
-    "check": "tsc --noEmit",
-    "ts-coverage": "typescript-coverage-report"
+    "check": "tsc --noEmit"
   },
   "author": "Cashfree",
   "reference": "Mintlify mcp",
@@ -48,7 +47,6 @@
     "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^9.27.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
-    "typescript-coverage-report": "^1.1.1"
+    "typescript": "^5.8.3"
   }
 }
