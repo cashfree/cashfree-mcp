@@ -13,25 +13,15 @@ import {
   getValFromNestedJson,
 } from "./helpers.js";
 
-interface SecurityParam {
-  type: "apiKey" | "http" | "oauth2";
-}
-
 interface Endpoint {
   url?: string;
   method: string;
   path: any;
   title?: string;
   description?: string;
-  request: {
-    security: Array<{
-      parameters: {
-        header: Record<string, SecurityParam | any>;
-      };
-    }>;
-  };
-  servers: Array<{ url: string }>; // Ensure 'servers' is optional
-  operation: string; // Ensure 'operation' is optional
+  request: { [key: string]: any }; // Made required to match helper signature
+  servers: Array<{ url: string }>; // Make 'servers' required
+  operation: { [key: string]: any }; // Ensure 'operation' is an object
 }
 
 export async function createToolsFromOpenApi(
@@ -68,7 +58,11 @@ export async function createToolsFromOpenApi(
     paths: (specification.paths || {}) as {
       [path: string]: { [method: string]: any };
     },
-  });
+  }).map((ep: any) => ({
+    ...ep,
+    servers: Array.isArray(ep.servers) ? ep.servers : [],
+    request: ep.request ?? {}, // Ensure request is always defined
+  }));
   const endpointId = String(getFileId(specification, index));
   const envVars = loadEnv(endpointId);
 
@@ -134,14 +128,20 @@ export async function createToolsFromOpenApi(
           }
         }
 
-        const security = endpoint.request.security?.[0]?.parameters;
+        const security = endpoint.request?.security?.[0]?.parameters;
         if (security?.header) {
           for (const [key, value] of Object.entries(security.header)) {
             let envKey = "";
-            if (value.type === "apiKey") {
-              envKey = `header.${key}.API_KEY`;
-            } else if (value.type === "http") {
-              envKey = `header.${key}.HTTP`;
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              "type" in value
+            ) {
+              if ((value as { type: string }).type === "apiKey") {
+                envKey = `header.${key}.API_KEY`;
+              } else if ((value as { type: string }).type === "http") {
+                envKey = `header.${key}.HTTP`;
+              }
             }
 
             const envVal = getValFromNestedJson(envKey, envVars);
