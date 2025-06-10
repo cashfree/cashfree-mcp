@@ -1,3 +1,4 @@
+import { OpenApiToEndpointConverter } from "@mintlify/validation";
 import { z } from "zod";
 import { dataSchemaArrayToZod, dataSchemaToZod } from "./zod.js";
 import { readConfig } from "../config.js";
@@ -59,14 +60,10 @@ export function findNextIteration(set: Set<string>, str: string): number {
   let count = 1;
   set.forEach((val) => {
     if (val.startsWith(`${str}---`)) {
-      const suffix = val.replace(`${str}---`, "");
-      const num = parseInt(suffix, 10);
-      if (!isNaN(num) && num >= count) {
-        count = num + 1;
-      }
+      count = Number(val.replace(`${str}---`, ""));
     }
   });
-  return count;
+  return count + 1;
 }
 
 function resolveReferences(
@@ -126,22 +123,24 @@ export function getEndpointsFromOpenApi(
           specification,
           refCache
         );
-        endpoints.push({
+        if (!isMcpEnabledEndpoint(resolvedPathItem)) continue;
+        const endpoint = OpenApiToEndpointConverter.convert(
+          {
+            ...specification,
+            paths: { [path]: { [method]: resolvedPathItem } },
+          } as any,
           path,
-          method,
-          operation: resolvedPathItem,
-          servers: undefined,
-          request: undefined,
-        });
-      } catch (error) {
+          method as any
+        );
+        endpoints.push(endpoint as any);
+      } catch (error: any) {
         console.error(
-          `Failed to resolve references for ${method} ${path}:`,
-          error
+          `Error processing endpoint ${method.toUpperCase()} ${path}:`,
+          error.message
         );
       }
     }
   }
-
   return endpoints;
 }
 
@@ -158,12 +157,8 @@ export function loadEnv(key: string): SimpleRecord {
 // Zod schema conversion helpers
 function convertParameterSection(parameters: any, paramSection: any) {
   if (parameters) {
-    Object.entries(parameters).forEach(([key, value]) => {
-      if (typeof value === "object" && value !== null && "schema" in value) {
-        paramSection[key] = dataSchemaArrayToZod(
-          (value as { schema: any }).schema
-        );
-      }
+    Object.entries(parameters).forEach(([key, value]: any) => {
+      paramSection[key] = dataSchemaArrayToZod(value.schema);
     });
   }
 }
@@ -232,58 +227,52 @@ export function convertEndpointToCategorizedZod(
   const envVariables = loadEnv(envKey);
 
   const baseUrl = envVariables.base_url || endpoint.servers?.[0]?.url || "";
-  const url = `${baseUrl}${endpoint.path}`;
 
+  const url = `${baseUrl}${endpoint.path}`;
   const method = endpoint.method;
 
-  const paths: Record<string, z.ZodTypeAny> = {};
-  const queries: Record<string, z.ZodTypeAny> = {};
-  const headers: Record<string, z.ZodTypeAny> = {};
-  const cookies: Record<string, z.ZodTypeAny> = {};
-
-  const securityQueries: Record<string, z.ZodString> = {};
-  const securityHeaders: Record<string, z.ZodString> = {};
-  const securityCookies: Record<string, z.ZodString> = {};
-
-  let body: { body: z.ZodTypeAny } | undefined = undefined;
-
-  const requestParams =
-    endpoint.operation?.parameters || endpoint.request?.parameters;
+  const paths: Record<string, any> = {};
+  const queries: Record<string, any> = {};
+  const headers: Record<string, any> = {};
+  const cookies: Record<string, any> = {};
+  let body: any | undefined = undefined;
 
   convertParametersAndAddToRelevantParamGroups(
-    requestParams,
+    endpoint?.request?.parameters,
     paths,
     queries,
     headers,
     cookies
   );
 
-  const securityParams = endpoint.request?.[0]?.parameters;
+  const securityParams = endpoint?.request?.security?.[0]?.parameters;
   if (securityParams) {
     convertSecurityParametersAndAddToRelevantParamGroups(
       securityParams,
-      securityQueries,
-      securityHeaders,
-      securityCookies,
+      queries,
+      headers,
+      cookies,
       envVariables
     );
-
-    Object.assign(queries, securityQueries);
-    Object.assign(headers, securityHeaders);
-    Object.assign(cookies, securityCookies);
   }
 
-  const jsonBodySchema = endpoint.request?.body?.["application/json"];
-  const bodySchemaArray = jsonBodySchema?.schemaArray;
-  const bodySchema = bodySchemaArray?.[0];
+  const jsonBodySchema = endpoint?.request?.body?.["application/json"];
+  const bodySchema = jsonBodySchema?.schemaArray?.[0];
+
   if (bodySchema) {
     const zodBodySchema = dataSchemaToZod(bodySchema);
     body = { body: zodBodySchema };
   }
 
-  const result = { url, method, paths, queries, body, headers, cookies };
-
-  return result;
+  return {
+    url,
+    method,
+    paths,
+    queries,
+    body,
+    headers,
+    cookies,
+  };
 }
 
 export function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any {
