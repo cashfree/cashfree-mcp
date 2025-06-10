@@ -72,14 +72,19 @@ class WebFile extends Blob {
     return (
       !!object &&
       object instanceof Blob &&
-      /^(File)$/.test(String((object as { [Symbol.toStringTag]?: unknown })[Symbol.toStringTag]))
+      /^(File)$/.test(
+        String(
+          (object as { [Symbol.toStringTag]?: unknown })[Symbol.toStringTag]
+        )
+      )
     );
   }
 }
 
-const File = typeof global.File === "undefined"
-  ? WebFile
-  : (global.File as unknown as typeof WebFile);
+const File =
+  typeof global.File === "undefined"
+    ? WebFile
+    : (global.File as unknown as typeof WebFile);
 
 // Zod schema helpers
 const ANY = z.any();
@@ -105,7 +110,9 @@ export function dataSchemaArrayToZod(
   for (const schema of schemas.slice(1)) {
     zodSchemas.push(dataSchemaToZod(schema));
   }
-  return z.union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]).array();
+  return z
+    .union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]])
+    .array();
 }
 
 function getEnumSchema(
@@ -120,8 +127,15 @@ function getEnumSchema(
 }
 
 export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
-  if (!schema || typeof schema !== "object" || !("type" in schema) || Object.keys(schema).length === 0) {
-    return (schema && (schema as { required?: boolean }).required) ? ANY : ANY_OPT;
+  if (
+    !schema ||
+    typeof schema !== "object" ||
+    !("type" in schema) ||
+    Object.keys(schema).length === 0
+  ) {
+    return schema && (schema as { required?: boolean }).required
+      ? ANY
+      : ANY_OPT;
   }
 
   switch (schema.type) {
@@ -149,7 +163,11 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       return schema.required ? ANY : ANY_OPT;
 
     case "string": {
-      if ("enum" in schema && Array.isArray(schema.enum) && schema.enum.length > 0) {
+      if (
+        "enum" in schema &&
+        Array.isArray(schema.enum) &&
+        schema.enum.length > 0
+      ) {
         const stringEnum = z.enum(schema.enum as [string, ...string[]]);
         return schema.required ? stringEnum : stringEnum.optional();
       }

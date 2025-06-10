@@ -156,35 +156,29 @@ export function loadEnv(key: string): SimpleRecord {
 }
 
 // Zod schema conversion helpers
-function convertParameterSection(
-  parameters: { [s: string]: unknown } | ArrayLike<unknown>,
-  paramSection: { [x: string]: z.ZodTypeAny }
-) {
-  Object.entries(parameters).forEach(([key, value]) => {
-    if (typeof value === "object" && value !== null && "schema" in value) {
-      paramSection[key] = dataSchemaArrayToZod(
-        (value as { schema: any }).schema
-      );
-    }
-  });
+function convertParameterSection(parameters: any, paramSection: any) {
+  if (parameters) {
+    Object.entries(parameters).forEach(([key, value]) => {
+      if (typeof value === "object" && value !== null && "schema" in value) {
+        paramSection[key] = dataSchemaArrayToZod(
+          (value as { schema: any }).schema
+        );
+      }
+    });
+  }
 }
 
 function convertParametersAndAddToRelevantParamGroups(
-  parameters: {
-    path: { [s: string]: unknown } | ArrayLike<unknown>;
-    query: { [s: string]: unknown } | ArrayLike<unknown>;
-    header: { [s: string]: unknown } | ArrayLike<unknown>;
-    cookie: { [s: string]: unknown } | ArrayLike<unknown>;
-  },
-  paths: { [x: string]: z.ZodTypeAny },
-  queries: { [x: string]: z.ZodTypeAny },
-  headers: { [x: string]: z.ZodTypeAny },
-  cookies: { [x: string]: z.ZodTypeAny }
+  parameters: any,
+  paths: any,
+  queries: any,
+  headers: any,
+  cookies: any
 ) {
-  convertParameterSection(parameters.path, paths);
-  convertParameterSection(parameters.query, queries);
-  convertParameterSection(parameters.header, headers);
-  convertParameterSection(parameters.cookie, cookies);
+  convertParameterSection(parameters?.path, paths);
+  convertParameterSection(parameters?.query, queries);
+  convertParameterSection(parameters?.header, headers);
+  convertParameterSection(parameters?.cookie, cookies);
 }
 
 function convertSecurityParameterSection(
@@ -236,36 +230,44 @@ export function convertEndpointToCategorizedZod(
   endpoint: Endpoint
 ): CategorizedZod {
   const envVariables = loadEnv(envKey);
-  const url = `${envVariables.base_url || endpoint.servers?.[0]?.url || ""}${
-    endpoint.path
-  }`;
+
+  const baseUrl = envVariables.base_url || endpoint.servers?.[0]?.url || "";
+  const url = `${baseUrl}${endpoint.path}`;
+
   const method = endpoint.method;
+
   const paths: Record<string, z.ZodTypeAny> = {};
   const queries: Record<string, z.ZodTypeAny> = {};
   const headers: Record<string, z.ZodTypeAny> = {};
   const cookies: Record<string, z.ZodTypeAny> = {};
+
   const securityQueries: Record<string, z.ZodString> = {};
   const securityHeaders: Record<string, z.ZodString> = {};
   const securityCookies: Record<string, z.ZodString> = {};
+
   let body: { body: z.ZodTypeAny } | undefined = undefined;
 
+  const requestParams =
+    endpoint.operation?.parameters || endpoint.request?.parameters;
+
   convertParametersAndAddToRelevantParamGroups(
-    endpoint?.request?.parameters,
+    requestParams,
     paths,
     queries,
     headers,
     cookies
   );
 
-  if (endpoint?.request?.security?.[0]?.parameters) {
+  const securityParams = endpoint.request?.[0]?.parameters;
+  if (securityParams) {
     convertSecurityParametersAndAddToRelevantParamGroups(
-      endpoint.request.security[0].parameters,
+      securityParams,
       securityQueries,
       securityHeaders,
       securityCookies,
       envVariables
     );
-    // Merge security parameters into main parameter groups
+
     Object.assign(queries, securityQueries);
     Object.assign(headers, securityHeaders);
     Object.assign(cookies, securityCookies);
@@ -279,7 +281,9 @@ export function convertEndpointToCategorizedZod(
     body = { body: zodBodySchema };
   }
 
-  return { url, method, paths, queries, body, headers, cookies };
+  const result = { url, method, paths, queries, body, headers, cookies };
+
+  return result;
 }
 
 export function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any {

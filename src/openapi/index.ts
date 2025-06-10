@@ -12,16 +12,27 @@ import {
   loadEnv,
   getValFromNestedJson,
 } from "./helpers.js";
-
 interface Endpoint {
   url?: string;
   method: string;
-  path: any;
+  path: string;
   title?: string;
   description?: string;
-  request: { [key: string]: any }; // Made required to match helper signature
-  servers: Array<{ url: string }>; // Make 'servers' required
-  operation: { [key: string]: any }; // Ensure 'operation' is an object
+  request: { [key: string]: any };
+  servers: Array<{ url: string }>;
+  operation: {
+    summary?: string;
+    description?: string;
+    tags?: string[];
+    "x-mcp"?: Record<string, any>;
+    operationId?: string;
+    deprecated?: boolean;
+    security?: any[];
+    parameters?: any[];
+    requestBody?: any;
+    responses?: any;
+    [key: string]: any;
+  };
 }
 
 export async function createToolsFromOpenApi(
@@ -159,7 +170,6 @@ export async function createToolsFromOpenApi(
           headers: inputHeaders,
           withCredentials: true,
         };
-
         try {
           const response = await axios(requestConfig);
           return response.data;
