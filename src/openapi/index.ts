@@ -12,6 +12,7 @@ import {
   loadEnv,
   getValFromNestedJson,
 } from "./helpers.js";
+
 interface Endpoint {
   url?: string;
   method: string;
@@ -45,35 +46,27 @@ export async function createToolsFromOpenApi(
   try {
     openapi = fs.readFileSync(openApiPath, "utf8");
   } catch (error) {
-    // No OpenAPI file found, skip
-    return;
+    return; // Skip if no file
   }
 
   const { valid, errors, specification } = await validate(openapi);
 
-  if (!valid || !specification) {
-    console.error("Invalid OpenAPI file:", errors);
+  if (!valid || !specification || !specification.paths) {
+    console.error("Invalid OpenAPI file or missing paths:", errors);
     return;
   }
 
-  if (!specification.paths) {
-    console.error("Specification paths are undefined.");
-    return;
-  }
-  if (!specification.paths) {
-    console.error("Specification paths are undefined.");
-    return;
-  }
   const endpoints: Endpoint[] = getEndpointsFromOpenApi({
     ...specification,
-    paths: (specification.paths || {}) as {
+    paths: specification.paths as {
       [path: string]: { [method: string]: any };
     },
   }).map((ep: any) => ({
     ...ep,
     servers: Array.isArray(ep.servers) ? ep.servers : [],
-    request: ep.request ?? {}, // Ensure request is always defined
+    request: ep.request ?? {},
   }));
+
   const endpointId = String(getFileId(specification, index));
   const envVars = loadEnv(endpointId);
 
@@ -170,19 +163,45 @@ export async function createToolsFromOpenApi(
           headers: inputHeaders,
           withCredentials: true,
         };
+
         try {
           const response = await axios(requestConfig);
-          return response.data;
+
+          const responseText =
+            typeof response.data === "object"
+              ? JSON.stringify(response.data, null, 2)
+              : String(response.data);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: responseText,
+              },
+            ],
+            isError: false,
+          };
         } catch (error) {
+          let errorText: string;
           if (isAxiosError(error)) {
-            return {
-              error: true,
-              message: error.response?.data || error.message,
-            };
+            console.error("[ERROR] Axios error response:", error.response);
+            console.error("[ERROR] Axios error message:", error.message);
+            errorText =
+              typeof error.response?.data === "object"
+                ? JSON.stringify(error.response.data, null, 2)
+                : String(error.message);
+          } else {
+            console.error("[ERROR] Unknown error occurred:", error);
+            errorText = String(error);
           }
           return {
-            error: true,
-            message: "Unknown error occurred",
+            content: [
+              {
+                type: "text",
+                text: errorText,
+              },
+            ],
+            isError: true,
           };
         }
       }

@@ -12,9 +12,11 @@ if (!fs.existsSync(distDir)) {
 }
 
 const files = fs.readdirSync(srcDir);
+
 for (const file of files) {
   if (file.endsWith('.json')) {
-    fs.copyFileSync(path.join(srcDir, file), path.join(distDir, file));
-    console.log(`Copied ${file} to dist/openapi`);
+    const srcPath = path.join(srcDir, file);
+    const destPath = path.join(distDir, file);
+    fs.copyFileSync(srcPath, destPath);
   }
 }
