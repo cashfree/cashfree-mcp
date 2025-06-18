@@ -4,7 +4,6 @@
  */
 
 import { getPublicKeyFromPath } from "./openapi/helpers.js";
-
 export interface ApiConfig {
   base_url?: string;
   header: {

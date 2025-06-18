@@ -2,6 +2,7 @@ import { OpenApiToEndpointConverter } from "@mintlify/validation";
 import { z } from "zod";
 import { dataSchemaArrayToZod, dataSchemaToZod } from "./zod.js";
 import { readConfig } from "../config.js";
+import { Endpoint } from "../types.js";
 import crypto from "crypto";
 import fs from "fs";
 
@@ -24,21 +25,6 @@ type Specification = {
     };
   };
 };
-
-interface Endpoint {
-  request:
-    | {
-        [key: string]: any;
-      }
-    | undefined;
-  servers: { [key: string]: any } | undefined;
-  path: string;
-  method: string;
-  operation: { [key: string]: any };
-  "x-mcp"?: {
-    enabled: boolean;
-  };
-}
 
 export type NestedRecord =
   | string
@@ -106,9 +92,7 @@ function resolveAllReferences(
   return result;
 }
 
-export function getEndpointsFromOpenApi(
-  specification: Specification
-): Endpoint[] {
+export function getEndpointsFromOpenApi(specification: any): Endpoint[] {
   const endpoints: Endpoint[] = [];
   const paths = specification.paths;
   const refCache: RefCache = {};
@@ -226,7 +210,10 @@ export function convertEndpointToCategorizedZod(
 ): CategorizedZod {
   const envVariables = loadEnv(envKey);
 
-  const baseUrl = envVariables.base_url || endpoint.servers?.[0]?.url || "";
+  const baseUrl =
+    envVariables.base_url ||
+    (Array.isArray(endpoint?.servers) ? endpoint.servers[0]?.url : undefined) ||
+    "";
 
   const url = `${baseUrl}${endpoint.path}`;
   const method = endpoint.method;
@@ -298,7 +285,8 @@ export function isMcpEnabled(path: string): boolean {
 }
 
 export function isMcpEnabledEndpoint(endpointSpec: Endpoint): boolean {
-  return endpointSpec?.["x-mcp"]?.["enabled"] === true;
+  const mcp = (endpointSpec as any)["x-mcp"];
+  return mcp?.["enabled"] === true;
 }
 
 /**

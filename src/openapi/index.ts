@@ -3,6 +3,7 @@ import axios, { isAxiosError } from "axios";
 import dashify from "dashify";
 import fs from "node:fs";
 import { getFileId } from "../utils.js";
+import { Endpoint } from "../types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   convertEndpointToCategorizedZod,
@@ -11,30 +12,8 @@ import {
   getEndpointsFromOpenApi,
   loadEnv,
   getValFromNestedJson,
+  generateCfSignature,
 } from "./helpers.js";
-
-interface Endpoint {
-  url?: string;
-  method: string;
-  path: string;
-  title?: string;
-  description?: string;
-  request: { [key: string]: any };
-  servers: Array<{ url: string }>;
-  operation: {
-    summary?: string;
-    description?: string;
-    tags?: string[];
-    "x-mcp"?: Record<string, any>;
-    operationId?: string;
-    deprecated?: boolean;
-    security?: any[];
-    parameters?: any[];
-    requestBody?: any;
-    responses?: any;
-    [key: string]: any;
-  };
-}
 
 export async function createToolsFromOpenApi(
   openApiPath: string,
@@ -56,17 +35,7 @@ export async function createToolsFromOpenApi(
     return;
   }
 
-  const endpoints: Endpoint[] = getEndpointsFromOpenApi({
-    ...specification,
-    paths: specification.paths as {
-      [path: string]: { [method: string]: any };
-    },
-  }).map((ep: any) => ({
-    ...ep,
-    servers: Array.isArray(ep.servers) ? ep.servers : [],
-    request: ep.request ?? {},
-  }));
-
+  const endpoints = getEndpointsFromOpenApi(specification);
   const endpointId = String(getFileId(specification, index));
   const envVars = loadEnv(endpointId);
 
@@ -80,26 +49,25 @@ export async function createToolsFromOpenApi(
       headers: headersSchema,
       cookies: cookiesSchema,
     } = convertEndpointToCategorizedZod(endpointId, endpoint);
-
-    const serverArgumentsSchemas = {
-      ...pathsSchema,
-      ...queriesSchema,
-      ...bodySchema,
-      ...headersSchema,
-      ...cookiesSchema,
-    };
-
+    const serverArgumentsSchemas = Object.assign(
+      Object.assign(
+        Object.assign(
+          Object.assign(Object.assign({}, pathsSchema), queriesSchema),
+          bodySchema
+        ),
+        headersSchema
+      ),
+      cookiesSchema
+    );
     if (!endpoint.title) {
       endpoint.title = `${endpoint.method} ${convertStrToTitle(endpoint.path)}`;
     }
-
     if (existingTools.has(endpoint.title)) {
       const lastCount = findNextIteration(existingTools, endpoint.title);
       endpoint.title = `${endpoint.title}---${lastCount}`;
     }
-
     if (endpoint.title.length > 64) {
-      endpoint.title = endpoint.title.slice(0, 64);
+      endpoint.title = endpoint.title.slice(0, -64);
     }
 
     existingTools.add(endpoint.title);
@@ -120,7 +88,7 @@ export async function createToolsFromOpenApi(
           delete inputArgs.body;
         }
 
-        for (const [key, value] of Object.entries(inputArgs)) {
+        Object.entries(inputArgs).forEach(([key, value]) => {
           if (key in pathsSchema) {
             urlWithPathParams = urlWithPathParams.replace(`{${key}}`, value);
           } else if (key in queriesSchema) {
@@ -130,29 +98,56 @@ export async function createToolsFromOpenApi(
           } else if (key in cookiesSchema) {
             inputCookies[key] = value;
           }
+        });
+
+        if (endpoint.request.security.length > 0) {
+          const securityParams = endpoint.request?.security?.[0]?.parameters;
+          if (securityParams?.header) {
+            Object.entries(securityParams.header).forEach(([key, value]) => {
+              let envKey = "";
+              if (
+                typeof value === "object" &&
+                value !== null &&
+                "type" in value
+              ) {
+                const v = value as { type: string; scheme?: string };
+                if (v.type === "apiKey") {
+                  envKey = `header.${key}.API_KEY`;
+                } else if (v.type === "http") {
+                  envKey = `header.${key}.HTTP.${v.scheme}`;
+                  if (v.scheme === "bearer" && envKey in envVars) {
+                    inputHeaders["Authorization"] = `Bearer ${envVars[envKey]}`;
+                    return;
+                  }
+                }
+                const envValue = getValFromNestedJson(envKey, envVars);
+                if (envKey && envValue) {
+                  inputHeaders[key] = envValue;
+                }
+              }
+            });
+            Object.entries(securityParams.header).forEach(([key]) => {
+              const headerValue = envVars.header?.[key];
+              if (headerValue) {
+                inputHeaders[key] = headerValue;
+              }
+            });
+          }
         }
 
-        const security = endpoint.request?.security?.[0]?.parameters;
-        if (security?.header) {
-          for (const [key, value] of Object.entries(security.header)) {
-            let envKey = "";
-            if (
-              typeof value === "object" &&
-              value !== null &&
-              "type" in value
-            ) {
-              if ((value as { type: string }).type === "apiKey") {
-                envKey = `header.${key}.API_KEY`;
-              } else if ((value as { type: string }).type === "http") {
-                envKey = `header.${key}.HTTP`;
-              }
-            }
-
-            const envVal = getValFromNestedJson(envKey, envVars);
-            if (envVal) {
-              inputHeaders[key] = envVal;
-            }
-          }
+        if (openApiPath.includes("PO") || openApiPath.includes("VRS")) {
+          const clientId =
+            typeof envVars.header?.["x-client-id"] === "string"
+              ? envVars.header["x-client-id"]
+              : "";
+          const publicKey =
+            typeof envVars.TWO_FA_PUBLIC_KEY === "string"
+              ? envVars.TWO_FA_PUBLIC_KEY
+              : "";
+          inputHeaders["x-cf-signature"] = generateCfSignature(
+            clientId,
+            publicKey
+          );
         }
 
         const requestConfig = {
@@ -161,47 +156,66 @@ export async function createToolsFromOpenApi(
           params: inputParams,
           data: inputBody,
           headers: inputHeaders,
-          withCredentials: true,
         };
 
         try {
           const response = await axios(requestConfig);
 
-          const responseText =
-            typeof response.data === "object"
-              ? JSON.stringify(response.data, null, 2)
-              : String(response.data);
+          // Stringify the response data
+          let responseData = JSON.stringify(response.data, undefined, 2);
+          responseData = responseData.replace(
+            /("beneficiary_instrument_details"\s*:\s*)(\[[^\]]*\]|\{[^\}]*\})/gs,
+            '$1"[MASKED]"'
+          );
 
           return {
             content: [
               {
                 type: "text",
-                text: responseText,
+                text: responseData,
               },
             ],
-            isError: false,
           };
         } catch (error) {
-          let errorText: string;
-          if (isAxiosError(error)) {
-            console.error("[ERROR] Axios error response:", error.response);
-            console.error("[ERROR] Axios error message:", error.message);
-            errorText =
-              typeof error.response?.data === "object"
-                ? JSON.stringify(error.response.data, null, 2)
-                : String(error.message);
-          } else {
-            console.error("[ERROR] Unknown error occurred:", error);
-            errorText = String(error);
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "config" in error &&
+            typeof (error as any).config === "object" &&
+            (error as any).config !== null &&
+            "headers" in (error as any).config
+          ) {
+            const errConfig = (error as any).config;
+            ["x-client-id", "x-client-secret", "Authorization"].forEach(
+              (header) => {
+                if (errConfig.headers && errConfig.headers[header]) {
+                  errConfig.headers[header] = "[MASKED]";
+                }
+              }
+            );
+          }
+          const errMsg = JSON.stringify(error, undefined, 2);
+          let data = "{}";
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            typeof (error as any).response === "object" &&
+            (error as any).response !== null &&
+            "data" in (error as any).response
+          ) {
+            data = JSON.stringify((error as any).response.data, undefined, 2);
           }
           return {
+            isError: true,
             content: [
               {
                 type: "text",
-                text: errorText,
+                text: isAxiosError(error)
+                  ? `receivedPayload: ${data}\n\n errorMessage: ${error.message}\n\n${errMsg}`
+                  : `receivedPayload: ${data}\n\n errorMessage: ${errMsg}`,
               },
             ],
-            isError: true,
           };
         }
       }
