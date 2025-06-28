@@ -85,6 +85,17 @@ export async function createToolsFromOpenApi(
 
         if ("body" in inputArgs) {
           inputBody = inputArgs.body;
+
+          if (typeof inputBody === "string") {
+            try {
+              inputBody = JSON.parse(inputBody);
+            } catch {
+              throw new Error(
+                "Invalid JSON string passed in 'body'. Please pass it as a JS object."
+              );
+            }
+          }
+
           delete inputArgs.body;
         }
 

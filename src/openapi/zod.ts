@@ -1,59 +1,42 @@
-import { Blob } from "node:buffer";
-import { z, ZodTypeAny, ZodSchema } from "zod";
-import {
-  DataSchema,
-  DataSchemaArray,
-  IncrementalDataSchema,
-  IncrementalDataSchemaArray,
-} from "@mintlify/validation";
-import { BinaryLike } from "node:crypto";
+// Use the global Blob if available, otherwise fallback to node:buffer
+const BlobClass: typeof Blob =
+  typeof Blob !== "undefined" ? Blob : require("node:buffer").Blob;
 
-type SchemaInput = DataSchema | IncrementalDataSchema;
-type InitType = Blob | ArrayBuffer | BinaryLike;
+import { z, ZodTypeAny } from "zod";
 
-// WebFile polyfill (based on fetch-blob, MIT License)
-class WebFile extends Blob {
-  private _lastModified: number = 0;
-  private _name: string = "";
+// Util to throw if required param missing
+function panic(error: Error): never {
+  throw error;
+}
+
+const WebFile = class File extends BlobClass {
+  _lastModified: number;
+  _name: string;
 
   constructor(
-    init: BlobPart[] | BlobPart,
-    options: BlobPropertyBag & { lastModified?: number; name?: string } = {}
+    init: BlobPart[],
+    name: string = panic(
+      new TypeError("File constructor requires name argument")
+    ),
+    options: { lastModified?: number; type?: string } = {}
   ) {
     if (arguments.length < 2) {
       throw new TypeError(
         `Failed to construct 'File': 2 arguments required, but only ${arguments.length} present.`
       );
     }
-    super(
-      Array.isArray(init)
-        ? init.map((part) => {
-            if (
-              part instanceof Blob ||
-              part instanceof ArrayBuffer ||
-              typeof part === "string"
-            ) {
-              return part as InitType;
-            }
-            throw new TypeError("Invalid type in init array");
-          })
-        : [init as InitType],
-      options
-    );
+
+    super(init, options);
 
     const lastModified =
-      options?.lastModified === undefined
+      options.lastModified === undefined
         ? Date.now()
         : Number(options.lastModified);
 
-    if (!Number.isNaN(lastModified)) {
-      this._lastModified = lastModified;
-    } else {
-      throw new TypeError("Invalid lastModified value");
-    }
-    if (typeof options.name === "string") {
-      this._name = options.name;
-    }
+    this._lastModified = !Number.isNaN(lastModified)
+      ? lastModified
+      : Date.now();
+    this._name = String(name);
   }
 
   get name(): string {
@@ -64,78 +47,66 @@ class WebFile extends Blob {
     return this._lastModified;
   }
 
-  get [Symbol.toStringTag](): string {
+  get [Symbol.toStringTag]() {
     return "File";
   }
 
   static [Symbol.hasInstance](object: unknown): boolean {
     return (
       !!object &&
-      object instanceof Blob &&
-      /^(File)$/.test(
-        String(
-          (object as { [Symbol.toStringTag]?: unknown })[Symbol.toStringTag]
-        )
-      )
+      object instanceof BlobClass &&
+      (object as any)[Symbol.toStringTag] === "File"
     );
   }
-}
+};
 
-const File =
-  typeof global.File === "undefined"
-    ? WebFile
-    : (global.File as unknown as typeof WebFile);
+// Use native File if available, otherwise fallback to WebFile
+const FileClass: any =
+  typeof globalThis.File === "undefined" ? WebFile : globalThis.File;
 
-// Zod schema helpers
+// Zod constants
 const ANY = z.any();
 const ANY_OPT = ANY.optional();
 const BOOLEAN = z.boolean();
 const BOOLEAN_OPT = BOOLEAN.optional();
-const FILE = z.instanceof(File);
+const DATE = z.coerce.date();
+const DATE_OPT = DATE.optional();
+const FILE = z.instanceof(FileClass);
 const FILE_OPT = FILE.optional();
 const NULL = z.null();
 const NULL_OPT = NULL.optional();
+const RECORD = z.record(z.any());
+const RECORD_WITH_DEFAULT = RECORD.default({});
+const RECORD_OPT = RECORD.optional();
 const STRING = z.string();
+const NUMBER = z.number();
+const INTEGER = z.number().int();
 
-export function dataSchemaArrayToZod(
-  schemas: DataSchemaArray | IncrementalDataSchemaArray
-): ZodTypeAny {
-  if (!Array.isArray(schemas) || schemas.length === 0) {
-    throw new TypeError("schemas must be a non-empty array");
-  }
-  const firstSchema = dataSchemaToZod(schemas[0]);
-  if (!schemas[1]) return firstSchema;
-
-  const zodSchemas: ZodSchema[] = [firstSchema];
-  for (const schema of schemas.slice(1)) {
-    zodSchemas.push(dataSchemaToZod(schema));
-  }
-  return z
-    .union(zodSchemas as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]])
-    .array();
-}
-
+// Helper to generate Zod enum schema
 function getEnumSchema(
-  enumList: (string | number)[],
+  enumList: string[] | number[],
   type: "string" | "number"
-): ZodTypeAny {
-  if (!Array.isArray(enumList) || enumList.length === 0) {
-    throw new TypeError("enumList must be a non-empty array");
-  }
+) {
   const zodSchema = z.enum(enumList.map(String) as [string, ...string[]]);
   return type === "string" ? zodSchema : zodSchema.transform(Number);
 }
 
-export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
-  if (
-    !schema ||
-    typeof schema !== "object" ||
-    !("type" in schema) ||
-    Object.keys(schema).length === 0
-  ) {
-    return schema && (schema as { required?: boolean }).required
-      ? ANY
-      : ANY_OPT;
+// Convert array of schemas to Zod union array
+export function dataSchemaArrayToZod(schemas: any[]): ZodTypeAny {
+  const zodSchemas = schemas.map((schema) => dataSchemaToZod(schema));
+  if (zodSchemas.length === 0) {
+    // fallback to any if no schemas provided
+    return z.array(z.any());
+  }
+  return z
+    .union([...zodSchemas] as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]])
+    .array();
+}
+
+// Main function: Convert data schema to Zod schema
+export function dataSchemaToZod(schema: any): ZodTypeAny {
+  if (!schema || typeof schema !== "object" || !("type" in schema)) {
+    return schema?.required ? ANY : ANY_OPT;
   }
 
   switch (schema.type) {
@@ -146,14 +117,14 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       return schema.required ? BOOLEAN : BOOLEAN_OPT;
 
     case "enum<string>": {
-      const strEnumSchema = getEnumSchema(schema.enum, "string");
-      return schema.required ? strEnumSchema : strEnumSchema.optional();
+      const strEnum = getEnumSchema(schema.enum, "string");
+      return schema.required ? strEnum : strEnum.optional();
     }
 
     case "enum<number>":
     case "enum<integer>": {
-      const numEnumSchema = getEnumSchema(schema.enum, "number");
-      return schema.required ? numEnumSchema : numEnumSchema.optional();
+      const numEnum = getEnumSchema(schema.enum, "number");
+      return schema.required ? numEnum : numEnum.optional();
     }
 
     case "file":
@@ -163,13 +134,9 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       return schema.required ? ANY : ANY_OPT;
 
     case "string": {
-      if (
-        "enum" in schema &&
-        Array.isArray(schema.enum) &&
-        schema.enum.length > 0
-      ) {
-        const stringEnum = z.enum(schema.enum as [string, ...string[]]);
-        return schema.required ? stringEnum : stringEnum.optional();
+      if (Array.isArray(schema.enum)) {
+        const enumSchema = z.enum(schema.enum as [string, ...string[]]);
+        return schema.required ? enumSchema : enumSchema.optional();
       }
 
       if (schema.format === "binary") {
@@ -177,13 +144,14 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
       }
 
       let stringSchema = STRING;
-      if (typeof schema.minLength === "number") {
+
+      if (schema.minLength !== undefined) {
         stringSchema = stringSchema.min(schema.minLength);
       }
-      if (typeof schema.maxLength === "number") {
+      if (schema.maxLength !== undefined) {
         stringSchema = stringSchema.max(schema.maxLength);
       }
-      if (typeof schema.pattern === "string") {
+      if (schema.pattern !== undefined) {
         stringSchema = stringSchema.regex(new RegExp(schema.pattern));
       }
 
@@ -195,14 +163,89 @@ export function dataSchemaToZod(schema: SchemaInput): ZodTypeAny {
         case "url":
           stringSchema = stringSchema.url();
           break;
+        case "uuid":
+          stringSchema = stringSchema.uuid();
+          break;
+        case "date-time":
+          return schema.required ? DATE : DATE_OPT;
+      }
+
+      if ("default" in schema) {
+        return schema.required
+          ? stringSchema.default(schema.default)
+          : stringSchema.optional().default(schema.default);
       }
 
       return schema.required ? stringSchema : stringSchema.optional();
     }
 
-    // Continue with other types like number, integer, date, object, array, etc.
-    // You can add them similarly with validation conditions
-  }
+    case "number":
+    case "integer": {
+      if (Array.isArray(schema.enum)) {
+        const numEnum = getEnumSchema(schema.enum, "number");
+        return schema.required ? numEnum : numEnum.optional();
+      }
 
-  return ANY;
+      let numSchema = schema.type === "integer" ? INTEGER : NUMBER;
+
+      if (schema.minimum !== undefined) {
+        numSchema = numSchema.min(schema.minimum);
+      }
+      if (schema.maximum !== undefined) {
+        numSchema = numSchema.max(schema.maximum);
+      }
+      if (schema.exclusiveMinimum !== undefined) {
+        numSchema = numSchema.gt(schema.exclusiveMinimum);
+      }
+      if (schema.exclusiveMaximum !== undefined) {
+        numSchema = numSchema.lt(schema.exclusiveMaximum);
+      }
+
+      return schema.required ? numSchema : numSchema.optional();
+    }
+
+    case "array": {
+      let itemSchema: ZodTypeAny;
+
+      if (Array.isArray(schema.items)) {
+        itemSchema = dataSchemaArrayToZod(schema.items);
+      } else {
+        itemSchema = dataSchemaToZod(schema.items);
+      }
+
+      let arraySchema = z.array(itemSchema);
+
+      if (schema.minItems !== undefined) {
+        arraySchema = arraySchema.min(schema.minItems);
+      }
+      if (schema.maxItems !== undefined) {
+        arraySchema = arraySchema.max(schema.maxItems);
+      }
+
+      return schema.required ? arraySchema : arraySchema.optional();
+    }
+
+    case "object": {
+      const shape: Record<string, ZodTypeAny> = {};
+      const requiredSet = new Set<string>(schema.requiredProperties || []);
+
+      for (const [key, propSchema] of Object.entries(schema.properties || {})) {
+        const zodProp = Array.isArray(propSchema)
+          ? dataSchemaArrayToZod(propSchema)
+          : dataSchemaToZod(propSchema);
+        shape[key] = requiredSet.has(key) ? zodProp : zodProp.optional();
+      }
+
+      const objSchema = z.object(shape);
+
+      if (Object.keys(shape).length === 0) {
+        return schema.required ? RECORD_WITH_DEFAULT : RECORD_OPT;
+      }
+
+      return schema.required ? objSchema : objSchema.optional();
+    }
+
+    default:
+      return schema.required ? ANY : ANY_OPT;
+  }
 }
