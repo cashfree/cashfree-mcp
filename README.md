@@ -13,11 +13,33 @@ cd cashfree-mcp
 
 ### Install Dependencies
 
+Before installing, ensure you have **Node.js v14.x or higher** installed. If you're using `nvm` or `brew`, make sure the correct version is active:
+
+```bash
+node -v
+# Should output v14.x or higher
+```
+
+#### Step 1: Install project dependencies
+
 ```bash
 npm install
 ```
 
-(requires Node.js 14.x or higher)
+This will install all required packages listed in `package.json`.
+
+> 💡 If you're using `Node.js >=18`, you might face peer dependency issues with packages like `undici`. In that case, upgrade Node.js to `>=20.18.1` or adjust the package version if needed.
+
+#### Step 2: Build the project
+
+```bash
+npm run build
+```
+
+This compiles the source files to the `dist/` directory, which is required to run the MCP server.
+
+> 🛠️ If you see errors related to missing files in `/dist`, ensure you've run the build step successfully.
+
 
 ## Configuration
 
@@ -29,23 +51,23 @@ Add the following configuration block to your `claude_desktop_config.json`
 
 ```json
 {
-    "mcpServers": {
-        "cashfree": {
-            "command": "node",
-            "args": ["/path/to/cashfree-mcp/src/index.js"],
-            "env": {
-                "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
-                "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
-                "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
-                "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
-                "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
-                "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
-                "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
-                "TOOLS": "pg,payouts,secureid",
-                "ENV": "sandbox"
-            }
-        }
+  "mcpServers": {
+    "cashfree": {
+      "command": "node",
+      "args": ["/path/to/cashfree-mcp/dist/index.js"],
+      "env": {
+        "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
+        "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
+        "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
+        "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
+        "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
+        "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
+        "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
+        "TOOLS": "pg,payouts,secureid",
+        "ENV": "sandbox"
+      }
     }
+  }
 }
 ```
 
@@ -55,26 +77,26 @@ Add the following configuration block to your VS Code settings
 
 ```json
 {
-    "mcp": {
-        "inputs": [],
-        "servers": {
-            "cashfree": {
-                "command": "node",
-                "args": ["/path/to/cashfree-mcp/src/index.js"],
-                "env": {
-                    "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
-                    "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
-                    "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
-                    "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
-                    "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
-                    "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
-                    "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
-                    "TOOLS": "pg,payouts,secureid",
-                    "ENV": "sandbox"
-                }
-            }
+  "mcp": {
+    "inputs": [],
+    "servers": {
+      "cashfree": {
+        "command": "node",
+        "args": ["/path/to/cashfree-mcp/dist/index.js"],
+        "env": {
+          "PAYMENTS_APP_ID": "YOUR_PG_CLIENT_ID",
+          "PAYMENTS_APP_SECRET": "YOUR_PG_CLIENT_SECRET",
+          "PAYOUTS_APP_ID": "YOUR_PAYOUTS_CLIENT_ID",
+          "PAYOUTS_APP_SECRET": "YOUR_PAYOUTS_CLIENT_SECRET",
+          "TWO_FA_PUBLIC_KEY_PEM_PATH": "/path/to/public_key.pem",
+          "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
+          "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
+          "TOOLS": "pg,payouts,secureid",
+          "ENV": "sandbox"
         }
+      }
     }
+  }
 }
 ```
 
@@ -83,20 +105,20 @@ Add the following configuration block to your VS Code settings
 Set the following environment variables for each service:
 **Payment Gateway:**
 
--   `PAYMENTS_APP_ID`: Your Payment Gateway client ID
--   `PAYMENTS_APP_SECRET`: Your Payment Gateway client secret
+- `PAYMENTS_APP_ID`: Your Payment Gateway client ID
+- `PAYMENTS_APP_SECRET`: Your Payment Gateway client secret
 
 **Payouts:**
 
--   `PAYOUTS_APP_ID`: Your Payouts client ID
--   `PAYOUTS_APP_SECRET`: Your Payouts client secret
--   `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
+- `PAYOUTS_APP_ID`: Your Payouts client ID
+- `PAYOUTS_APP_SECRET`: Your Payouts client secret
+- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
 **SecureID:**
 
--   `SECUREID_APP_ID`: Your SecureID client ID
--   `SECUREID_APP_SECRET`: Your SecureID client secret
--   `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
+- `SECUREID_APP_ID`: Your SecureID client ID
+- `SECUREID_APP_SECRET`: Your SecureID client secret
+- `TWO_FA_PUBLIC_KEY_PEM_PATH`: Path to your 2FA public key (required only if 2FA is enabled)
 
 ### Environment
 
@@ -106,9 +128,9 @@ Set the following environment variables for each service:
 
 `TOOLS`: Comma-separated list of modules to enable. Available options:
 
--   `pg`: Payment Gateway APIs
--   `payouts`: Payouts APIs
--   `secureid`: SecureID APIs
+- `pg`: Payment Gateway APIs
+- `payouts`: Payouts APIs
+- `secureid`: SecureID APIs
 
 ## Tools
 
