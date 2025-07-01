@@ -9,10 +9,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
  */
 export async function connectServer(server: McpServer): Promise<void> {
   const transport = new StdioServerTransport();
-
   try {
     await server.connect(transport);
-    console.log("MCP Server successfully connected via stdio");
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Failed to connect MCP Server:", errorMessage);
