@@ -47,12 +47,19 @@ const DEFAULT_CONFIG: Config = {
 export function readConfig(): Config {
   const config: Config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   const isProduction = process.env.ENV === "production";
-  const baseUrl = isProduction ? BASE_URLS.production : BASE_URLS.sandbox;
 
-  // Replace sandbox base_url with the correct environment URL
-  Object.entries(config).forEach(([_, apiConfig]) => {
-    const suffix = apiConfig.base_url?.split(BASE_URLS.sandbox)[1] ?? "";
-    apiConfig.base_url = `${baseUrl}${suffix}`;
+  // Adjust base_url for sandbox vs production
+  const baseUrl = isProduction ? BASE_URLS.production : BASE_URLS.sandbox;
+  (
+    Object.keys(config) as Array<
+      | typeof PAYMENT_API_KEY
+      | typeof PAYOUT_API_KEY
+      | typeof VERIFICATION_API_KEY
+    >
+  ).forEach((api) => {
+    config[api].base_url = `${baseUrl}${
+      config[api].base_url!.split(BASE_URLS.sandbox)[1]
+    }`;
   });
 
   // Helper to configure API credentials
@@ -62,7 +69,10 @@ export function readConfig(): Config {
     secretVar,
     pubKeyVar,
   }: {
-    key: keyof Config;
+    key:
+      | typeof PAYMENT_API_KEY
+      | typeof PAYOUT_API_KEY
+      | typeof VERIFICATION_API_KEY;
     idVar: string;
     secretVar: string;
     pubKeyVar?: string;
@@ -75,18 +85,15 @@ export function readConfig(): Config {
         "x-client-secret": appSecret,
       };
     }
-
-    if (pubKeyVar) {
-      const publicKeyPath = process.env[pubKeyVar];
-      if (publicKeyPath) {
-        const publicKey = getPublicKeyFromPath(publicKeyPath);
-        config[key].TWO_FA_PUBLIC_KEY =
-          publicKey === null ? undefined : publicKey;
+    if (pubKeyVar && process.env[pubKeyVar]) {
+      const publicKey = getPublicKeyFromPath(process.env[pubKeyVar]);
+      if (publicKey !== null && publicKey !== undefined) {
+        config[key].TWO_FA_PUBLIC_KEY = publicKey;
       }
     }
   };
 
-  // Apply credentials to each API config
+  // Apply credentials for each API
   (
     [
       {

@@ -16,16 +16,12 @@ export function initializeObject(
   let current: NestedRecord = obj;
 
   for (const key of path) {
-    if (typeof current === "string") break;
-
-    if (!(key in current) || typeof current[key] !== "object") {
+    if (!current[key] || typeof current[key] !== "object") {
       current[key] = {};
     }
-
     current = current[key];
   }
-
-  return obj;
+  return current;
 }
 
 /**
@@ -35,10 +31,11 @@ export function getFileId(
   spec: OpenAPI.Document,
   index: number
 ): string | number {
-  const title = spec.info?.title;
-  const version = spec.info?.version;
-
-  return title && version ? `${title} - ${version}` : index;
+  var _a;
+  return ((_a = spec.info) === null || _a === void 0 ? void 0 : _a.title) &&
+    spec?.info?.version
+    ? `${spec?.info?.title} - ${spec?.info?.version}`
+    : index;
 }
 
 /**
@@ -48,18 +45,21 @@ export function throwOnAxiosError(
   response: AxiosResponse,
   errMsg: string
 ): void {
-  const contentType = response.headers["content-type"];
-  const isJson = contentType?.includes("application/json");
-
+  var _a, _b;
   if (response.status !== 200) {
-    const errorMsg =
-      isJson && response.data?.error
-        ? `${errMsg}: ${response.data.error}`
-        : `${errMsg}: ${response.status} ${response.statusText || ""}`;
-
-    throw new Error(errorMsg);
+    if (
+      ((_a = response.headers["content-type"]) === null || _a === void 0
+        ? void 0
+        : _a.includes("application/json")) &&
+      ((_b = response.data) === null || _b === void 0 ? void 0 : _b.error)
+    ) {
+      throw new Error(`${errMsg}: ${response.data.error}`);
+    } else {
+      throw new Error(
+        `${errMsg}: ${response.status} ${response.statusText || ""}`
+      );
+    }
   }
-
   if (!response.data) {
     throw new Error(`${errMsg}: ${response.status} ${response.statusText}`);
   }
@@ -68,31 +68,26 @@ export function throwOnAxiosError(
 /**
  * Formats various types of errors into human-readable strings.
  */
-export function formatErr(err: unknown): string {
+export function formatErr(err: unknown) {
+  var _a, _b;
   if (axios.isAxiosError(err)) {
     if (err.message) {
       return err.message;
-    }
-
-    if (err.response) {
-      const error = err.response.data?.error;
-      return error || `${err.response.status} ${err.response.statusText}`;
-    }
-
-    if (err.request) {
+    } else if (err.response) {
+      return (_b =
+        (_a = err.response.data) === null || _a === void 0
+          ? void 0
+          : _a.error) !== null && _b !== void 0
+        ? _b
+        : `${err.response.status} ${err.response.statusText}`;
+    } else if (err.request) {
       return "No response received from server";
+    } else {
+      err = "An unknown error occurred";
     }
-
-    return "An unknown Axios error occurred";
-  }
-
-  if (err instanceof Error) {
+  } else if (err instanceof Error) {
     return err.message;
-  }
-
-  try {
-    return JSON.stringify(err, null, 2);
-  } catch {
-    return "Unknown error (unstringifiable)";
+  } else {
+    return JSON.stringify(err, undefined, 2);
   }
 }

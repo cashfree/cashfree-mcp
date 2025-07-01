@@ -60,30 +60,21 @@ export async function sendMessageToChatbot(message: string): Promise<string> {
     messageId: uuidv4(),
     message,
   };
-
   try {
-    const response = await fetch(CASHIEN_API_URL, {
+    const response = await fetch(`${CASHIEN_API_URL}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
-
-    if (!response.ok) {
-      console.error(`HTTP error: ${response.status} ${response.statusText}`);
+    const finalResp: CashienResponse = await response.json();
+    if (finalResp.status === undefined || finalResp.status === "ERROR") {
       return GENERIC_ERR_MSG;
     }
-
-    const json: CashienResponse = await response.json();
-
-    if (!json || json.status === "ERROR" || typeof json.message !== "string") {
-      return GENERIC_ERR_MSG;
-    }
-
-    return json.message;
+    return finalResp.message ?? GENERIC_ERR_MSG;
   } catch (error) {
-    console.error("Network error in sendMessageToChatbot:", error);
+    console.error("Error in sendMessageToChatbot:", error);
     return GENERIC_ERR_MSG;
   }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Entry point for Cashfree MCP server.
- * Initializes the server, loads tools (OpenAPI, search, cashien), and connects the server over stdio.
+ * Initializes server, loads OpenAPI tools, and starts the server.
  */
 
 import fs from "node:fs";
@@ -35,25 +35,23 @@ async function main() {
   const openApiFilePaths = fs
     .readdirSync(openApiDir)
     .filter((file) => file.startsWith("openapi-") && file.endsWith(".json"))
-    .filter(isMcpEnabled);
+    .filter((file) => isMcpEnabled(file));
 
   await Promise.all(
-    openApiFilePaths.map((openApiPath, index) =>
-      createToolsFromOpenApi(
+    openApiFilePaths.map(async (openApiPath, index) => {
+      return createToolsFromOpenApi(
         path.join(openApiDir, openApiPath),
         index,
         server,
         existingTools
-      )
-    )
+      );
+    })
   );
 
   await connectServer(server);
 }
 
 main().catch((error: unknown) => {
-  const message =
-    error instanceof Error ? error.stack ?? error.message : String(error);
-  console.error("Fatal error while initializing MCP server:\n", message);
+  console.error("Fatal error in trying to initialize MCP server:", error);
   process.exit(1);
 });

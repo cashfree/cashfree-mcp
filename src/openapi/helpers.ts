@@ -92,6 +92,7 @@ function resolveAllReferences(
   return result;
 }
 
+
 export function getEndpointsFromOpenApi(specification: any): Endpoint[] {
   const endpoints: Endpoint[] = [];
   const paths = specification.paths;

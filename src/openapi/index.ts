@@ -85,17 +85,6 @@ export async function createToolsFromOpenApi(
 
         if ("body" in inputArgs) {
           inputBody = inputArgs.body;
-
-          if (typeof inputBody === "string") {
-            try {
-              inputBody = JSON.parse(inputBody);
-            } catch {
-              throw new Error(
-                "Invalid JSON string passed in 'body'. Please pass it as a JS object."
-              );
-            }
-          }
-
           delete inputArgs.body;
         }
 
@@ -206,17 +195,11 @@ export async function createToolsFromOpenApi(
             );
           }
           const errMsg = JSON.stringify(error, undefined, 2);
-          let data = "{}";
-          if (
-            typeof error === "object" &&
-            error !== null &&
-            "response" in error &&
-            typeof (error as any).response === "object" &&
-            (error as any).response !== null &&
-            "data" in (error as any).response
-          ) {
-            data = JSON.stringify((error as any).response.data, undefined, 2);
-          }
+          const data = JSON.stringify(
+            isAxiosError(error) && error.response ? error.response.data : {},
+            undefined,
+            2
+          );
           return {
             isError: true,
             content: [
