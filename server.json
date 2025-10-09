@@ -1,0 +1,127 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.cashfree/cashfree-mcp",
+  "description": "Cashfree MCP server for cashfree docs and APIs",
+  "repository": {
+    "url": "https://github.com/cashfree/cashfree-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.cashfree.com/mcp",
+      "headers": [
+        {
+          "description": "Payment Gateway App Id",
+          "isSecret": true,
+          "name": "PAYMENTS_APP_ID"
+        },
+        {
+          "description": "Payment Gateway App Secret",
+          "isSecret": true,
+          "name": "PAYMENTS_APP_SECRET"
+        },
+        {
+          "description": "Payouts App Id",
+          "isSecret": true,
+          "name": "PAYOUTS_APP_ID"
+        },
+        {
+          "description": "Payouts App Secret",
+          "isSecret": true,
+          "name": "PAYOUTS_APP_SECRET"
+        },
+        {
+          "description": "Payouts app public key base64 encoded",
+          "isSecret": false,
+          "name": "PAYOUTS_APP_PUBLIC_KEY"
+        },
+        {
+          "description": "SecureId App Id",
+          "isSecret": true,
+          "name": "SECUREID_APP_ID"
+        },
+        {
+          "description": "SecureId App Secret",
+          "isSecret": true,
+          "name": "SECUREID_APP_SECRET"
+        },
+        {
+          "description": "SecureId app public key base64 encoded",
+          "isSecret": false,
+          "name": "SECUREID_APP_PUBLIC_KEY"
+        }
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@cashfreepayments/cashfree-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Payment Gateway App Id",
+          "format": "string",
+          "isSecret": true,
+          "name": "PAYMENTS_APP_ID"
+        },
+        {
+          "description": "Payment Gateway App Secret",
+          "format": "string",
+          "isSecret": true,
+          "name": "PAYMENTS_APP_SECRET"
+        },
+        {
+          "description": "Payouts App Id",
+          "format": "string",
+          "isSecret": true,
+          "name": "PAYOUTS_APP_ID"
+        },
+        {
+          "description": "Payouts App Secret",
+          "format": "string",
+          "isSecret": true,
+          "name": "PAYOUTS_APP_SECRET"
+        },
+        {
+          "description": "Path to the PEM file containing the public key for verifying 2FA signatures",
+          "format": "string",
+          "isSecret": false,
+          "name": "TWO_FA_PUBLIC_KEY_PEM_PATH"
+        },
+        {
+          "description": "SecureId App Id",
+          "format": "string",
+          "isSecret": true,
+          "name": "SECUREID_APP_ID"
+        },
+        {
+          "description": "SecureId App Secret",
+          "format": "string",
+          "isSecret": true,
+          "name": "SECUREID_APP_SECRET"
+        },
+        {
+          "description": "Tools (Comma-separated list of modules to enable. Available options: pg, payouts, secureid)",
+          "format": "string",
+          "isSecret": false,
+          "isRequired": true,
+          "name": "TOOLS"
+        },
+        {
+          "description": "Environment (production/sandbox default: sandbox)",
+          "format": "string",
+          "isSecret": false,
+          "isRequired": true,
+          "name": "ENV"
+        }
+      ]
+    }
+  ]
+}
