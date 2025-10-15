@@ -15,8 +15,8 @@ import {
   generateCfSignature,
   getElicitationConfig,
   hasElicitationEnabled,
-  getMissingRequiredFields,
-  createElicitationRequest,
+  getMissingAndProvidedFields,
+  createConfirmationAndElicitationRequest,
   applyFieldMappings,
   validateElicitationResponse,
 } from "./helpers.js";
@@ -39,18 +39,21 @@ async function triggerElicitationFlow(
     return inputArgs;
   }
   
-  const missingFields = getMissingRequiredFields(elicitationConfig, inputArgs);
+  const { missingFields, providedFields } = getMissingAndProvidedFields(elicitationConfig, inputArgs);
   console.log(`Missing fields: ${JSON.stringify(missingFields)}`);
+  console.log(`Provided fields: ${JSON.stringify(providedFields)}`);
   
-  if (missingFields.length === 0) {
-    console.log(`No missing fields, proceeding without elicitation`);
+  // If no elicitation needed (all required fields provided and no optional fields to confirm)
+  if (missingFields.length === 0 && Object.keys(providedFields).length === 0) {
+    console.log(`No missing fields and no confirmation needed, proceeding without elicitation`);
     return inputArgs;
   }
   
-  // Create elicitation request for missing fields
-  const elicitationRequest = createElicitationRequest(
+  // Create elicitation request for confirmation and missing fields
+  const elicitationRequest = createConfirmationAndElicitationRequest(
     endpoint.title || endpoint.path,
     missingFields,
+    providedFields,
     elicitationConfig
   );
   

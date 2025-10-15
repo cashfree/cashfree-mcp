@@ -1195,7 +1195,14 @@
               }
             ]
           }
-        }
+        },
+        "required": [
+          "link_amount",
+          "link_currency",
+          "link_id",
+          "customer_details",
+          "link_purpose"
+        ]
       },
       "CreateOfferRequest": {
         "title": "CreateOfferRequest",
@@ -15421,7 +15428,51 @@
                     "target": "body.link_purpose",
                     "transform": "string"
                   }
+                },
+                "customer_name": {
+                  "required": false,
+                  "message": "Please provide the customer's name",
+                  "schema": {
+                    "type": "string",
+                    "title": "Customer Name",
+                    "description": "Full name of the customer",
+                    "maxLength": 100
+                  },
+                  "mapping": {
+                    "target": "body.customer_details.customer_name",
+                    "transform": "string"
+                  }
+                },
+                "customer_phone": {
+                  "required": false,
+                  "message": "Please provide the customer's phone number",
+                  "schema": {
+                    "type": "string",
+                    "title": "Customer Phone",
+                    "description": "Customer's phone number (10 digits for India)",
+                    "pattern": "^[0-9]{10}$"
+                  },
+                  "mapping": {
+                    "target": "body.customer_details.customer_phone",
+                    "transform": "string"
+                  }
+                },
+                "customer_email": {
+                  "required": false,
+                  "message": "Please provide the customer's email address",
+                  "schema": {
+                    "type": "string",
+                    "title": "Customer Email",
+                    "description": "Customer's email address",
+                    "maxLength": 100,
+                    "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+                  },
+                  "mapping": {
+                    "target": "body.customer_details.customer_email",
+                    "transform": "string"
+                  }
                 }
+                
               }
             }
           }

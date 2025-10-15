@@ -413,6 +413,40 @@ export function getMissingRequiredFields(
 }
 
 /**
+ * Identify missing and provided fields for elicitation confirmation flow
+ */
+export function getMissingAndProvidedFields(
+  elicitationConfig: ElicitationConfiguration,
+  providedArgs: Record<string, any>
+): { missingFields: string[]; providedFields: Record<string, any> } {
+  const missingFields: string[] = [];
+  const providedFields: Record<string, any> = {};
+  
+  Object.entries(elicitationConfig.fields).forEach(([fieldName, fieldConfig]) => {
+    const targetPath = fieldConfig.mapping.target;
+    
+    // Check if field is provided
+    const fieldProvided = hasValueAtPath(providedArgs, targetPath) || 
+                         hasValueAtPath(providedArgs, fieldName) ||
+                         (fieldName in providedArgs && providedArgs[fieldName] !== undefined && providedArgs[fieldName] !== '');
+    
+    if (fieldProvided) {
+      // Get the actual value that was provided
+      const value = getValueAtPath(providedArgs, targetPath) || 
+                   getValueAtPath(providedArgs, fieldName) || 
+                   providedArgs[fieldName];
+      providedFields[fieldName] = value;
+    } else if (fieldConfig.required) {
+      missingFields.push(fieldName);
+    }
+  });
+  
+  console.log("Missing fields: " + JSON.stringify(missingFields));
+  console.log("Provided fields: " + JSON.stringify(providedFields));
+  return { missingFields, providedFields };
+}
+
+/**
  * Check if a value exists at a given path in an object
  */
 function hasValueAtPath(obj: any, path: string): boolean {
@@ -427,6 +461,23 @@ function hasValueAtPath(obj: any, path: string): boolean {
   }
   
   return current !== null && current !== undefined && current !== '';
+}
+
+/**
+ * Get value at a given path in an object
+ */
+function getValueAtPath(obj: any, path: string): any {
+  const parts = path.split('.');
+  let current = obj;
+  
+  for (const part of parts) {
+    if (current === null || current === undefined || !(part in current)) {
+      return undefined;
+    }
+    current = current[part];
+  }
+  
+  return current;
 }
 
 /**
@@ -455,6 +506,73 @@ export function createElicitationRequest(
     method: "elicitation/create",
     params: {
       message: message || `Please provide the required parameters for ${toolName}:`,
+      requestedSchema: {
+        type: "object",
+        properties,
+        ...(required.length > 0 && { required })
+      }
+    }
+  };
+}
+
+/**
+ * Create an elicitation request that shows confirmation for provided values and asks for missing fields
+ */
+export function createConfirmationAndElicitationRequest(
+  toolName: string,
+  missingFieldNames: string[],
+  providedFields: Record<string, any>,
+  elicitationConfig: ElicitationConfiguration
+): ElicitRequest {
+  const properties: Record<string, PrimitiveSchemaDefinition> = {};
+  const required: string[] = [];
+  
+  // Create confirmation message with provided values
+  let confirmationMessage = `${toolName}\n\n`;
+  
+  if (Object.keys(providedFields).length > 0) {
+    confirmationMessage += "**Current Values:**\n";
+    Object.entries(providedFields).forEach(([fieldName, value]) => {
+      const fieldConfig = elicitationConfig.fields[fieldName];
+      const displayName = fieldConfig?.schema?.title || fieldName;
+      confirmationMessage += `• ${displayName}: ${value}\n`;
+    });
+    confirmationMessage += "\n";
+  }
+  
+  if (missingFieldNames.length > 0) {
+    confirmationMessage += "**Required Information:**\n";
+    missingFieldNames.forEach(fieldName => {
+      const fieldConfig = elicitationConfig.fields[fieldName];
+      if (fieldConfig) {
+        confirmationMessage += `• ${fieldConfig.schema?.title || fieldName}: ${fieldConfig.message || 'Please provide this field'}\n`;
+      }
+    });
+    confirmationMessage += "\n";
+  }
+  
+  confirmationMessage += "Please confirm the current values and provide any missing information. You can update any field if needed:";
+  
+  // Add all configurable fields (both provided and missing) to allow updates
+  Object.entries(elicitationConfig.fields).forEach(([fieldName, fieldConfig]) => {
+    // Create a copy of the schema and set default value for provided fields
+    const schema = { ...fieldConfig.schema };
+    if (providedFields[fieldName] !== undefined) {
+      (schema as any).default = providedFields[fieldName];
+    }
+    
+    properties[fieldName] = schema;
+    
+    // Only mark as required if it's missing and marked as required in config
+    if (fieldConfig.required && missingFieldNames.includes(fieldName)) {
+      required.push(fieldName);
+    }
+  });
+
+  return {
+    method: "elicitation/create",
+    params: {
+      message: confirmationMessage,
       requestedSchema: {
         type: "object",
         properties,
