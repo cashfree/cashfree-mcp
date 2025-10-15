@@ -2,7 +2,16 @@ import { OpenApiToEndpointConverter } from "@mintlify/validation";
 import { z } from "zod";
 import { dataSchemaArrayToZod, dataSchemaToZod } from "./zod.js";
 import { readConfig } from "../config.js";
-import { Endpoint } from "../types.js";
+import { 
+  Endpoint, 
+  ElicitationConfiguration,
+} from "../types.js";
+import {
+  ElicitRequest,
+  PrimitiveSchemaDefinition,
+  StringSchema,
+  NumberSchema
+} from "@modelcontextprotocol/sdk/types.js";
 import crypto from "crypto";
 import fs from "fs";
 
@@ -109,7 +118,7 @@ export function getEndpointsFromOpenApi(specification: any): Endpoint[] {
           refCache
         );
         if (!isMcpEnabledEndpoint(resolvedPathItem)) continue;
-        const endpoint = OpenApiToEndpointConverter.convert(
+        const rawEndpoint = OpenApiToEndpointConverter.convert(
           {
             ...specification,
             paths: { [path]: { [method]: resolvedPathItem } },
@@ -117,7 +126,17 @@ export function getEndpointsFromOpenApi(specification: any): Endpoint[] {
           path,
           method as any
         );
-        endpoints.push(endpoint as any);
+        
+        // Convert to our Endpoint type and ensure x-mcp configuration is preserved
+        const endpoint: Endpoint = {
+          ...rawEndpoint,
+          operation: {
+            ...resolvedPathItem,
+            "x-mcp": resolvedPathItem["x-mcp"]
+          }
+        };
+        
+        endpoints.push(endpoint);
       } catch (error: any) {
         console.error(
           `Error processing endpoint ${method.toUpperCase()} ${path}:`,
@@ -329,4 +348,257 @@ export function getPublicKeyFromPath(path: string): string | null {
     );
     return null;
   }
+}
+
+/**
+ * Extract elicitation configuration from an endpoint's x-mcp section
+ */
+export function getElicitationConfig(endpoint: Endpoint): ElicitationConfiguration | null {
+  // Try multiple locations for x-mcp configuration
+  const mcpConfig = endpoint.operation?.["x-mcp"] || (endpoint as any)["x-mcp"];
+  if (!mcpConfig || !mcpConfig.config?.elicitation) {
+    return null;
+  }
+  return mcpConfig.config.elicitation;
+}
+
+/**
+ * Check if an endpoint has elicitation enabled
+ */
+export function hasElicitationEnabled(endpoint: Endpoint): boolean {
+  const config = getElicitationConfig(endpoint);
+  return config !== null && config.enabled && Object.keys(config.fields || {}).length > 0;
+}
+
+/**
+ * Identify missing required fields for elicitation
+ */
+export function getMissingRequiredFields(
+  elicitationConfig: ElicitationConfiguration,
+  providedArgs: Record<string, any>
+): string[] {
+  const missingFields: string[] = [];
+  
+  Object.entries(elicitationConfig.fields).forEach(([fieldName, fieldConfig]) => {
+    
+    if (fieldConfig.required) {
+      // Use the mapping target to check if field is provided
+      const targetPath = fieldConfig.mapping.target;
+      
+      // Also check if the field is provided directly by name
+      const fieldProvided = hasValueAtPath(providedArgs, targetPath) || 
+                           hasValueAtPath(providedArgs, fieldName) ||
+                           (fieldName in providedArgs && providedArgs[fieldName] !== undefined && providedArgs[fieldName] !== '');
+      
+      if (!fieldProvided) {
+        missingFields.push(fieldName);
+      }
+    } else {
+      // For optional fields, check if they are provided
+      const targetPath = fieldConfig.mapping.target;
+      const fieldProvided = hasValueAtPath(providedArgs, targetPath) || 
+                           hasValueAtPath(providedArgs, fieldName) ||
+                           (fieldName in providedArgs && providedArgs[fieldName] !== undefined && providedArgs[fieldName] !== '');
+
+      if (!fieldProvided) {
+        missingFields.push(fieldName);
+      }
+    }
+  });
+  
+  console.log("Elicitation config " + JSON.stringify(elicitationConfig));
+  console.log("Provided args " + JSON.stringify(providedArgs));
+  console.log("Missing fields " + JSON.stringify(missingFields));
+  return missingFields;
+}
+
+/**
+ * Check if a value exists at a given path in an object
+ */
+function hasValueAtPath(obj: any, path: string): boolean {
+  const parts = path.split('.');
+  let current = obj;
+  
+  for (const part of parts) {
+    if (current === null || current === undefined || !(part in current)) {
+      return false;
+    }
+    current = current[part];
+  }
+  
+  return current !== null && current !== undefined && current !== '';
+}
+
+/**
+ * Create an elicitation request for missing fields
+ */
+export function createElicitationRequest(
+  toolName: string,
+  missingFieldNames: string[],
+  elicitationConfig: ElicitationConfiguration,
+  message?: string
+): ElicitRequest {
+  const properties: Record<string, PrimitiveSchemaDefinition> = {};
+  const required: string[] = [];
+
+  for (const fieldName of missingFieldNames) {
+    const fieldConfig = elicitationConfig.fields[fieldName];
+    if (fieldConfig) {
+      properties[fieldName] = fieldConfig.schema;
+      if (fieldConfig.required) {
+        required.push(fieldName);
+      }
+    }
+  }
+
+  return {
+    method: "elicitation/create",
+    params: {
+      message: message || `Please provide the required parameters for ${toolName}:`,
+      requestedSchema: {
+        type: "object",
+        properties,
+        ...(required.length > 0 && { required })
+      }
+    }
+  };
+}/**
+ * Apply field mappings to elicitation response values
+ */
+export function applyFieldMappings(
+  elicitationConfig: ElicitationConfiguration,
+  elicitationResponse: Record<string, any>,
+  originalArgs: Record<string, any>
+): Record<string, any> {
+  const mappedArgs = { ...originalArgs };
+  
+  Object.entries(elicitationResponse).forEach(([fieldName, value]) => {
+    const fieldConfig = elicitationConfig.fields[fieldName];
+    if (fieldConfig) {
+      const mapping = fieldConfig.mapping;
+      setValueAtPath(mappedArgs, mapping.target, value, mapping.transform);
+    } else {
+      // Check if any field in the config matches this field name
+      const matchingConfigField = Object.entries(elicitationConfig.fields).find(
+        ([configFieldName]) => configFieldName === fieldName || configFieldName.split('.').pop() === fieldName
+      );
+      
+      if (matchingConfigField) {
+        const [, configField] = matchingConfigField;
+        if (configField && configField.mapping) {
+          setValueAtPath(mappedArgs, configField.mapping.target, value, configField.mapping.transform);
+        }
+      } else {
+        // If no mapping exists, use the field name directly
+        mappedArgs[fieldName] = value;
+      }
+    }
+  });
+  
+  return mappedArgs;
+}
+
+/**
+ * Set a value at a given path in an object
+ */
+function setValueAtPath(obj: any, path: string, value: any, transformation?: string): void {
+  const parts = path.split('.');
+  let current = obj;
+  
+  // Navigate to the parent of the target
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!(part in current) || current[part] === null || current[part] === undefined) {
+      current[part] = {};
+    }
+    current = current[part];
+  }
+  
+  // Apply transformation if specified
+  let transformedValue = value;
+  if (transformation) {
+    transformedValue = applyTransformation(value, transformation);
+  }
+  
+  // Set the final value
+  const finalPart = parts[parts.length - 1];
+  current[finalPart] = transformedValue;
+}
+
+/**
+ * Apply transformation to a value
+ */
+function applyTransformation(value: any, transformation: string): any {
+  switch (transformation) {
+    case 'number':
+      return Number(value);
+    case 'boolean':
+      return Boolean(value);
+    case 'string':
+      return String(value);
+    case 'array':
+      return Array.isArray(value) ? value : [value];
+    default:
+      return value;
+  }
+}
+
+/**
+ * Validate elicitation response against validation schema
+ */
+export function validateElicitationResponse(
+  elicitationConfig: ElicitationConfiguration,
+  response: Record<string, any>
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  Object.entries(response).forEach(([fieldName, value]) => {
+    const fieldConfig = elicitationConfig.fields[fieldName];
+    if (fieldConfig && fieldConfig.schema) {
+      const schema = fieldConfig.schema;
+      
+      // Simple validation based on schema type
+      if (schema.type === 'string') {
+        const stringSchema = schema as StringSchema & { pattern?: string; enum?: string[] };
+        
+        if (stringSchema.pattern && typeof value === 'string' && typeof stringSchema.pattern === 'string') {
+          const regex = new RegExp(stringSchema.pattern);
+          if (!regex.test(value)) {
+            errors.push(`Field ${fieldName} does not match required pattern`);
+          }
+        }
+        
+        if (typeof value === 'string') {
+          if (stringSchema.minLength && value.length < stringSchema.minLength) {
+            errors.push(`Field ${fieldName} is too short (minimum ${stringSchema.minLength} characters)`);
+          }
+          if (stringSchema.maxLength && value.length > stringSchema.maxLength) {
+            errors.push(`Field ${fieldName} is too long (maximum ${stringSchema.maxLength} characters)`);
+          }
+        }
+        
+        if (stringSchema.enum && Array.isArray(stringSchema.enum) && !stringSchema.enum.includes(value)) {
+          errors.push(`Field ${fieldName} must be one of: ${stringSchema.enum.join(', ')}`);
+        }
+      }
+      
+      if (schema.type === 'number' || schema.type === 'integer') {
+        const numberSchema = schema as NumberSchema;
+        
+        if (typeof value === 'number') {
+          if (numberSchema.minimum !== undefined && value < numberSchema.minimum) {
+            errors.push(`Field ${fieldName} is too small (minimum ${numberSchema.minimum})`);
+          }
+          if (numberSchema.maximum !== undefined && value > numberSchema.maximum) {
+            errors.push(`Field ${fieldName} is too large (maximum ${numberSchema.maximum})`);
+          }
+        }
+      }
+    }
+  });
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
 }

@@ -1195,14 +1195,7 @@
               }
             ]
           }
-        },
-        "required": [
-          "link_amount",
-          "link_currency",
-          "link_id",
-          "customer_details",
-          "link_purpose"
-        ]
+        }
       },
       "CreateOfferRequest": {
         "title": "CreateOfferRequest",
@@ -15367,7 +15360,71 @@
       "post": {
         "summary": "Create Payment Link",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "enabled": true,
+              "fields": {
+                "link_amount": {
+                  "required": true,
+                  "message": "Please provide the amount to be collected through this payment link",
+                  "schema": {
+                    "type": "number",
+                    "title": "Link Amount",
+                    "description": "Amount to be collected using this link (minimum 1 INR)",
+                    "minimum": 1
+                  },
+                  "mapping": {
+                    "target": "body.link_amount",
+                    "transform": "number"
+                  }
+                },
+                "link_id": {
+                  "required": true,
+                  "message": "Please provide a unique identifier for this payment link",
+                  "schema": {
+                    "type": "string",
+                    "title": "Link ID",
+                    "description": "Unique identifier for the link (alphanumeric, _, - allowed)",
+                    "maxLength": 50,
+                    "pattern": "^[a-zA-Z0-9_-]+$"
+                  },
+                  "mapping": {
+                    "target": "body.link_id",
+                    "transform": "string"
+                  }
+                },
+                "link_currency": {
+                  "required": false,
+                  "schema": {
+                    "type": "string",
+                    "title": "Currency",
+                    "description": "Currency for the payment link",
+                    "enum": ["INR", "USD", "EUR"],
+                    "default": "INR"
+                  },
+                  "mapping": {
+                    "target": "body.link_currency",
+                    "transform": "string"
+                  }
+                },
+                "link_purpose": {
+                  "required": false,
+                  "schema": {
+                    "type": "string",
+                    "title": "Payment Purpose",
+                    "description": "Brief description for which payment must be collected",
+                    "maxLength": 500,
+                    "default": "Payment collection"
+                  },
+                  "mapping": {
+                    "target": "body.link_purpose",
+                    "transform": "string"
+                  }
+                }
+              }
+            }
+          }
         },
         "description": "Use this API to create a new payment link. The created payment link url will be available in the API response parameter link_url.",
         "tags": [

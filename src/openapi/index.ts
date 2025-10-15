@@ -1,7 +1,7 @@
 import { validate } from "@mintlify/openapi-parser";
 import axios, { isAxiosError } from "axios";
 import dashify from "dashify";
-import fs from "node:fs";
+import fs from "fs";
 import { getFileId } from "../utils.js";
 import { Endpoint } from "../types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -13,7 +13,74 @@ import {
   loadEnv,
   getValFromNestedJson,
   generateCfSignature,
+  getElicitationConfig,
+  hasElicitationEnabled,
+  getMissingRequiredFields,
+  createElicitationRequest,
+  applyFieldMappings,
+  validateElicitationResponse,
 } from "./helpers.js";
+
+async function triggerElicitationFlow(
+  inputArgs: Record<string, any>,
+  endpoint: Endpoint,
+  server: McpServer
+): Promise<Record<string, any>> {
+  console.log(`Elicitation flow triggered for endpoint: ${endpoint.title}`);
+  
+  if (!hasElicitationEnabled(endpoint)) {
+    console.log(`Elicitation not enabled for endpoint: ${endpoint.title}`);
+    return inputArgs;
+  }
+  
+  const elicitationConfig = getElicitationConfig(endpoint);
+  if (!elicitationConfig) {
+    console.log(`No elicitation config found for endpoint: ${endpoint.title}`);
+    return inputArgs;
+  }
+  
+  const missingFields = getMissingRequiredFields(elicitationConfig, inputArgs);
+  console.log(`Missing fields: ${JSON.stringify(missingFields)}`);
+  
+  if (missingFields.length === 0) {
+    console.log(`No missing fields, proceeding without elicitation`);
+    return inputArgs;
+  }
+  
+  // Create elicitation request for missing fields
+  const elicitationRequest = createElicitationRequest(
+    endpoint.title || endpoint.path,
+    missingFields,
+    elicitationConfig
+  );
+  
+  console.log(`Created elicitation request: ${JSON.stringify(elicitationRequest)}`);
+  
+  // Use MCP elicitation to collect missing information
+  const elicitationResult = await server.server.elicitInput(elicitationRequest.params);
+  console.log(`Elicitation result: ${JSON.stringify(elicitationResult)}`);
+  if (elicitationResult?.action !== "accept" || !elicitationResult?.content) {
+    console.log(`Elicitation cancelled or failed`);
+    throw new Error(`Operation cancelled. Required information was not provided.`);
+  }
+  
+  console.log(`Elicitation successful, received values: ${JSON.stringify(elicitationResult.content)}`);
+  
+  // Validate the elicitation response
+  const validationResult = validateElicitationResponse(elicitationConfig, elicitationResult.content);
+
+  if (!validationResult.valid) {
+    console.log(`Validation failed: ${JSON.stringify(validationResult.errors)}`);
+    throw new Error(`Validation errors: ${validationResult.errors.join(', ')}`);
+  }
+  
+  // Apply field mappings and merge with original input args
+  const mappedArgs = applyFieldMappings(elicitationConfig, elicitationResult.content, inputArgs);
+  
+  console.log(`Applied field mappings, final args: ${JSON.stringify(mappedArgs)}`);
+  
+  return mappedArgs;
+}
 
 export async function createToolsFromOpenApi(
   openApiPath: string,
@@ -76,7 +143,14 @@ export async function createToolsFromOpenApi(
       dashify(endpoint.title),
       endpoint.description || endpoint.title,
       serverArgumentsSchemas,
-      async (inputArgs: Record<string, any>) => {
+      async (inputArgs: Record<string, any>) => {  
+        try {
+          // Apply elicitation flow if enabled
+          inputArgs = await triggerElicitationFlow(inputArgs, endpoint, server);
+        } catch (error) {
+          console.log("Elicitation error:", error);
+        }
+        console.log("elicitation applied input args:", inputArgs);
         const inputParams: Record<string, any> = {};
         const inputHeaders: Record<string, any> = {};
         const inputCookies: Record<string, any> = {};
