@@ -1195,7 +1195,13 @@
               }
             ]
           }
-        }
+        },
+        "required": [
+          "link_currency",
+          "link_id",
+          "customer_details",
+          "link_purpose"
+        ]
       },
       "CreateOfferRequest": {
         "title": "CreateOfferRequest",
@@ -1376,7 +1382,6 @@
           }
         },
         "required": [
-          "order_amount",
           "order_currency",
           "customer_details"
         ]
@@ -1834,8 +1839,7 @@
           }
         },
         "required": [
-          "customer_id",
-          "customer_phone"
+          "customer_id"
         ]
       },
       "CustomerDetailsResponse": {
@@ -2956,10 +2960,7 @@
             ],
             "description": "Customer Bank Code"
           }
-        },
-        "required": [
-          "customer_phone"
-        ]
+        }
       },
       "LinkEntity": {
         "title": "LinkEntity",
@@ -3994,7 +3995,6 @@
           }
         },
         "required": [
-          "refund_amount",
           "refund_id"
         ]
       },
@@ -15218,6 +15218,93 @@
         "example": "some-req-id",
         "description": "Request id for your api call. Is blank or null if no `x-request-id` is sent during the request"
       }
+    },
+    "x-elicitationConfig": {
+      "createPaymentLink": {
+        "enabled": true,
+        "fields": {
+          "link_amount": {
+            "required": true,
+            "message": "Please provide the amount to be collected through this payment link",
+            "schema": {
+              "type": "number",
+              "title": "Link Amount",
+              "description": "Amount to be collected using this link (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.link_amount",
+              "transform": "number"
+            }
+          },
+          "customer_phone": {
+            "required":  true, 
+            "message": "Please provide the customer's phone number",
+            "schema": {
+              "type": "string",
+              "title": "Customer Phone",
+              "description": "Phone number of the customer in international format without '+' sign",
+              "pattern": "^[1-9][0-9]{7,14}$"
+            },
+            "mapping": {
+              "target": "body.customer_details.customer_phone",
+              "transform": "string"
+            }
+          }
+        }
+      },
+      "createOrder": {
+        "enabled": true,
+        "fields": {
+          "order_amount": {
+            "required": true,
+            "message": "Please provide the total order amount",
+            "schema": {
+              "type": "number",
+              "title": "Order Amount",
+              "description": "Total amount for the order (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.order_amount",
+              "transform": "number"
+            }
+          },
+          "customer_phone": {
+            "required":  true, 
+            "message": "Please provide the customer's phone number",
+            "schema": {
+              "type": "string",
+              "title": "Customer Phone",
+              "description": "Phone number of the customer in international format without '+' sign",
+              "pattern": "^[1-9][0-9]{7,14}$"
+            },
+            "mapping": {
+              "target": "body.customer_details.customer_phone",
+              "transform": "string"
+            }
+          }
+        }
+      },
+      "createRefund": {
+        "enabled": true,
+        "fields": {
+          "refund_amount": {
+            "required": true,
+            "message": "Please provide the refund amount",
+            "schema": {
+              "type": "number",
+              "title": "Refund Amount",
+              "description": "Amount to be refunded (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.refund_amount",
+              "transform": "number"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -15363,70 +15450,11 @@
           "enabled": true,
           "config": {
             "elicitation": {
-              "enabled": true,
-              "fields": {
-                "link_amount": {
-                  "required": true,
-                  "message": "Please provide the amount to be collected through this payment link",
-                  "schema": {
-                    "type": "number",
-                    "title": "Link Amount",
-                    "description": "Amount to be collected using this link (minimum 1 INR)",
-                    "minimum": 1
-                  },
-                  "mapping": {
-                    "target": "body.link_amount",
-                    "transform": "number"
-                  }
-                },
-                "link_id": {
-                  "required": true,
-                  "message": "Please provide a unique identifier for this payment link",
-                  "schema": {
-                    "type": "string",
-                    "title": "Link ID",
-                    "description": "Unique identifier for the link (alphanumeric, _, - allowed)",
-                    "maxLength": 50,
-                    "pattern": "^[a-zA-Z0-9_-]+$"
-                  },
-                  "mapping": {
-                    "target": "body.link_id",
-                    "transform": "string"
-                  }
-                },
-                "link_currency": {
-                  "required": false,
-                  "schema": {
-                    "type": "string",
-                    "title": "Currency",
-                    "description": "Currency for the payment link",
-                    "enum": ["INR", "USD", "EUR"],
-                    "default": "INR"
-                  },
-                  "mapping": {
-                    "target": "body.link_currency",
-                    "transform": "string"
-                  }
-                },
-                "link_purpose": {
-                  "required": false,
-                  "schema": {
-                    "type": "string",
-                    "title": "Payment Purpose",
-                    "description": "Brief description for which payment must be collected",
-                    "maxLength": 500,
-                    "default": "Payment collection"
-                  },
-                  "mapping": {
-                    "target": "body.link_purpose",
-                    "transform": "string"
-                  }
-                }
-              }
+              "$ref": "#/components/x-elicitationConfig/createPaymentLink"
             }
           }
         },
-        "description": "Use this API to create a new payment link. The created payment link url will be available in the API response parameter link_url.",
+        "description": "Use this API to create a new payment link. The created payment link url will be available in the API response parameter link_url. Please pass non required fields only if user passed that are critical like phone",
         "tags": [
           "Payment Links"
         ],
@@ -15859,7 +15887,12 @@
       "post": {
         "summary": "Create Order",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/createOrder"
+            }
+          }
         },
         "security": [
           {
@@ -16505,7 +16538,12 @@
       "post": {
         "summary": "Create Refund",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/createRefund"
+            }
+          }
         },
         "description": "Use this API to initiate refunds.",
         "tags": [
