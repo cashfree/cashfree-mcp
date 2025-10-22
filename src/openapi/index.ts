@@ -115,17 +115,24 @@ export async function createToolsFromOpenApi(
       body: bodySchema,
       headers: headersSchema,
       cookies: cookiesSchema,
+      metadata: metadataSchema,
     } = convertEndpointToCategorizedZod(endpointId, endpoint);
+    
     const serverArgumentsSchemas = Object.assign(
       Object.assign(
         Object.assign(
-          Object.assign(Object.assign({}, pathsSchema), queriesSchema),
-          bodySchema
+          Object.assign(
+            Object.assign(Object.assign({}, pathsSchema), queriesSchema),
+
+            bodySchema
+          ),
+          headersSchema
         ),
-        headersSchema
+        cookiesSchema
       ),
-      cookiesSchema
+      metadataSchema
     );
+    console.log(`Creating tool for endpoint: ${endpoint.path} with method: ${endpoint.method}, metadata schema: ${JSON.stringify(metadataSchema?.shape)}`);
     if (!endpoint.title) {
       endpoint.title = `${endpoint.method} ${convertStrToTitle(endpoint.path)}`;
     }
@@ -156,10 +163,17 @@ export async function createToolsFromOpenApi(
         const inputCookies: Record<string, any> = {};
         let urlWithPathParams = urlSchema;
         let inputBody: any = undefined;
+        let metadata: any = undefined;
 
         if ("body" in inputArgs) {
           inputBody = inputArgs.body;
           delete inputArgs.body;
+        }
+
+        if ("metadata" in inputArgs) {
+          metadata = inputArgs.metadata;
+          delete inputArgs.metadata;
+          console.log("Received metadata:", JSON.stringify(metadata, null, 2));
         }
 
         Object.entries(inputArgs).forEach(([key, value]) => {

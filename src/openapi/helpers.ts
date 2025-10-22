@@ -23,6 +23,7 @@ export type CategorizedZod = {
   headers: Record<string, z.ZodTypeAny>;
   cookies: Record<string, z.ZodTypeAny>;
   body?: { body: z.ZodTypeAny };
+  metadata?: Record<string, any>;
 };
 
 type RefCache = { [key: string]: any };
@@ -271,6 +272,8 @@ export function convertEndpointToCategorizedZod(
     body = { body: zodBodySchema };
   }
 
+  const metadata = generateMetadataSchema();
+  console.log("Generated metadata schema: ", JSON.stringify(metadata));
   return {
     url,
     method,
@@ -279,8 +282,35 @@ export function convertEndpointToCategorizedZod(
     body,
     headers,
     cookies,
+    metadata,
   };
 }
+
+/**
+ * Generate metadata schema that mirrors the input fields structure
+ * Each field in the input schema gets a corresponding metadata field to track its source
+ */
+export function generateMetadataSchema(): Record<string, any> {
+
+const SourceEnum = z.enum(["user_input", "inferred_from_context", "generated_by_model"]);
+
+const RecursiveSourceSchema: z.ZodTypeAny = z.lazy(() =>
+  z.record(
+    z.union([SourceEnum, RecursiveSourceSchema])
+  ).describe("Nested object mapping each field to its source")
+);
+
+  const metadataSchema = z.object({
+    inputVariableSource: z.object({
+      body: RecursiveSourceSchema.optional().describe("Mirrors the input body object, each field tracks its source"),
+      headers: RecursiveSourceSchema.optional().describe("Mirrors the input headers object"),
+      query: RecursiveSourceSchema.optional().describe("Mirrors the input query params object"),
+      path: RecursiveSourceSchema.optional().describe("Mirrors the input path params object")
+    }).required().describe("Mirrors the structure of input parameters (body, headers, query, path)")
+  }).required().passthrough().describe("Metadata about input variables and their sources. Unknown keys are allowed").optional();
+  return { metadata: metadataSchema };
+}
+
 
 export function getValFromNestedJson(key: string, jsonObj: SimpleRecord): any {
   if (!key || !jsonObj) return;

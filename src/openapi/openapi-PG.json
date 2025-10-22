@@ -1199,6 +1199,7 @@
         "required": [
           "link_currency",
           "link_id",
+          "link_amount",
           "customer_details",
           "link_purpose"
         ]
