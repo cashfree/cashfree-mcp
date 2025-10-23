@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/cashfree-cashfree-mcp-badge.png)](https://mseep.ai/app/cashfree-cashfree-mcp)
+
 # Cashfree MCP Server
 
 Cashfree MCP server allows AI tools and agents to integrate with [Cashfree](https://www.cashfree.com/) APIs (Payment Gateway, Payouts, and SecureID) using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction).
