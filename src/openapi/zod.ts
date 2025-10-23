@@ -110,7 +110,7 @@ export function dataSchemaArrayToZod(schemas: any) {
   for (const schema of schemas.slice(2)) {
     zodSchemas.push(dataSchemaToZod(schema));
   }
-  return z.union(zodSchemas).array();
+  return z.union(zodSchemas);
 }
 
 function getEnumSchema(enumList: any, type: string): ZodTypeAny {
@@ -245,20 +245,34 @@ export function dataSchemaToZod(schema: Schema): ZodTypeAny {
       return schema.required ? arraySchema : arraySchema.optional();
     case "object":
       const shape: Record<string, ZodTypeAny> = {};
-      const requiredProperties = schema.requiredProperties;
+      // Handle both 'required' and 'requiredProperties' for compatibility
+      const requiredProperties = schema.requiredProperties || (schema as any).required;
       const requiredPropertiesSet = new Set(
         Array.isArray(requiredProperties) ? requiredProperties : []
       );
-      for (const [key, propSchema] of Object.entries(
-        schema.properties as any
-      )) {
-        const zodPropSchema = Array.isArray(propSchema)
-          ? dataSchemaArrayToZod(propSchema)
-          : dataSchemaToZod(propSchema as Schema);
-        shape[key] = requiredPropertiesSet.has(key)
-          ? zodPropSchema
-          : zodPropSchema.optional();
+      
+      // Special handling for the case where properties are arrays with individual required flags
+      const properties = schema.properties as any;
+      for (const [key, propSchema] of Object.entries(properties)) {
+        let zodPropSchema: ZodTypeAny;
+        let isRequired = false;
+        
+        if (Array.isArray(propSchema)) {
+          // Handle array-wrapped schemas (from OpenAPI conversion)
+          zodPropSchema = dataSchemaArrayToZod(propSchema);
+          // Check if any schema in the array has required: true
+          isRequired = propSchema.some((s: any) => s.required === true);
+        } else {
+          zodPropSchema = dataSchemaToZod(propSchema as Schema);
+          isRequired = (propSchema as any).required === true;
+        }
+        
+        // Check if property is in the required list OR has individual required flag
+        const shouldBeRequired = requiredPropertiesSet.has(key) || isRequired;
+        
+        shape[key] = shouldBeRequired ? zodPropSchema : zodPropSchema.optional();
       }
+      
       if (Object.keys(shape).length === 0) {
         return schema.required ? RECORD_WITH_DEFAULT : RECORD_OPT;
       }
