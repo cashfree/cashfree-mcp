@@ -302,12 +302,12 @@ const RecursiveSourceSchema: z.ZodTypeAny = z.lazy(() =>
 
   const metadataSchema = z.object({
     inputVariableSource: z.object({
-      body: RecursiveSourceSchema.optional().describe("Mirrors the input body object, each field tracks its source"),
-      headers: RecursiveSourceSchema.optional().describe("Mirrors the input headers object"),
-      query: RecursiveSourceSchema.optional().describe("Mirrors the input query params object"),
-      path: RecursiveSourceSchema.optional().describe("Mirrors the input path params object")
-    }).required().describe("Mirrors the structure of input parameters (body, headers, query, path)")
-  }).required().passthrough().describe("Metadata about input variables and their sources. Unknown keys are allowed").optional();
+      body: RecursiveSourceSchema.default({}).describe("Mirrors the input body object, each field tracks its source including nested fields till leaf"),
+      headers: RecursiveSourceSchema.default({}).describe("Mirrors the input headers object"),
+      query: RecursiveSourceSchema.default({}).describe("Mirrors the input query params object"),
+      path: RecursiveSourceSchema.default({}).describe("Mirrors the input path params object")
+    }).describe("Mirrors the structure of input parameters (body, headers, query, path)")
+  }).passthrough().describe("Metadata about input variables and their sources. Unknown keys are allowed").required();
   return { metadata: metadataSchema };
 }
 
@@ -403,44 +403,75 @@ export function hasElicitationEnabled(endpoint: Endpoint): boolean {
 /**
  * Identify missing required fields for elicitation
  */
-export function getMissingRequiredFields(
+export function getElicitationRequestFields(
   elicitationConfig: ElicitationConfiguration,
-  providedArgs: Record<string, any>
-): string[] {
+  providedArgs: Record<string, any>,
+  metadata: Record<string, any>,
+  elicitationRequest: any
+): { missingFields: string[]; defaults: Record<string, any> } {
   const missingFields: string[] = [];
-  
-  Object.entries(elicitationConfig.fields).forEach(([fieldName, fieldConfig]) => {
-    
-    if (fieldConfig.required) {
-      // Use the mapping target to check if field is provided
-      const targetPath = fieldConfig.mapping.target;
-      
-      // Also check if the field is provided directly by name
-      const fieldProvided = hasValueAtPath(providedArgs, targetPath) || 
-                           hasValueAtPath(providedArgs, fieldName) ||
-                           (fieldName in providedArgs && providedArgs[fieldName] !== undefined && providedArgs[fieldName] !== '');
-      
-      if (!fieldProvided) {
-        missingFields.push(fieldName);
-      }
-    } else {
-      // For optional fields, check if they are provided
-      const targetPath = fieldConfig.mapping.target;
-      const fieldProvided = hasValueAtPath(providedArgs, targetPath) || 
-                           hasValueAtPath(providedArgs, fieldName) ||
-                           (fieldName in providedArgs && providedArgs[fieldName] !== undefined && providedArgs[fieldName] !== '');
+  const defaults: Record<string, any> = {};
 
-      if (!fieldProvided) {
-        missingFields.push(fieldName);
+  const getValueFromMetadata = (path: string): any => {
+    if (!metadata?.inputVariableSource) return undefined;
+    const parts = path.split('.');
+    let current: any = metadata.inputVariableSource;
+    for (const part of parts) {
+      if (!current) return undefined;
+      current = current[part];
+    }
+    return current;
+  };
+
+  Object.entries(elicitationConfig.fields).forEach(([fieldName, fieldConfig]) => {
+    const targetPath = fieldConfig.mapping?.target || fieldName;
+
+    const valueFromArgs = hasValueAtPath(providedArgs, targetPath)
+      ? getValueAtPath(providedArgs, targetPath)
+      : providedArgs[fieldName];
+
+    const valueFromMetadata = getValueFromMetadata(targetPath);
+
+    // Use metadata value as default if available
+    let defaultValue = valueFromArgs ?? (valueFromMetadata && valueFromMetadata !== 'generated_by_model' ? valueFromMetadata : undefined);
+
+    if (valueFromMetadata === 'generated_by_model') {
+      // Treat generated_by_model as default but still ask if required
+      defaultValue = valueFromArgs ?? undefined;
+    }
+
+    // Determine if we need to ask
+    const isMissing = fieldConfig.required && (valueFromArgs === undefined || valueFromArgs === '');
+    const isGeneratedByModel = valueFromMetadata === 'generated_by_model';
+
+    if (isMissing || isGeneratedByModel) {
+      missingFields.push(fieldName);
+      
+      // Only add to elicitation request schema if field is actually missing
+      if (!elicitationRequest.params.requestedSchema.properties[fieldName]) {
+        elicitationRequest.params.requestedSchema.properties[fieldName] = fieldConfig.schema;
+      }
+      
+      // Set default value if available
+      if (defaultValue !== undefined) {
+        defaults[fieldName] = defaultValue;
+        elicitationRequest.params.requestedSchema.properties[fieldName].default = defaultValue;
       }
     }
   });
-  
-  console.log("Elicitation config " + JSON.stringify(elicitationConfig));
-  console.log("Provided args " + JSON.stringify(providedArgs));
-  console.log("Missing fields " + JSON.stringify(missingFields));
-  return missingFields;
+
+  console.log("Missing fields:", missingFields);
+  console.log("Defaults:", defaults);
+
+  return { missingFields, defaults };
+};
+
+
+// Helper to get value at path
+function getValueAtPath(obj: any, path: string) {
+  return path.split('.').reduce((acc, key) => (acc ? acc[key] : undefined), obj);
 }
+
 
 /**
  * Check if a value exists at a given path in an object

@@ -15,7 +15,7 @@ import {
   generateCfSignature,
   getElicitationConfig,
   hasElicitationEnabled,
-  getMissingRequiredFields,
+  getElicitationRequestFields,
   createElicitationRequest,
   applyFieldMappings,
   validateElicitationResponse,
@@ -27,60 +27,67 @@ async function triggerElicitationFlow(
   server: McpServer
 ): Promise<Record<string, any>> {
   console.log(`Elicitation flow triggered for endpoint: ${endpoint.title}`);
-  
+
+  const metadata = inputArgs.metadata || {};
+  console.log(`Input metadata: ${JSON.stringify(metadata)}`);
+
   if (!hasElicitationEnabled(endpoint)) {
     console.log(`Elicitation not enabled for endpoint: ${endpoint.title}`);
     return inputArgs;
   }
-  
+
   const elicitationConfig = getElicitationConfig(endpoint);
   if (!elicitationConfig) {
     console.log(`No elicitation config found for endpoint: ${endpoint.title}`);
     return inputArgs;
   }
-  
-  const missingFields = getMissingRequiredFields(elicitationConfig, inputArgs);
+
+  // Create empty elicitation request first
+  const elicitationRequest = createElicitationRequest(endpoint.title || endpoint.path, [], elicitationConfig);
+
+  // Get missing fields and defaults
+  const { missingFields, defaults } = getElicitationRequestFields(
+    elicitationConfig,
+    inputArgs,
+    metadata,
+    elicitationRequest
+  );
+
   console.log(`Missing fields: ${JSON.stringify(missingFields)}`);
-  
+  console.log(`Defaults: ${JSON.stringify(defaults)}`);
+
   if (missingFields.length === 0) {
     console.log(`No missing fields, proceeding without elicitation`);
     return inputArgs;
   }
-  
-  // Create elicitation request for missing fields
-  const elicitationRequest = createElicitationRequest(
-    endpoint.title || endpoint.path,
-    missingFields,
-    elicitationConfig
-  );
-  
+
   console.log(`Created elicitation request: ${JSON.stringify(elicitationRequest)}`);
-  
-  // Use MCP elicitation to collect missing information
+
+  // Trigger MCP elicitation
   const elicitationResult = await server.server.elicitInput(elicitationRequest.params);
   console.log(`Elicitation result: ${JSON.stringify(elicitationResult)}`);
+
   if (elicitationResult?.action !== "accept" || !elicitationResult?.content) {
     console.log(`Elicitation cancelled or failed`);
     throw new Error(`Operation cancelled. Required information was not provided.`);
   }
-  
-  console.log(`Elicitation successful, received values: ${JSON.stringify(elicitationResult.content)}`);
-  
-  // Validate the elicitation response
-  const validationResult = validateElicitationResponse(elicitationConfig, elicitationResult.content);
 
+  console.log(`Elicitation successful, received values: ${JSON.stringify(elicitationResult.content)}`);
+
+  // Validate response
+  const validationResult = validateElicitationResponse(elicitationConfig, elicitationResult.content);
   if (!validationResult.valid) {
     console.log(`Validation failed: ${JSON.stringify(validationResult.errors)}`);
     throw new Error(`Validation errors: ${validationResult.errors.join(', ')}`);
   }
-  
-  // Apply field mappings and merge with original input args
+
+  // Merge mapped fields with original input args
   const mappedArgs = applyFieldMappings(elicitationConfig, elicitationResult.content, inputArgs);
-  
   console.log(`Applied field mappings, final args: ${JSON.stringify(mappedArgs)}`);
-  
+
   return mappedArgs;
 }
+
 
 export async function createToolsFromOpenApi(
   openApiPath: string,
@@ -151,6 +158,7 @@ export async function createToolsFromOpenApi(
       endpoint.description || endpoint.title,
       serverArgumentsSchemas,
       async (inputArgs: Record<string, any>) => {  
+
         try {
           // Apply elicitation flow if enabled
           inputArgs = await triggerElicitationFlow(inputArgs, endpoint, server);
@@ -163,18 +171,12 @@ export async function createToolsFromOpenApi(
         const inputCookies: Record<string, any> = {};
         let urlWithPathParams = urlSchema;
         let inputBody: any = undefined;
-        let metadata: any = undefined;
 
         if ("body" in inputArgs) {
           inputBody = inputArgs.body;
           delete inputArgs.body;
         }
 
-        if ("metadata" in inputArgs) {
-          metadata = inputArgs.metadata;
-          delete inputArgs.metadata;
-          console.log("Received metadata:", JSON.stringify(metadata, null, 2));
-        }
 
         Object.entries(inputArgs).forEach(([key, value]) => {
           if (key in pathsSchema) {
