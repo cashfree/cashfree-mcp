@@ -400,6 +400,7 @@
           }
         },
         "required": [
+          "transfer_amount",
           "transfer_id",
           "beneficiary_details"
         ]
@@ -698,9 +699,11 @@
       },
       "v1_createCashgram_body": {
         "required": [
+          "amount",
           "cashgramId",
           "linkExpiry",
-          "name"
+          "name",
+          "phone"
         ],
         "type": "object",
         "properties": {
@@ -777,6 +780,9 @@
         }
       },
       "v1_deactivateCashgram_body": {
+        "required": [
+          "cashgramId"
+        ],
         "type": "object",
         "properties": {
           "cashgramId": {

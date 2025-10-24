@@ -57,23 +57,23 @@ async function triggerElicitationFlow(
 
 
   // Trigger MCP elicitation
-  const elicitationResult = await server.server.elicitInput(elicitationRequest.params);
+    const elicitationResult = await server.server.elicitInput(elicitationRequest.params);
 
-  if (elicitationResult?.action !== "accept" || !elicitationResult?.content) {
+    if (elicitationResult?.action !== "accept" || !elicitationResult?.content) {
     throw new Error(`Operation cancelled. Required information was not provided.`);
-  }
+    }
 
 
-  // Validate response
-  const validationResult = validateElicitationResponse(elicitationConfig, elicitationResult.content);
-  if (!validationResult.valid) {
+    // Validate response
+    const validationResult = validateElicitationResponse(elicitationConfig, elicitationResult.content);
+    if (!validationResult.valid) {
     throw new Error(`Validation errors: ${validationResult.errors.join(', ')}`);
-  }
+    }
 
-  // Merge mapped fields with original input args
-  const mappedArgs = applyFieldMappings(elicitationConfig, elicitationResult.content, inputArgs);
+    // Merge mapped fields with original input args
+    const mappedArgs = applyFieldMappings(elicitationConfig, elicitationResult.content, inputArgs);
 
-  return mappedArgs;
+    return mappedArgs;
 }
 
 

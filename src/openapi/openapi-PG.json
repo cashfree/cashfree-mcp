@@ -1383,6 +1383,7 @@
           }
         },
         "required": [
+          "order_amount",
           "order_currency",
           "customer_details"
         ]
@@ -1840,7 +1841,9 @@
           }
         },
         "required": [
-          "customer_id"
+          "customer_id",
+          "customer_phone"
+
         ]
       },
       "CustomerDetailsResponse": {
@@ -2961,7 +2964,10 @@
             ],
             "description": "Customer Bank Code"
           }
-        }
+        },
+        "required": [
+          "customer_phone"
+        ]
       },
       "LinkEntity": {
         "title": "LinkEntity",
@@ -3996,6 +4002,7 @@
           }
         },
         "required": [
+          "refund_amount",
           "refund_id"
         ]
       },

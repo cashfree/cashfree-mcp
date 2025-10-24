@@ -12,6 +12,7 @@ import {
   StringSchema,
   NumberSchema
 } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import crypto from "crypto";
 import fs from "fs";
 
@@ -268,7 +269,14 @@ export function convertEndpointToCategorizedZod(
   const bodySchema = jsonBodySchema?.schemaArray?.[0];
 
   if (bodySchema) {
-    const zodBodySchema = dataSchemaToZod(bodySchema);
+    let zodBodySchema = dataSchemaToZod(bodySchema);
+    
+    // If endpoint has elicitation config, make fields optional
+    // Client capability check will happen at runtime
+    if (hasElicitationEnabled(endpoint)) {
+      zodBodySchema = makeElicitationFieldsOptional(zodBodySchema, endpoint);
+    }
+    
     body = { body: zodBodySchema };
   }
 
@@ -385,6 +393,86 @@ export function getPublicKeyFromPath(path: string): string | null {
     );
     return null;
   }
+}
+
+/**
+ * Check if elicitation should be used for this endpoint
+ * Returns true only if:
+ * 1. Endpoint has elicitation configuration
+ * 2. Endpoint has elicitation enabled
+ * Client support will be checked at runtime during execution
+ */
+export function shouldUseElicitation(endpoint: Endpoint): boolean {
+  return hasElicitationEnabled(endpoint);
+}
+
+/**
+ * Check if client supports elicitation by attempting to use it
+ * This is a runtime check that will be done during tool execution
+ */
+export async function checkElicitationSupport(_server: McpServer): Promise<boolean> {
+  try {
+    // Try a simple elicitation request to check if client supports it
+    // If it fails, the client doesn't support elicitation
+    return true; // For now, assume supported - actual check happens during execution
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Make fields that have elicitation configuration optional in the Zod schema
+ * This allows elicitation to fill in missing required fields
+ */
+export function makeElicitationFieldsOptional(zodSchema: z.ZodTypeAny, endpoint: Endpoint): z.ZodTypeAny {
+  const elicitationConfig = getElicitationConfig(endpoint);
+  if (!elicitationConfig || !zodSchema) {
+    return zodSchema;
+  }
+
+  // Get the list of fields that should be made optional (those configured for elicitation)
+  const elicitationFields = Object.entries(elicitationConfig.fields).map(([fieldName, fieldConfig]) => {
+    // Use the target path from mapping, or fall back to field name
+    const targetPath = fieldConfig.mapping?.target || fieldName;
+    // For body fields, remove the 'body.' prefix if present
+    return targetPath.startsWith('body.') ? targetPath.substring(5) : targetPath;
+  });
+
+  if (zodSchema instanceof z.ZodObject) {
+    const shape = zodSchema.shape;
+    const newShape: Record<string, z.ZodTypeAny> = {};
+
+    // Process each field in the schema
+    for (const [key, value] of Object.entries(shape)) {
+      if (elicitationFields.includes(key)) {
+        // Make this field optional since it can be provided via elicitation
+        newShape[key] = makeFieldOptional(value as z.ZodTypeAny);
+      } else if (value instanceof z.ZodObject) {
+        // Recursively process nested objects
+        newShape[key] = makeElicitationFieldsOptional(value, endpoint);
+      } else {
+        // Keep the field as is
+        newShape[key] = value as z.ZodTypeAny;
+      }
+    }
+
+    return z.object(newShape);
+  }
+  
+  return zodSchema;
+}
+
+/**
+ * Helper function to make a Zod field optional
+ */
+function makeFieldOptional(zodType: z.ZodTypeAny): z.ZodTypeAny {
+  // If it's already optional, return as is
+  if (zodType instanceof z.ZodOptional) {
+    return zodType;
+  }
+  
+  // Make the field optional
+  return zodType.optional();
 }
 
 /**

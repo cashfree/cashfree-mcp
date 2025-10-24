@@ -418,6 +418,8 @@
         "description": "Request Body Schema for Generate KYC Link",
         "type": "object",
         "required": [
+          "phone",
+          "template_name",
           "verification_id"
         ],
         "properties": {
@@ -5830,7 +5832,9 @@
         "description": "Find the request parameters for the Name Match API",
         "type": "object",
         "required": [
-          "verification_id"
+          "verification_id",
+          "name_1",
+          "name_2"
         ],
         "example": {
           "verification_id": "ABC00123",
