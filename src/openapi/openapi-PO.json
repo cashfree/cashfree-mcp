@@ -400,7 +400,6 @@
           }
         },
         "required": [
-          "transfer_amount",
           "transfer_id",
           "beneficiary_details"
         ]
@@ -699,11 +698,9 @@
       },
       "v1_createCashgram_body": {
         "required": [
-          "amount",
           "cashgramId",
           "linkExpiry",
-          "name",
-          "phone"
+          "name"
         ],
         "type": "object",
         "properties": {
@@ -780,9 +777,6 @@
         }
       },
       "v1_deactivateCashgram_body": {
-        "required": [
-          "cashgramId"
-        ],
         "type": "object",
         "properties": {
           "cashgramId": {
@@ -1825,6 +1819,77 @@
         "example": "some-req-id",
         "description": "It displays the request ID for the API request. Is blank or null if no `x-request-id` is sent during the request"
       }
+    },
+    "x-elicitationConfig": {
+      "createTransfer": {
+        "enabled": true,
+        "fields": {
+          "transfer_amount": {
+            "required": true,
+            "message": "Please provide the amount to be transferred",
+            "schema": {
+              "type": "number",
+              "title": "Transfer Amount",
+              "description": "Amount to be transferred (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.transfer_amount",
+              "transform": "number"
+            }
+          }
+        }
+      },
+      "createCashgram": {
+        "enabled": true,
+        "fields": {
+          "amount": {
+            "required": true,
+            "message": "Please provide the amount for Cashgram",
+            "schema": {
+              "type": "number",
+              "title": "Cashgram Amount",
+              "description": "Amount for Cashgram (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.amount",
+              "transform": "number"
+            }
+          },
+          "phone": {
+            "required": true,
+            "message": "Please provide the beneficiary's phone number",
+            "schema": {
+              "type": "string",
+              "title": "Phone Number",
+              "description": "Beneficiary's phone number in E.164 format"
+            },
+            "mapping": {
+              "target": "body.phone",
+              "transform": "string"
+            }
+          }
+        }
+      },
+      "deactivateCashgram": {
+        "enabled": true,
+        "fields": {
+          "cashgram_id": {
+            "required": true,
+            "message": "Please provide the Cashgram ID to be deactivated",
+            "schema": {
+              "type": "string",
+              "title": "Cashgram ID",
+              "description": "The unique identifier of the Cashgram to be deactivated"
+            },
+            "mapping": {
+              "target": "path.cashgram_id",
+              "transform": "string"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -1832,7 +1897,12 @@
       "post": {
         "summary": "Standard Transfer V2",
         "x-mcp": {
-          "enabled":  true
+          "enabled":  true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/createTransfer"
+            }
+          }
         },
         "description": "Use this API to initiate an amount transfer at Cashfree Payments. It is an async request by default.",
         "tags": [
@@ -2958,7 +3028,12 @@
       "post": {
         "summary": "Create Cashgram",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/schemas/x-elicitationConfig/createCashgram"
+            }
+          }
         },
         "description": "Use this API to create a Cashgram.",
         "operationId": "create-cashgram1",
@@ -3041,7 +3116,12 @@
       "post": {
         "summary": "Deactivate Cashgram",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/schemas/x-elicitationConfig/deactivateCashgram"
+            }
+          }
         },
         "description": "",
         "operationId": "deactivate-cashgram1",

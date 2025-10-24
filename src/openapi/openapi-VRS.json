@@ -418,8 +418,6 @@
         "description": "Request Body Schema for Generate KYC Link",
         "type": "object",
         "required": [
-          "phone",
-          "template_name",
           "verification_id"
         ],
         "properties": {
@@ -5832,9 +5830,7 @@
         "description": "Find the request parameters for the Name Match API",
         "type": "object",
         "required": [
-          "verification_id",
-          "name_1",
-          "name_2"
+          "verification_id"
         ],
         "example": {
           "verification_id": "ABC00123",
@@ -18064,6 +18060,70 @@
           "aadhaar_number": "655675523712"
         }
       }
+    },
+    "x-elicitationConfig": {
+      "VrsNameMatchVerification": {
+        "enabled": true,
+        "fields": {
+          "name_1": {
+            "required": true,
+            "message": "Please provide the first name to verify",
+            "schema": {
+              "type": "string",
+              "title": "First Name",
+              "description": "First name to verify"
+            },
+            "mapping": {
+              "target": "body.name_1",
+              "transform": "string"
+            }
+          },
+          "name_2": {
+            "required": true,
+            "message": "Please provide the second name to verify",
+            "schema": {
+              "type": "string",
+              "title": "Second Name",
+              "description": "Second name to verify"
+            },
+            "mapping": {
+              "target": "body.name_2",
+              "transform": "string"
+            }
+          }
+        }
+      },
+      "VrsGenerateKYCLink": {
+        "enabled": true, 
+        "fields": {
+          "phone": {
+            "required": false,
+            "message": "Please provide the phone number",
+            "schema": {
+              "type": "string",
+              "title": "Phone Number",
+              "description": "Phone number of the user"
+            },
+            "mapping": {
+              "target": "body.phone",
+              "transform": "string"
+            }
+          },
+          "template_name": {
+            "required": true,
+            "message": "Please provide the template name",
+            "schema": {
+              "type": "string",
+              "title": "Template Name",
+              "description": "Template Name of the KYC form"
+            },
+            "mapping": {
+              "target": "body.template_name",
+              "transform": "string"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -18081,7 +18141,12 @@
         ],
         "summary": "Verify Name Match",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/VrsNameMatchVerification"
+            }
+          }
         },
         "description": "Use this API to verify names that have enormous variations. Provide us the names you want to verify, and we will tell you whether they match and provide the reason. View the [test data](https://www.cashfree.com/docs/api-reference/vrs/data-to-test-integration#name-match) and use the information to trigger the validations. The test data are usable only in the test environments such as sandbox.",
         "parameters": [
@@ -18142,7 +18207,12 @@
         ],
         "summary": "Generate KYC Link",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/VrsGenerateKYCLink"
+            }
+          }
         },
         "description": "Use this API to generate a verification form to verify the KYC information of your users digitally.",
         "requestBody": {
