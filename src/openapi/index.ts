@@ -29,6 +29,7 @@ async function triggerElicitationFlow(
 
   const inputVariableSource = inputArgs.inputVariableSource || {};
 
+  // Check if elicitation is globally enabled and endpoint-specific configuration
   if (!hasElicitationEnabled(endpoint)) {
     return inputArgs;
   }

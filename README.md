@@ -64,7 +64,8 @@ Add the following configuration block to your `claude_desktop_config.json`
         "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
         "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
         "TOOLS": "pg,payouts,secureid",
-        "ENV": "sandbox"
+        "ENV": "sandbox",
+        "ELICITATION_ENABLED": "true"
       }
     }
   }
@@ -92,7 +93,8 @@ Add the following configuration block to your VS Code settings
           "SECUREID_APP_ID": "YOUR_SECUREID_CLIENT_ID",
           "SECUREID_APP_SECRET": "YOUR_SECUREID_CLIENT_SECRET",
           "TOOLS": "pg,payouts,secureid",
-          "ENV": "sandbox"
+          "ENV": "sandbox",
+          "ELICITATION_ENABLED": "true"
         }
       }
     }
@@ -132,6 +134,12 @@ Set the following environment variables for each service:
 - `payouts`: Payouts APIs
 - `secureid`: SecureID APIs
 
+### Elicitation Configuration
+
+`ELICITATION_ENABLED`: Set to `true` to enable interactive parameter elicitation, `false` to disable (default: `false`)
+
+When enabled, the MCP server will prompt users for missing required parameters instead of failing with validation errors. This provides a more interactive experience by asking users to provide values for required fields that weren't initially supplied.
+
 ## Tools
 
 Cashfree MCP has the following tools available, grouped by the product category
@@ -141,6 +149,7 @@ Cashfree MCP has the following tools available, grouped by the product category
 | Tool Name                                                | Description                                                                                        |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | **search**                                               | Search across the Cashfree Payments Developer Documentation.                                       |
+| **get-input-source-help**                               | Get comprehensive instructions for handling input source variable errors.                          |
 | **create-payment-link**                                  | Create a new payment link.                                                                         |
 | **fetch-payment-link-details**                           | View all details and status of a payment link.                                                     |
 | **cancel-payment-link**                                  | Cancel an active payment link. No further payments can be done against cancelled links             |

@@ -281,7 +281,7 @@ export function convertEndpointToCategorizedZod(
   }
 
   const metadata = generateMetadataSchema();
-  console.error("Generated metadata schema: ", JSON.stringify(metadata));
+  // console.error("Generated metadata schema: ", JSON.stringify(metadata));
   return {
     url,
     method,
@@ -398,8 +398,9 @@ export function getPublicKeyFromPath(path: string): string | null {
 /**
  * Check if elicitation should be used for this endpoint
  * Returns true only if:
- * 1. Endpoint has elicitation configuration
- * 2. Endpoint has elicitation enabled
+ * 1. Global elicitation is enabled via ELICITATION_ENABLED environment variable
+ * 2. Endpoint has elicitation configuration
+ * 3. Endpoint has elicitation enabled
  * Client support will be checked at runtime during execution
  */
 export function shouldUseElicitation(endpoint: Endpoint): boolean {
@@ -425,41 +426,64 @@ export async function checkElicitationSupport(_server: McpServer): Promise<boole
  * This allows elicitation to fill in missing required fields
  */
 export function makeElicitationFieldsOptional(zodSchema: z.ZodTypeAny, endpoint: Endpoint): z.ZodTypeAny {
+  // Check if elicitation is globally enabled first
+  if (!hasElicitationEnabled(endpoint)) {
+    return zodSchema;
+  }
+  
   const elicitationConfig = getElicitationConfig(endpoint);
   if (!elicitationConfig || !zodSchema) {
     return zodSchema;
   }
 
-  // Get the list of fields that should be made optional (those configured for elicitation)
-  const elicitationFields = Object.entries(elicitationConfig.fields).map(([fieldName, fieldConfig]) => {
+  // Get the list of field paths that should be made optional (those configured for elicitation)
+  const elicitationFieldPaths = Object.entries(elicitationConfig.fields).map(([fieldName, fieldConfig]) => {
     // Use the target path from mapping, or fall back to field name
     const targetPath = fieldConfig.mapping?.target || fieldName;
     // For body fields, remove the 'body.' prefix if present
     return targetPath.startsWith('body.') ? targetPath.substring(5) : targetPath;
   });
 
-  if (zodSchema instanceof z.ZodObject) {
-    const shape = zodSchema.shape;
-    const newShape: Record<string, z.ZodTypeAny> = {};
+  return makeFieldsOptionalAtPaths(zodSchema, elicitationFieldPaths);
+}
 
-    // Process each field in the schema
-    for (const [key, value] of Object.entries(shape)) {
-      if (elicitationFields.includes(key)) {
-        // Make this field optional since it can be provided via elicitation
-        newShape[key] = makeFieldOptional(value as z.ZodTypeAny);
-      } else if (value instanceof z.ZodObject) {
-        // Recursively process nested objects
-        newShape[key] = makeElicitationFieldsOptional(value, endpoint);
-      } else {
-        // Keep the field as is
-        newShape[key] = value as z.ZodTypeAny;
-      }
-    }
-
-    return z.object(newShape);
+/**
+ * Recursively make fields optional at specified paths in a Zod schema
+ */
+function makeFieldsOptionalAtPaths(zodSchema: z.ZodTypeAny, fieldPaths: string[]): z.ZodTypeAny {
+  if (!(zodSchema instanceof z.ZodObject)) {
+    return zodSchema;
   }
-  
-  return zodSchema;
+
+  const shape = zodSchema.shape;
+  const newShape: Record<string, z.ZodTypeAny> = {};
+
+  // Process each field in the schema
+  for (const [key, value] of Object.entries(shape)) {
+    // Check if this field should be made optional (exact match)
+    const shouldMakeOptional = fieldPaths.includes(key);
+    
+    // Check for nested paths that start with this key
+    const nestedPaths = fieldPaths
+      .filter(path => path.startsWith(`${key}.`))
+      .map(path => path.substring(key.length + 1)); // Remove the key and dot prefix
+
+    if (shouldMakeOptional) {
+      // Make this field optional since it can be provided via elicitation
+      newShape[key] = makeFieldOptional(value as z.ZodTypeAny);
+    } else if (nestedPaths.length > 0 && value instanceof z.ZodObject) {
+      // Recursively process nested objects for nested field paths
+      newShape[key] = makeFieldsOptionalAtPaths(value, nestedPaths);
+    } else if (value instanceof z.ZodObject) {
+      // Process nested objects even if no specific paths match (for deeper nesting)
+      newShape[key] = makeFieldsOptionalAtPaths(value, fieldPaths);
+    } else {
+      // Keep the field as is
+      newShape[key] = value as z.ZodTypeAny;
+    }
+  }
+
+  return z.object(newShape);
 }
 
 /**
@@ -489,8 +513,15 @@ export function getElicitationConfig(endpoint: Endpoint): ElicitationConfigurati
 
 /**
  * Check if an endpoint has elicitation enabled
+ * Now checks both global environment variable and endpoint-specific configuration
  */
 export function hasElicitationEnabled(endpoint: Endpoint): boolean {
+  // First check if elicitation is globally enabled via environment variable
+  if (process.env.ELICITATION_ENABLED?.toLowerCase() !== 'true')  {
+    return false;
+  }
+
+  // Then check endpoint-specific configuration
   const config = getElicitationConfig(endpoint);
   return config !== null && config.enabled && Object.keys(config.fields || {}).length > 0;
 }
@@ -520,11 +551,18 @@ export function getElicitationRequestFields(
 
   Object.entries(elicitationConfig.fields).forEach(([fieldName, fieldConfig]) => {
     const targetPath = fieldConfig.mapping?.target || fieldName;
+    
+    // For body fields, get the path relative to the body
+    const bodyRelativePath = targetPath.startsWith('body.') ? targetPath.substring(5) : targetPath;
 
-    const valueFromArgs = hasValueAtPath(providedArgs, targetPath)
+    // Check if value exists in provided args at the target path
+    const valueFromArgs = hasValueAtPath(providedArgs, targetPath) 
       ? getValueAtPath(providedArgs, targetPath)
+      : hasValueAtPath(providedArgs, bodyRelativePath)
+      ? getValueAtPath(providedArgs, bodyRelativePath)
       : providedArgs[fieldName];
 
+    // Check input variable source using the full target path
     const valueFromInputVariableSource = getValueFromInputVariableSource(targetPath);
 
     // Use input variable source value as default if available
@@ -538,7 +576,7 @@ export function getElicitationRequestFields(
     // Determine if we need to ask
     const isMissing = fieldConfig.required && (valueFromArgs === undefined || valueFromArgs === '');
     const isGeneratedByModel = valueFromInputVariableSource === 'generated_by_model';
-    console.error("Defaults ", JSON.stringify(defaults));
+    
     if (isMissing || isGeneratedByModel) {
       missingFields.push(fieldName);
       
@@ -627,7 +665,7 @@ export function applyFieldMappings(
   
   Object.entries(elicitationResponse).forEach(([fieldName, value]) => {
     const fieldConfig = elicitationConfig.fields[fieldName];
-    if (fieldConfig) {
+    if (fieldConfig && fieldConfig.mapping) {
       const mapping = fieldConfig.mapping;
       setValueAtPath(mappedArgs, mapping.target, value, mapping.transform);
     } else {

@@ -14,6 +14,7 @@ import { createSearchTool } from "./search.js";
 import { isMcpEnabled } from "./openapi/helpers.js";
 import { readConfig } from "./config.js";
 import { createCashienTool } from "./cashien.js";
+import { createCFContextInitializerTool } from "./input-source-help.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +26,7 @@ async function main() {
 
   await createSearchTool(server);
   await createCashienTool(server);
+  await createCFContextInitializerTool(server);
 
   // Dynamically load OpenAPI-based tools
   const openApiDir = path.join(__dirname, "openapi");

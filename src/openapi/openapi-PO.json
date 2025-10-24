@@ -3037,7 +3037,7 @@
           "enabled": true,
           "config": {
             "elicitation": {
-              "$ref": "#/components/schemas/x-elicitationConfig/createCashgram"
+              "$ref": "#/components/x-elicitationConfig/createCashgram"
             }
           }
         },
@@ -3125,7 +3125,7 @@
           "enabled": true,
           "config": {
             "elicitation": {
-              "$ref": "#/components/schemas/x-elicitationConfig/deactivateCashgram"
+              "$ref": "#/components/x-elicitationConfig/deactivateCashgram"
             }
           }
         },
