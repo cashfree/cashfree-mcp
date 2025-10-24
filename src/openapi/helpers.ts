@@ -273,7 +273,7 @@ export function convertEndpointToCategorizedZod(
   }
 
   const metadata = generateMetadataSchema();
-  console.log("Generated metadata schema: ", JSON.stringify(metadata));
+  console.error("Generated metadata schema: ", JSON.stringify(metadata));
   return {
     url,
     method,
@@ -286,29 +286,36 @@ export function convertEndpointToCategorizedZod(
   };
 }
 
+const SourceEnum = z.enum([
+  "user_input",
+  "generated_by_model",
+  "inferred_from_context"
+]);
+
 /**
- * Generate metadata schema that mirrors the input fields structure
- * Each field in the input schema gets a corresponding metadata field to track its source
+ * Recursive schema that allows nested metadata objects.
+ * Each key maps either to a source string or another nested object
+ * following the same structure.
  */
-export function generateMetadataSchema(): Record<string, any> {
-
-const SourceEnum = z.enum(["user_input", "inferred_from_context", "generated_by_model"]);
-
 const RecursiveSourceSchema: z.ZodTypeAny = z.lazy(() =>
   z.record(
     z.union([SourceEnum, RecursiveSourceSchema])
-  ).describe("Nested object mapping each field to its source")
+  ).describe("Nested object mapping each field to its source (recursively)")
 );
 
-  const metadataSchema = z.object({
-    inputVariableSource: z.object({
-      body: RecursiveSourceSchema.default({}).describe("Mirrors the input body object, each field tracks its source including nested fields till leaf"),
-      headers: RecursiveSourceSchema.default({}).describe("Mirrors the input headers object"),
-      query: RecursiveSourceSchema.default({}).describe("Mirrors the input query params object"),
-      path: RecursiveSourceSchema.default({}).describe("Mirrors the input path params object")
-    }).describe("Mirrors the structure of input parameters (body, headers, query, path)")
-  }).passthrough().describe("Metadata about input variables and their sources. Unknown keys are allowed").required();
-  return { metadata: metadataSchema };
+/**
+ * Generates metadata schema that mirrors input structure.
+ * Tracks sources for input fields (e.g. body, headers, query, path),
+ * allowing arbitrary nesting and unknown keys.
+ */
+export function generateMetadataSchema() {
+  const InputVariableSourceSchema = z.object({
+    body: RecursiveSourceSchema.describe(
+      "Mirrors the input body object, tracking sources for all nested fields"
+    )
+  }).describe("Tracks the source of input parameters (body, headers, query, path)");
+
+  return { inputVariableSource: InputVariableSourceSchema};
 }
 
 
@@ -371,7 +378,7 @@ export function getPublicKeyFromPath(path: string): string | null {
   try {
     return fs.readFileSync(path, "utf8");
   } catch (error) {
-    console.warn(
+    console.error(
       `Warning: Failed to read public key from path: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
@@ -406,16 +413,16 @@ export function hasElicitationEnabled(endpoint: Endpoint): boolean {
 export function getElicitationRequestFields(
   elicitationConfig: ElicitationConfiguration,
   providedArgs: Record<string, any>,
-  metadata: Record<string, any>,
+  inputVariableSource: Record<string, any>,
   elicitationRequest: any
 ): { missingFields: string[]; defaults: Record<string, any> } {
   const missingFields: string[] = [];
   const defaults: Record<string, any> = {};
 
-  const getValueFromMetadata = (path: string): any => {
-    if (!metadata?.inputVariableSource) return undefined;
+  const getValueFromInputVariableSource = (path: string): any => {
+    if (!inputVariableSource) return undefined;
     const parts = path.split('.');
-    let current: any = metadata.inputVariableSource;
+    let current: any = inputVariableSource;
     for (const part of parts) {
       if (!current) return undefined;
       current = current[part];
@@ -430,20 +437,20 @@ export function getElicitationRequestFields(
       ? getValueAtPath(providedArgs, targetPath)
       : providedArgs[fieldName];
 
-    const valueFromMetadata = getValueFromMetadata(targetPath);
+    const valueFromInputVariableSource = getValueFromInputVariableSource(targetPath);
 
-    // Use metadata value as default if available
-    let defaultValue = valueFromArgs ?? (valueFromMetadata && valueFromMetadata !== 'generated_by_model' ? valueFromMetadata : undefined);
+    // Use input variable source value as default if available
+    let defaultValue = valueFromArgs ?? (valueFromInputVariableSource && valueFromInputVariableSource !== 'generated_by_model' ? valueFromInputVariableSource : undefined);
 
-    if (valueFromMetadata === 'generated_by_model') {
+    if (valueFromInputVariableSource === 'generated_by_model') {
       // Treat generated_by_model as default but still ask if required
       defaultValue = valueFromArgs ?? undefined;
     }
 
     // Determine if we need to ask
     const isMissing = fieldConfig.required && (valueFromArgs === undefined || valueFromArgs === '');
-    const isGeneratedByModel = valueFromMetadata === 'generated_by_model';
-
+    const isGeneratedByModel = valueFromInputVariableSource === 'generated_by_model';
+    console.error("Defaults ", JSON.stringify(defaults));
     if (isMissing || isGeneratedByModel) {
       missingFields.push(fieldName);
       
@@ -460,10 +467,7 @@ export function getElicitationRequestFields(
     }
   });
 
-  console.log("Missing fields:", missingFields);
-  console.log("Defaults:", defaults);
-
-  return { missingFields, defaults };
+  return { missingFields, defaults};
 };
 
 
