@@ -35,9 +35,9 @@ jobs:
 
       - name: Sync files to /mcp_servers/cashfree in forked repo
         run: |
-          rm -rf klavis-mcp_servers/mcp_servers/cashfree
-          mkdir -p klavis-mcp_servers/mcp_servers/cashfree
-          rsync -av --exclude='.git' --exclude='klavis-mcp_servers' ./ klavis-mcp_servers/mcp_servers/cashfree/
+          rm -rf klavis/mcp_servers/cashfree
+          mkdir -p klavis/mcp_servers/cashfree
+          rsync -av --exclude='.git' --exclude='klavis' ./ klavis/mcp_servers/cashfree/
 
       - name: Create PR branch on fork
         run: |
