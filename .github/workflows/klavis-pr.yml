@@ -37,7 +37,13 @@ jobs:
         run: |
           rm -rf klavis/mcp_servers/cashfree
           mkdir -p klavis/mcp_servers/cashfree
-          rsync -av --exclude='.git' --exclude='klavis' ./ klavis/mcp_servers/cashfree/
+            rsync -av \
+              --exclude='.git' \
+              --exclude='.github' \
+              --exclude='smithery.yaml' \
+              --exclude='server.json' \
+              --exclude='klavis-mcp_servers' \
+              ./ klavis/mcp_servers/cashfree/
 
       - name: Create PR branch on fork
         run: |
@@ -47,17 +53,25 @@ jobs:
           git commit -m "Sync from cashfree-mcp tag ${{ github.ref_name }}"
           git push origin ${BRANCH_NAME}
 
-      - name: Create Pull Request to upstream
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.KLAVIS_PR_TOKEN }}
-          path: klavis-mcp_servers
-          commit-message: "Sync from cashfree-mcp tag ${{ github.ref_name }}"
-          branch: ${{ env.BRANCH_NAME }}
-          title: "[Automated] Sync from cashfree-mcp tag ${{ github.ref_name }}"
-          body: |
-            Automated PR to sync changes from cashfree-mcp tag `${{ github.ref_name }}`.
-          base: main
-          fork: sivadurga-cashfree/klavis
-          upstream: Klavis-AI/klavis
+      - name: Create or update Pull Request to upstream
+        run: |
+          gh pr list \
+            --repo Klavis-AI/klavis \
+            --head sivadurga-cashfree:cashfree-mcp-${{ github.ref_name }}-pr \
+            --state open \
+            --json url \
+            --jq '.[0].url' > pr_url.txt
+          PR_URL=$(cat pr_url.txt)
+          if [ -z "$PR_URL" ]; then
+            gh pr create \
+              --repo Klavis-AI/klavis \
+              --head sivadurga-cashfree:cashfree-mcp-${{ github.ref_name }}-pr \
+              --base main \
+              --title "[Automated] Sync from cashfree-mcp tag ${{ github.ref_name }}" \
+              --body "Automated PR to sync changes from cashfree-mcp tag \`${{ github.ref_name }}\`."
+          else
+            echo "PR already exists: $PR_URL"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.KLAVIS_PR_TOKEN }}
 
