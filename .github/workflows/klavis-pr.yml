@@ -42,7 +42,7 @@ jobs:
             --exclude='.github' \
             --exclude='smithery.yaml' \
             --exclude='server.json' \
-            --exclude='klavis-mcp_servers' \
+            --exclude='klavis' \
             ./ klavis/mcp_servers/cashfree/ || [ $? -eq 24 ]
 
       - name: Create PR branch on fork
