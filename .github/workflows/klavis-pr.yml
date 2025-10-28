@@ -4,7 +4,8 @@ on:
   push:
     tags:
       - 'klavis.*'
-
+    branches:
+      - '**'
 jobs:
   raise-pr:
     runs-on: ubuntu-latest
@@ -20,12 +21,13 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config --global user.name "siva-cashfree-mcp"
+          git config --global user.name "siva.durga:cashfree"
           git config --global user.email "siva.durga@cashfree.com"
 
       - name: Clone Klavis mcp_servers
         run: |
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${KLAVIS_REPO}.git klavis-mcp_servers
+          git clone https://github.com/Klavis-AI/klavis.git klavis-mcp_servers
+
 
       - name: Sync files to Klavis repo
         run: |
