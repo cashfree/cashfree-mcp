@@ -26,7 +26,7 @@ jobs:
 
       - name: Clone Klavis mcp_servers
         run: |
-          git clone https://github.com/Klavis-AI/klavis.git klavis-mcp_servers
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/Klavis-AI/klavis.git klavis-mcp_servers
 
 
       - name: Sync files to Klavis repo
