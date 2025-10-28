@@ -1,3 +1,5 @@
+import { PrimitiveSchemaDefinition } from "@modelcontextprotocol/sdk/types.js";
+
 export interface InitializationConfiguration {
   name: string;
   trieveApiKey: string;
@@ -22,7 +24,7 @@ export interface Endpoint {
     summary?: string;
     description?: string;
     tags?: string[];
-    "x-mcp"?: Record<string, any>;
+    "x-mcp"?: McpConfiguration;
     operationId?: string;
     deprecated?: boolean;
     security?: any[];
@@ -30,5 +32,28 @@ export interface Endpoint {
     requestBody?: any;
     responses?: any;
     [key: string]: any;
+  };
+}
+
+export interface McpConfiguration {
+  enabled: boolean;
+  config?: {
+    elicitation?: ElicitationConfiguration;
+  };
+}
+
+// Elicitation configuration for OpenAPI endpoints
+export interface ElicitationConfiguration {
+  enabled: boolean;
+  fields: Record<string, ElicitationField>;
+}
+
+export interface ElicitationField {
+  required: boolean;
+  message: string;
+  schema: PrimitiveSchemaDefinition;
+  mapping: {
+    target: string;
+    transform?: 'string' | 'number' | 'boolean' | 'array';
   };
 }

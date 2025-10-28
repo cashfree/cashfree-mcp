@@ -1197,9 +1197,9 @@
           }
         },
         "required": [
-          "link_amount",
           "link_currency",
           "link_id",
+          "link_amount",
           "customer_details",
           "link_purpose"
         ]
@@ -1843,6 +1843,7 @@
         "required": [
           "customer_id",
           "customer_phone"
+
         ]
       },
       "CustomerDetailsResponse": {
@@ -15225,6 +15226,93 @@
         "example": "some-req-id",
         "description": "Request id for your api call. Is blank or null if no `x-request-id` is sent during the request"
       }
+    },
+    "x-elicitationConfig": {
+      "createPaymentLink": {
+        "enabled": true,
+        "fields": {
+          "link_amount": {
+            "required": true,
+            "message": "Please provide the amount to be collected through this payment link",
+            "schema": {
+              "type": "number",
+              "title": "Link Amount",
+              "description": "Amount to be collected using this link (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.link_amount",
+              "transform": "number"
+            }
+          },
+          "customer_phone": {
+            "required":  true, 
+            "message": "Please provide the customer's phone number",
+            "schema": {
+              "type": "string",
+              "title": "Customer Phone",
+              "description": "Phone number of the customer in international format without '+' sign",
+              "pattern": "^[1-9][0-9]{7,14}$"
+            },
+            "mapping": {
+              "target": "body.customer_details.customer_phone",
+              "transform": "string"
+            }
+          }
+        }
+      },
+      "createOrder": {
+        "enabled": true,
+        "fields": {
+          "order_amount": {
+            "required": true,
+            "message": "Please provide the total order amount",
+            "schema": {
+              "type": "number",
+              "title": "Order Amount",
+              "description": "Total amount for the order (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.order_amount",
+              "transform": "number"
+            }
+          },
+          "customer_phone": {
+            "required":  true, 
+            "message": "Please provide the customer's phone number",
+            "schema": {
+              "type": "string",
+              "title": "Customer Phone",
+              "description": "Phone number of the customer in international format without '+' sign",
+              "pattern": "^[1-9][0-9]{7,14}$"
+            },
+            "mapping": {
+              "target": "body.customer_details.customer_phone",
+              "transform": "string"
+            }
+          }
+        }
+      },
+      "createRefund": {
+        "enabled": true,
+        "fields": {
+          "refund_amount": {
+            "required": true,
+            "message": "Please provide the refund amount",
+            "schema": {
+              "type": "number",
+              "title": "Refund Amount",
+              "description": "Amount to be refunded (minimum 1 INR)",
+              "minimum": 1
+            },
+            "mapping": {
+              "target": "body.refund_amount",
+              "transform": "number"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -15367,9 +15455,14 @@
       "post": {
         "summary": "Create Payment Link",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/createPaymentLink"
+            }
+          }
         },
-        "description": "Use this API to create a new payment link. The created payment link url will be available in the API response parameter link_url.",
+        "description": "Use this API to create a new payment link. The created payment link url will be available in the API response parameter link_url. Please pass non required fields only if user passed that are critical like phone",
         "tags": [
           "Payment Links"
         ],
@@ -15802,7 +15895,12 @@
       "post": {
         "summary": "Create Order",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/createOrder"
+            }
+          }
         },
         "security": [
           {
@@ -16448,7 +16546,12 @@
       "post": {
         "summary": "Create Refund",
         "x-mcp": {
-          "enabled": true
+          "enabled": true,
+          "config": {
+            "elicitation": {
+              "$ref": "#/components/x-elicitationConfig/createRefund"
+            }
+          }
         },
         "description": "Use this API to initiate refunds.",
         "tags": [

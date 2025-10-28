@@ -1,7 +1,7 @@
 import { validate } from "@mintlify/openapi-parser";
 import axios, { isAxiosError } from "axios";
 import dashify from "dashify";
-import fs from "node:fs";
+import fs from "fs";
 import { getFileId } from "../utils.js";
 import { Endpoint } from "../types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -13,7 +13,69 @@ import {
   loadEnv,
   getValFromNestedJson,
   generateCfSignature,
+  getElicitationConfig,
+  hasElicitationEnabled,
+  getElicitationRequestFields,
+  createElicitationRequest,
+  applyFieldMappings,
+  validateElicitationResponse,
 } from "./helpers.js";
+
+async function triggerElicitationFlow(
+  inputArgs: Record<string, any>,
+  endpoint: Endpoint,
+  server: McpServer
+): Promise<Record<string, any>> {
+
+  const inputVariableSource = inputArgs.inputVariableSource || {};
+
+  // Check if elicitation is globally enabled and endpoint-specific configuration
+  if (!hasElicitationEnabled(endpoint)) {
+    return inputArgs;
+  }
+
+  const elicitationConfig = getElicitationConfig(endpoint);
+  if (!elicitationConfig) {
+    console.error(`No elicitation config found for endpoint: ${endpoint.title}`);
+    return inputArgs;
+  }
+
+  // Create empty elicitation request first
+  const elicitationRequest = createElicitationRequest(endpoint.title || endpoint.path, [], elicitationConfig);
+
+  // Get missing fields
+  const { missingFields } = getElicitationRequestFields(
+    elicitationConfig,
+    inputArgs,
+    inputVariableSource,
+    elicitationRequest
+  );
+
+  if (missingFields.length === 0) {
+    return inputArgs;
+  }
+
+
+  // Trigger MCP elicitation
+    const elicitationResult = await server.server.elicitInput(elicitationRequest.params);
+
+    if (elicitationResult?.action !== "accept" || !elicitationResult?.content) {
+    throw new Error(`Operation cancelled. Required information was not provided.`);
+    }
+
+
+    // Validate response
+    const validationResult = validateElicitationResponse(elicitationConfig, elicitationResult.content);
+    if (!validationResult.valid) {
+    throw new Error(`Validation errors: ${validationResult.errors.join(', ')}`);
+    }
+
+    // Merge mapped fields with original input args
+    const mappedArgs = applyFieldMappings(elicitationConfig, elicitationResult.content, inputArgs);
+
+    return mappedArgs;
+}
+
 
 export async function createToolsFromOpenApi(
   openApiPath: string,
@@ -48,16 +110,22 @@ export async function createToolsFromOpenApi(
       body: bodySchema,
       headers: headersSchema,
       cookies: cookiesSchema,
+      metadata: metadataSchema,
     } = convertEndpointToCategorizedZod(endpointId, endpoint);
+    
     const serverArgumentsSchemas = Object.assign(
       Object.assign(
         Object.assign(
-          Object.assign(Object.assign({}, pathsSchema), queriesSchema),
-          bodySchema
+          Object.assign(
+            Object.assign(Object.assign({}, pathsSchema), queriesSchema),
+
+            bodySchema
+          ),
+          headersSchema
         ),
-        headersSchema
+        cookiesSchema
       ),
-      cookiesSchema
+      metadataSchema
     );
     if (!endpoint.title) {
       endpoint.title = `${endpoint.method} ${convertStrToTitle(endpoint.path)}`;
@@ -76,7 +144,14 @@ export async function createToolsFromOpenApi(
       dashify(endpoint.title),
       endpoint.description || endpoint.title,
       serverArgumentsSchemas,
-      async (inputArgs: Record<string, any>) => {
+      async (inputArgs: Record<string, any>) => {  
+
+        try {
+          // Apply elicitation flow if enabled
+          inputArgs = await triggerElicitationFlow(inputArgs, endpoint, server);
+        } catch (error) {
+          console.error("Elicitation error:", error);
+        }
         const inputParams: Record<string, any> = {};
         const inputHeaders: Record<string, any> = {};
         const inputCookies: Record<string, any> = {};
@@ -87,6 +162,7 @@ export async function createToolsFromOpenApi(
           inputBody = inputArgs.body;
           delete inputArgs.body;
         }
+
 
         Object.entries(inputArgs).forEach(([key, value]) => {
           if (key in pathsSchema) {
