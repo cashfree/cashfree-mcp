@@ -24,16 +24,20 @@ jobs:
           git config --global user.name "siva.durga:cashfree"
           git config --global user.email "siva.durga@cashfree.com"
 
-      - name: Clone Klavis mcp_servers
+      - name: Fork and clone Klavis mcp_servers
         run: |
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/Klavis-AI/klavis.git klavis-mcp_servers
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.actor }}/klavis.git klavis-mcp_servers
+          cd klavis-mcp_servers
+          git remote add upstream https://github.com/Klavis-AI/klavis.git
+          git fetch upstream
+          git checkout main || git checkout -b main
+          git pull upstream main || true
 
-
-      - name: Sync files to Klavis repo
+      - name: Sync files to forked repo
         run: |
           rsync -av --exclude='.git' ./ klavis-mcp_servers/cashfree-mcp/
 
-      - name: Create PR branch
+      - name: Create PR branch on fork
         run: |
           cd klavis-mcp_servers
           git checkout -b ${BRANCH_NAME}
@@ -41,7 +45,7 @@ jobs:
           git commit -m "Sync from cashfree-mcp tag ${{ github.ref_name }}"
           git push origin ${BRANCH_NAME}
 
-      - name: Create Pull Request
+      - name: Create Pull Request to upstream
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.KLAVIS_PR_TOKEN }}
@@ -51,4 +55,6 @@ jobs:
           title: "[Automated] Sync from cashfree-mcp tag ${{ github.ref_name }}"
           body: |
             Automated PR to sync changes from cashfree-mcp tag `${{ github.ref_name }}`.
+          base: main
+          push-to-fork: true
 
