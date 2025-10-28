@@ -52,7 +52,6 @@ async function triggerElicitationFlow(
   );
 
   if (missingFields.length === 0) {
-    console.error(`No missing fields, proceeding without elicitation`);
     return inputArgs;
   }
 
@@ -128,7 +127,6 @@ export async function createToolsFromOpenApi(
       ),
       metadataSchema
     );
-    console.error(`Creating tool for endpoint: ${endpoint.path} with method: ${endpoint.method}, metadata schema: ${JSON.stringify(metadataSchema?.shape)}`);
     if (!endpoint.title) {
       endpoint.title = `${endpoint.method} ${convertStrToTitle(endpoint.path)}`;
     }
@@ -154,7 +152,6 @@ export async function createToolsFromOpenApi(
         } catch (error) {
           console.error("Elicitation error:", error);
         }
-        console.error("elicitation applied input args:", inputArgs);
         const inputParams: Record<string, any> = {};
         const inputHeaders: Record<string, any> = {};
         const inputCookies: Record<string, any> = {};
