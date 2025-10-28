@@ -1,6 +1,7 @@
 {
   "name": "@cashfreepayments/cashfree-mcp",
-  "version": "1.0.0",
+  "mcpName": "io.github.cashfree/cashfree-mcp",
+  "version": "1.0.1",
   "type": "module",
   "description": "Cashfree MCP server for cashfree docs and APIs",
   "engines": {
