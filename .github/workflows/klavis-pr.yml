@@ -56,4 +56,6 @@ jobs:
           body: |
             Automated PR to sync changes from cashfree-mcp tag `${{ github.ref_name }}`.
           base: main
+          fork: sivadurga-cashfree/klavis
+          upstream: Klavis-AI/klavis
 
