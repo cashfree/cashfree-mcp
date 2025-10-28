@@ -1,0 +1,51 @@
+name: Raise PR to Klavis mcp_servers
+
+on:
+  push:
+    tags:
+      - 'klavis.*'
+
+jobs:
+  raise-pr:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.KLAVIS_PR_TOKEN }}
+      KLAVIS_REPO: klavis-ai/mcp_servers
+      BRANCH_NAME: cashfree-mcp-${{ github.ref_name }}-pr
+    steps:
+      - name: Checkout cashfree-mcp
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "siva-cashfree-mcp"
+          git config --global user.email "siva.durga@cashfree.com"
+
+      - name: Clone Klavis mcp_servers
+        run: |
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${KLAVIS_REPO}.git klavis-mcp_servers
+
+      - name: Sync files to Klavis repo
+        run: |
+          rsync -av --exclude='.git' ./ klavis-mcp_servers/cashfree-mcp/
+
+      - name: Create PR branch
+        run: |
+          cd klavis-mcp_servers
+          git checkout -b ${BRANCH_NAME}
+          git add .
+          git commit -m "Sync from cashfree-mcp tag ${{ github.ref_name }}"
+          git push origin ${BRANCH_NAME}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.KLAVIS_PR_TOKEN }}
+          path: klavis-mcp_servers
+          commit-message: "Sync from cashfree-mcp tag ${{ github.ref_name }}"
+          branch: ${{ env.BRANCH_NAME }}
+          title: "[Automated] Sync from cashfree-mcp tag ${{ github.ref_name }}"
+          body: |
+            Automated PR to sync changes from cashfree-mcp tag `${{ github.ref_name }}`.
