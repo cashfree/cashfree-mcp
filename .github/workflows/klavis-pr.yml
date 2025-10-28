@@ -26,20 +26,22 @@ jobs:
 
       - name: Fork and clone Klavis mcp_servers
         run: |
-          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.actor }}/klavis.git klavis-mcp_servers
-          cd klavis-mcp_servers
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.actor }}/klavis.git 
+          cd klavis
           git remote add upstream https://github.com/Klavis-AI/klavis.git
           git fetch upstream
           git checkout main || git checkout -b main
           git pull upstream main || true
 
-      - name: Sync files to forked repo
+      - name: Sync files to /mcp_servers/cashfree in forked repo
         run: |
-          rsync -av --exclude='.git' ./ klavis-mcp_servers/cashfree-mcp/
+          rm -rf klavis-mcp_servers/mcp_servers/cashfree
+          mkdir -p klavis-mcp_servers/mcp_servers/cashfree
+          rsync -av --exclude='.git' --exclude='klavis-mcp_servers' ./ klavis-mcp_servers/mcp_servers/cashfree/
 
       - name: Create PR branch on fork
         run: |
-          cd klavis-mcp_servers
+          cd klavis/mcp_servers
           git checkout -b ${BRANCH_NAME}
           git add .
           git commit -m "Sync from cashfree-mcp tag ${{ github.ref_name }}"
