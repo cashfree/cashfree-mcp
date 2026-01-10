@@ -205,7 +205,7 @@ This project is licensed under the terms of the MIT open source license. Please 
 
 ## Documentation
 
-For detailed API documentation, visit the [Cashfree API Documentation](https://docs.cashfree.com/reference/).
+For detailed API documentation, visit the [Cashfree API Documentation](https://www.cashfree.com/docs/api-reference/overview).
 
 ## Support
 
