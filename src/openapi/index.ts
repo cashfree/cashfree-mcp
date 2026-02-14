@@ -2,9 +2,16 @@ import { validate } from "@mintlify/openapi-parser";
 import axios, { isAxiosError } from "axios";
 import dashify from "dashify";
 import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 import { getFileId } from "../utils.js";
 import { Endpoint } from "../types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+// HTTP methods that mutate state and benefit from idempotency headers
+const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
+
+// Cashfree's idempotency header — auto-injected on mutating requests
+const IDEMPOTENCY_HEADER = "x-request-id";
 import {
   convertEndpointToCategorizedZod,
   convertStrToTitle,
@@ -226,6 +233,12 @@ export async function createToolsFromOpenApi(
           );
         }
 
+        // Add idempotency header for mutating operations to prevent
+        // duplicate side-effects on retries or network timeouts
+        if (MUTATING_METHODS.has(methodSchema.toLowerCase()) && !inputHeaders[IDEMPOTENCY_HEADER]) {
+          inputHeaders[IDEMPOTENCY_HEADER] = uuidv4();
+        }
+
         const requestConfig = {
           method: methodSchema,
           url: urlWithPathParams,
@@ -244,13 +257,16 @@ export async function createToolsFromOpenApi(
             '$1"[MASKED]"'
           );
 
+          // Include x-request-id for traceability on mutating operations
+          const requestId = requestConfig.headers[IDEMPOTENCY_HEADER];
+          const contentBlocks: Array<{ type: "text"; text: string }> = [];
+          if (requestId) {
+            contentBlocks.push({ type: "text", text: `${IDEMPOTENCY_HEADER}: ${requestId}` });
+          }
+          contentBlocks.push({ type: "text", text: responseData });
+
           return {
-            content: [
-              {
-                type: "text",
-                text: responseData,
-              },
-            ],
+            content: contentBlocks,
           };
         } catch (error) {
           if (
